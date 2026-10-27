@@ -1,0 +1,1245 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>超級市場裡學生字 - 互動學習遊戲</title>
+    <script src="https://aisearch-task.bj.bcebos.com/static/tailwindcss-3.4.17.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap" rel="stylesheet">
+    <style>
+        * {
+            font-family: 'Noto Sans TC', 'PingFang TC', 'Microsoft JhengHei', sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #fff9e6 0%, #ffe4f3 50%, #e6f7ff 100%);
+            min-height: 100vh;
+        }
+        
+        .watercolor-bg {
+            background-image: 
+                radial-gradient(ellipse at 20% 30%, rgba(255, 182, 193, 0.3) 0%, transparent 50%),
+                radial-gradient(ellipse at 80% 20%, rgba(173, 216, 230, 0.3) 0%, transparent 50%),
+                radial-gradient(ellipse at 50% 80%, rgba(255, 255, 150, 0.3) 0%, transparent 50%),
+                radial-gradient(ellipse at 10% 90%, rgba(144, 238, 144, 0.25) 0%, transparent 40%);
+        }
+        
+        .hand-drawn {
+            border-radius: 255px 15px 225px 15px/15px 225px 15px 255px;
+            border: 3px solid #5d4e37;
+            box-shadow: 4px 4px 0px rgba(93, 78, 55, 0.2);
+        }
+        
+        .hand-drawn-btn {
+            border-radius: 20px 8px 25px 10px/10px 22px 8px 20px;
+            border: 3px solid #5d4e37;
+            box-shadow: 3px 3px 0px rgba(93, 78, 55, 0.3);
+            transition: all 0.2s;
+        }
+        
+        .hand-drawn-btn:hover {
+            transform: translate(-2px, -2px);
+            box-shadow: 5px 5px 0px rgba(93, 78, 55, 0.3);
+        }
+        
+        .hand-drawn-btn:active {
+            transform: translate(2px, 2px);
+            box-shadow: 1px 1px 0px rgba(93, 78, 55, 0.3);
+        }
+        
+        .watercolor-card {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(5px);
+            border-radius: 30px 10px 35px 15px/15px 30px 10px 35px;
+            border: 4px solid #8b7355;
+            box-shadow: 6px 6px 0px rgba(139, 115, 85, 0.25);
+        }
+        
+        .text-big {
+            font-size: clamp(1.5rem, 4vw, 2.5rem);
+        }
+        
+        .text-huge {
+            font-size: clamp(2rem, 6vw, 3.5rem);
+        }
+        
+        .text-large {
+            font-size: clamp(1.25rem, 3vw, 1.75rem);
+        }
+        
+        .character-card {
+            background: linear-gradient(145deg, #fffef0, #fff8dc);
+            border-radius: 20px;
+            border: 3px dashed #deb887;
+            transition: all 0.3s;
+        }
+        
+        .character-card:hover {
+            transform: scale(1.05) rotate(-2deg);
+            border-color: #ff6b6b;
+        }
+        
+        .character-card.selected {
+            background: linear-gradient(145deg, #ffeaa7, #fdcb6e);
+            border-color: #e17055;
+            transform: scale(1.1);
+        }
+        
+        .character-card.correct {
+            background: linear-gradient(145deg, #a8e6cf, #88d8b0);
+            border-color: #00b894;
+            animation: bounce 0.5s;
+        }
+        
+        .character-card.wrong {
+            background: linear-gradient(145deg, #ffb3ba, #ff7f7f);
+            border-color: #d63031;
+            animation: shake 0.5s;
+        }
+        
+        @keyframes bounce {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.2); }
+        }
+        
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
+        }
+        
+        @keyframes float {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-10px) rotate(2deg); }
+        }
+        
+        .float-anim {
+            animation: float 3s ease-in-out infinite;
+        }
+        
+        .shelf-item {
+            cursor: pointer;
+            transition: all 0.3s;
+            border-radius: 15px;
+        }
+        
+        .shelf-item:hover {
+            transform: scale(1.15) translateY(-5px);
+            filter: brightness(1.1);
+        }
+        
+        .shelf-item.found {
+            animation: foundItem 0.6s;
+        }
+        
+        @keyframes foundItem {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.3) rotate(10deg); background: #ffd700; }
+            100% { transform: scale(1); }
+        }
+        
+        .speech-bubble {
+            position: relative;
+            background: #fff;
+            border: 3px solid #5d4e37;
+            border-radius: 20px;
+            padding: 20px;
+        }
+        
+        .speech-bubble::after {
+            content: '';
+            position: absolute;
+            bottom: -20px;
+            left: 30px;
+            border-width: 20px 15px 0;
+            border-style: solid;
+            border-color: #5d4e37 transparent transparent;
+        }
+        
+        .speech-bubble::before {
+            content: '';
+            position: absolute;
+            bottom: -14px;
+            left: 33px;
+            border-width: 17px 12px 0;
+            border-style: solid;
+            border-color: #fff transparent transparent;
+            z-index: 1;
+        }
+        
+        .progress-dot {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            border: 3px solid #8b7355;
+            background: #fff;
+            transition: all 0.3s;
+        }
+        
+        .progress-dot.active {
+            background: #ff6b6b;
+            transform: scale(1.3);
+        }
+        
+        .progress-dot.completed {
+            background: #00b894;
+        }
+        
+        .game-section {
+            display: none;
+        }
+        
+        .game-section.active {
+            display: block;
+            animation: fadeIn 0.5s;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .radical-box {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 80px;
+            min-height: 80px;
+            font-size: 3rem;
+            background: linear-gradient(145deg, #74b9ff, #0984e3);
+            color: white;
+            border-radius: 15px;
+            border: 3px solid #2d3436;
+            margin: 5px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .radical-box:hover {
+            transform: scale(1.1);
+        }
+        
+        .result-box {
+            min-height: 80px;
+            min-width: 80px;
+            border: 4px dashed #fdcb6e;
+            border-radius: 15px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3rem;
+            margin: 5px;
+            background: rgba(253, 203, 110, 0.2);
+        }
+        
+        .reading-text {
+            cursor: pointer;
+            transition: all 0.2s;
+            padding: 2px 4px;
+            border-radius: 8px;
+        }
+        
+        .reading-text:hover {
+            background: #ffeaa7;
+        }
+        
+        .reading-text.highlight {
+            background: #74b9ff;
+            color: white;
+        }
+        
+        .star {
+            color: #ddd;
+            font-size: 2.5rem;
+            transition: all 0.3s;
+        }
+        
+        .star.earned {
+            color: #ffd700;
+            text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+            animation: starPop 0.5s;
+        }
+        
+        @keyframes starPop {
+            0% { transform: scale(0); }
+            50% { transform: scale(1.3); }
+            100% { transform: scale(1); }
+        }
+        
+        .supermarket-shelf {
+            background: linear-gradient(180deg, #deb887 0%, #d2a679 10%, #deb887 10%, #c19a6b 100%);
+            background-size: 100% 120px;
+            border-radius: 10px;
+            border: 5px solid #8b4513;
+        }
+        
+        .confetti {
+            position: fixed;
+            width: 10px;
+            height: 10px;
+            top: -10px;
+            animation: confetti-fall 3s linear forwards;
+            z-index: 1000;
+        }
+        
+        @keyframes confetti-fall {
+            to {
+                top: 100vh;
+                transform: rotate(720deg);
+            }
+        }
+    </style>
+</head>
+<body class="watercolor-bg">
+    <div class="min-h-screen p-4 md:p-8">
+        <!-- 主標題 -->
+        <header class="text-center mb-6">
+            <div class="inline-block watercolor-card px-6 py-4 md:px-10 md:py-6">
+                <h1 class="text-huge font-black text-[#e17055] mb-2">🛒 超級市場裡學生字 🛒</h1>
+                <p class="text-large text-[#636e72]">和爸爸一起去超級市場認字吧！</p>
+            </div>
+        </header>
+
+        <!-- 進度導航 -->
+        <div class="flex justify-center items-center gap-3 md:gap-6 mb-8 flex-wrap">
+            <button onclick="showSection('intro')" class="hand-drawn-btn px-3 py-2 md:px-5 md:py-3 bg-[#fdcb6e] font-bold text-lg md:text-xl">🏠 首頁</button>
+            <button onclick="showSection('story')" class="hand-drawn-btn px-3 py-2 md:px-5 md:py-3 bg-[#74b9ff] font-bold text-lg md:text-xl">📖 故事</button>
+            <button onclick="showSection('game1')" class="hand-drawn-btn px-3 py-2 md:px-5 md:py-3 bg-[#a29bfe] font-bold text-lg md:text-xl">🔍 找一找</button>
+            <button onclick="showSection('game2')" class="hand-drawn-btn px-3 py-2 md:px-5 md:py-3 bg-[#55efc4] font-bold text-lg md:text-xl">🧩 加字</button>
+            <button onclick="showSection('game3')" class="hand-drawn-btn px-3 py-2 md:px-5 md:py-3 bg-[#ff7675] font-bold text-lg md:text-xl">🐟 偏旁</button>
+        </div>
+
+        <!-- 星星獎勵顯示 -->
+        <div class="fixed top-4 right-4 watercolor-card px-4 py-2 z-50">
+            <span class="star earned" id="star1">★</span>
+            <span class="star" id="star2">★</span>
+            <span class="star" id="star3">★</span>
+            <span class="star" id="star4">★</span>
+            <span class="star" id="star5">★</span>
+        </div>
+
+        <!-- 首頁 - 課前熱身 -->
+        <section id="intro" class="game-section active max-w-4xl mx-auto">
+            <div class="watercolor-card p-6 md:p-10 mb-6">
+                <h2 class="text-huge font-bold text-[#00b894] mb-6 text-center">🎵 課前熱身操 🎵</h2>
+                
+                <div class="space-y-6">
+                    <div class="hand-drawn bg-pink-100 p-6">
+                        <p class="text-big font-medium mb-4">1️⃣ 你去過超級市場嗎？</p>
+                        <p class="text-large text-[#636e72] mb-4">你會不會留意在超級市場裡出現的字？</p>
+                        <div class="flex gap-3 flex-wrap">
+                            <button onclick="playSound('pop'); answerQ1(true)" class="hand-drawn-btn px-6 py-3 bg-green-300 text-xl font-bold">會！我最喜歡認字了 ✋</button>
+                            <button onclick="playSound('pop'); answerQ1(false)" class="hand-drawn-btn px-6 py-3 bg-blue-300 text-xl font-bold">有時候會注意 👀</button>
+                        </div>
+                        <p id="q1-feedback" class="text-xl mt-4 font-bold hidden"></p>
+                    </div>
+
+                    <div class="hand-drawn bg-blue-100 p-6">
+                        <p class="text-big font-medium mb-4">2️⃣ 你可以在超級市場裡學到什麼生字和新詞？</p>
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-4" id="q2-items">
+                            <div onclick="selectQ2Item(this)" class="shelf-item bg-white p-4 text-center text-xl font-bold cursor-pointer border-2 border-gray-300">🥛 牛奶</div>
+                            <div onclick="selectQ2Item(this)" class="shelf-item bg-white p-4 text-center text-xl font-bold cursor-pointer border-2 border-gray-300">🍪 餅乾</div>
+                            <div onclick="selectQ2Item(this)" class="shelf-item bg-white p-4 text-center text-xl font-bold cursor-pointer border-2 border-gray-300">🍬 糖果</div>
+                            <div onclick="selectQ2Item(this)" class="shelf-item bg-white p-4 text-center text-xl font-bold cursor-pointer border-2 border-gray-300">🍜 米粉</div>
+                            <div onclick="selectQ2Item(this)" class="shelf-item bg-white p-4 text-center text-xl font-bold cursor-pointer border-2 border-gray-300">🐟 鰻魚</div>
+                            <div onclick="selectQ2Item(this)" class="shelf-item bg-white p-4 text-center text-xl font-bold cursor-pointer border-2 border-gray-300">🐟 鮭魚</div>
+                            <div onclick="selectQ2Item(this)" class="shelf-item bg-white p-4 text-center text-xl font-bold cursor-pointer border-2 border-gray-300">🍎 水果</div>
+                            <div onclick="selectQ2Item(this)" class="shelf-item bg-white p-4 text-center text-xl font-bold cursor-pointer border-2 border-gray-300">🥬 蔬菜</div>
+                        </div>
+                        <p id="q2-feedback" class="text-xl mt-4 font-bold text-center"></p>
+                    </div>
+                </div>
+
+                <div class="text-center mt-8">
+                    <button onclick="playSound('start'); showSection('story')" class="hand-drawn-btn px-10 py-5 bg-gradient-to-r from-[#ff6b6b] to-[#ffa502] text-white text-huge font-black float-anim">
+                        🚀 開始學習之旅！
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- 故事閱讀區 -->
+        <section id="story" class="game-section max-w-5xl mx-auto">
+            <div class="watercolor-card p-6 md:p-10 mb-6">
+                <div class="flex justify-between items-center mb-6 flex-wrap gap-4">
+                    <h2 class="text-huge font-bold text-[#6c5ce7]">📖 超級市場裡學生字</h2>
+                    <div class="flex gap-3">
+                        <button onclick="playSound('click'); toggleReading()" id="read-btn" class="hand-drawn-btn px-5 py-3 bg-[#fd79a8] text-white text-xl font-bold">
+                            🔊 朗讀全文
+                        </button>
+                        <button onclick="playSound('click'); stopReading()" class="hand-drawn-btn px-5 py-3 bg-gray-400 text-white text-xl font-bold">
+                            ⏹️ 停止
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 故事場景1 -->
+                <div class="md:flex gap-6 mb-8 items-start">
+                    <div class="md:w-1/3 mb-4 md:mb-0">
+                        <div class="bg-gradient-to-b from-sky-200 to-sky-100 rounded-3xl p-6 border-4 border-[#74b9ff] text-center">
+                            <div class="text-8xl mb-2">👨‍👧</div>
+                            <div class="text-6xl">🏪</div>
+                            <p class="text-lg font-bold text-[#0984e3] mt-2">超級市場門口</p>
+                        </div>
+                    </div>
+                    <div class="md:w-2/3">
+                        <div class="speech-bubble mb-4">
+                            <p class="text-big leading-relaxed reading-text" id="text1" onclick="speakText(this)">
+                                下午，爸爸帶我到超級市場去買東西。
+                            </p>
+                        </div>
+                        <button onclick="speakText(document.getElementById('text1'))" class="hand-drawn-btn px-4 py-2 bg-yellow-200 text-lg">🔊 聽這句</button>
+                    </div>
+                </div>
+
+                <!-- 故事場景2 -->
+                <div class="md:flex gap-6 mb-8 items-start flex-row-reverse">
+                    <div class="md:w-1/3 mb-4 md:mb-0">
+                        <div class="supermarket-shelf p-4 min-h-[200px]">
+                            <div class="grid grid-cols-4 gap-2">
+                                <div class="text-4xl text-center">🥛</div>
+                                <div class="text-4xl text-center">🍪</div>
+                                <div class="text-4xl text-center">🍬</div>
+                                <div class="text-4xl text-center">🍜</div>
+                                <div class="text-4xl text-center">🐟</div>
+                                <div class="text-4xl text-center">🍎</div>
+                                <div class="text-4xl text-center">🥬</div>
+                                <div class="text-4xl text-center">🍞</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="md:w-2/3">
+                        <div class="speech-bubble mb-4" style="background: #e8f5e9;">
+                            <p class="text-big leading-relaxed reading-text" id="text2" onclick="speakText(this)">
+                                超級市場裡的東西真多！爸爸從貨架上選了一些貨品，教我認字。
+                            </p>
+                        </div>
+                        <button onclick="speakText(document.getElementById('text2'))" class="hand-drawn-btn px-4 py-2 bg-yellow-200 text-lg">🔊 聽這句</button>
+                    </div>
+                </div>
+
+                <!-- 故事場景3 -->
+                <div class="md:flex gap-6 mb-8 items-start">
+                    <div class="md:w-1/3 mb-4 md:mb-0">
+                        <div class="bg-gradient-to-br from-orange-100 to-yellow-100 rounded-3xl p-6 border-4 border-[#fdcb6e]">
+                            <div class="text-center space-y-4">
+                                <div class="text-7xl">🥛</div>
+                                <p class="text-2xl font-bold text-orange-600">牛奶</p>
+                                <div class="text-7xl">🍪</div>
+                                <p class="text-2xl font-bold text-orange-600">餅乾</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="md:w-2/3">
+                        <div class="speech-bubble mb-4" style="background: #fff3e0;">
+                            <p class="text-big leading-relaxed reading-text" id="text3" onclick="speakText(this)">
+                                這是牛奶，那是餅乾。
+                            </p>
+                        </div>
+                        <button onclick="speakText(document.getElementById('text3'))" class="hand-drawn-btn px-4 py-2 bg-yellow-200 text-lg">🔊 聽這句</button>
+                    </div>
+                </div>
+
+                <!-- 故事場景4 - 加法識字 -->
+                <div class="bg-gradient-to-r from-pink-100 to-purple-100 rounded-3xl p-6 mb-8 border-4 border-[#a29bfe]">
+                    <h3 class="text-2xl font-bold text-purple-600 mb-4 text-center">✨ 加法識字法 ✨</h3>
+                    <div class="grid md:grid-cols-2 gap-6">
+                        <div class="bg-white rounded-2xl p-5 text-center">
+                            <p class="text-big reading-text" id="text4" onclick="speakText(this)">
+                                米 + 唐 = <span class="text-[#e17055] font-black">糖</span>，糖果的糖。
+                            </p>
+                            <div class="flex justify-center items-center gap-2 mt-4 text-5xl font-bold">
+                                <span class="bg-orange-200 px-3 py-2 rounded-lg">米</span>
+                                <span class="text-3xl">+</span>
+                                <span class="bg-blue-200 px-3 py-2 rounded-lg">唐</span>
+                                <span class="text-3xl">=</span>
+                                <span class="bg-red-200 px-3 py-2 rounded-lg text-[#e17055]">糖</span>
+                            </div>
+                            <button onclick="speakText(document.getElementById('text4'))" class="hand-drawn-btn px-4 py-2 bg-yellow-200 text-lg mt-4">🔊 聽這句</button>
+                        </div>
+                        <div class="bg-white rounded-2xl p-5 text-center">
+                            <p class="text-big reading-text" id="text5" onclick="speakText(this)">
+                                米 + 分 = <span class="text-[#00b894] font-black">粉</span>，米粉的粉。
+                            </p>
+                            <div class="flex justify-center items-center gap-2 mt-4 text-5xl font-bold">
+                                <span class="bg-orange-200 px-3 py-2 rounded-lg">米</span>
+                                <span class="text-3xl">+</span>
+                                <span class="bg-green-200 px-3 py-2 rounded-lg">分</span>
+                                <span class="text-3xl">=</span>
+                                <span class="bg-pink-200 px-3 py-2 rounded-lg text-[#00b894]">粉</span>
+                            </div>
+                            <button onclick="speakText(document.getElementById('text5'))" class="hand-drawn-btn px-4 py-2 bg-yellow-200 text-lg mt-4">🔊 聽這句</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 故事場景5 - 偏旁識字 -->
+                <div class="md:flex gap-6 mb-8 items-start">
+                    <div class="md:w-1/3 mb-4 md:mb-0">
+                        <div class="bg-gradient-to-br from-blue-100 to-cyan-100 rounded-3xl p-6 border-4 border-[#00cec9]">
+                            <div class="text-center">
+                                <div class="text-7xl mb-2">🐟🐟🐟</div>
+                                <p class="text-3xl font-bold text-blue-600">魚字邊</p>
+                                <div class="flex justify-center gap-4 mt-4">
+                                    <div class="text-center">
+                                        <p class="text-4xl font-bold text-[#0984e3]">鰻</p>
+                                        <p class="text-lg">鰻魚</p>
+                                    </div>
+                                    <div class="text-center">
+                                        <p class="text-4xl font-bold text-[#0984e3]">鮭</p>
+                                        <p class="text-lg">鮭魚</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="md:w-2/3">
+                        <div class="speech-bubble mb-4" style="background: #e0f7fa;">
+                            <p class="text-big leading-relaxed reading-text" id="text6" onclick="speakText(this)">
+                                鰻和鮭是什麼？魚字旁，大概是魚吧。
+                            </p>
+                        </div>
+                        <button onclick="speakText(document.getElementById('text6'))" class="hand-drawn-btn px-4 py-2 bg-yellow-200 text-lg">🔊 聽這句</button>
+                    </div>
+                </div>
+
+                <!-- 故事結尾 -->
+                <div class="bg-gradient-to-r from-yellow-100 to-orange-100 rounded-3xl p-8 border-4 border-[#ffa502] text-center">
+                    <div class="text-6xl mb-4">👨‍👧💕</div>
+                    <p class="text-huge leading-relaxed reading-text font-bold" id="text7" onclick="speakText(this)">
+                        爸爸說：「生活裡處處能識字，你只要多注意，識字就很容易！」
+                    </p>
+                    <button onclick="speakText(document.getElementById('text7'))" class="hand-drawn-btn px-4 py-2 bg-yellow-200 text-xl mt-4">🔊 聽這句</button>
+                </div>
+
+                <div class="text-center mt-8">
+                    <button onclick="playSound('complete'); earnStar(1); showSection('game1')" class="hand-drawn-btn px-10 py-5 bg-gradient-to-r from-[#a29bfe] to-[#6c5ce7] text-white text-huge font-black">
+                        🎮 開始玩遊戲！
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- 遊戲1: 超市找一找 -->
+        <section id="game1" class="game-section max-w-5xl mx-auto">
+            <div class="watercolor-card p-6 md:p-10 mb-6">
+                <h2 class="text-huge font-bold text-[#00b894] mb-4 text-center">🔍 超級市場找一找</h2>
+                <p class="text-large text-center text-[#636e72] mb-6">點擊貨架上爸爸教我認的東西！</p>
+                
+                <div id="find-task" class="text-center mb-6">
+                    <p class="text-2xl font-bold text-[#e17055]">請找出：<span id="find-target" class="text-4xl text-[#6c5ce7]">牛奶</span></p>
+                </div>
+
+                <div class="bg-gradient-to-b from-[#deb887] to-[#c19a6b] rounded-3xl p-4 md:p-8 border-8 border-[#8b4513] mb-6">
+                    <!-- 第一層貨架 -->
+                    <div class="bg-[#d2a679] rounded-xl p-4 mb-4">
+                        <div class="grid grid-cols-4 md:grid-cols-6 gap-3 md:gap-4" id="shelf1">
+                            <div onclick="checkFind(this, '牛奶')" class="shelf-item bg-white p-3 md:p-4 text-center rounded-xl" data-name="牛奶">
+                                <div class="text-4xl md:text-6xl">🥛</div>
+                                <p class="font-bold text-lg md:text-xl mt-1">牛奶</p>
+                            </div>
+                            <div onclick="checkFind(this, '蘋果')" class="shelf-item bg-white p-3 md:p-4 text-center rounded-xl" data-name="蘋果">
+                                <div class="text-4xl md:text-6xl">🍎</div>
+                                <p class="font-bold text-lg md:text-xl mt-1">蘋果</p>
+                            </div>
+                            <div onclick="checkFind(this, '糖果')" class="shelf-item bg-white p-3 md:p-4 text-center rounded-xl" data-name="糖果">
+                                <div class="text-4xl md:text-6xl">🍬</div>
+                                <p class="font-bold text-lg md:text-xl mt-1">糖果</p>
+                            </div>
+                            <div onclick="checkFind(this, '麵包')" class="shelf-item bg-white p-3 md:p-4 text-center rounded-xl" data-name="麵包">
+                                <div class="text-4xl md:text-6xl">🍞</div>
+                                <p class="font-bold text-lg md:text-xl mt-1">麵包</p>
+                            </div>
+                            <div onclick="checkFind(this, '餅乾')" class="shelf-item bg-white p-3 md:p-4 text-center rounded-xl" data-name="餅乾">
+                                <div class="text-4xl md:text-6xl">🍪</div>
+                                <p class="font-bold text-lg md:text-xl mt-1">餅乾</p>
+                            </div>
+                            <div onclick="checkFind(this, '香蕉')" class="shelf-item bg-white p-3 md:p-4 text-center rounded-xl" data-name="香蕉">
+                                <div class="text-4xl md:text-6xl">🍌</div>
+                                <p class="font-bold text-lg md:text-xl mt-1">香蕉</p>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- 第二層貨架 -->
+                    <div class="bg-[#c19a6b] rounded-xl p-4 mb-4">
+                        <div class="grid grid-cols-4 md:grid-cols-6 gap-3 md:gap-4" id="shelf2">
+                            <div onclick="checkFind(this, '米粉')" class="shelf-item bg-white p-3 md:p-4 text-center rounded-xl" data-name="米粉">
+                                <div class="text-4xl md:text-6xl">🍜</div>
+                                <p class="font-bold text-lg md:text-xl mt-1">米粉</p>
+                            </div>
+                            <div onclick="checkFind(this, '鰻魚')" class="shelf-item bg-white p-3 md:p-4 text-center rounded-xl" data-name="鰻魚">
+                                <div class="text-4xl md:text-6xl">🐟</div>
+                                <p class="font-bold text-lg md:text-xl mt-1">鰻魚</p>
+                            </div>
+                            <div onclick="checkFind(this, '蔬菜')" class="shelf-item bg-white p-3 md:p-4 text-center rounded-xl" data-name="蔬菜">
+                                <div class="text-4xl md:text-6xl">🥬</div>
+                                <p class="font-bold text-lg md:text-xl mt-1">蔬菜</p>
+                            </div>
+                            <div onclick="checkFind(this, '鮭魚')" class="shelf-item bg-white p-3 md:p-4 text-center rounded-xl" data-name="鮭魚">
+                                <div class="text-4xl md:text-6xl">🐠</div>
+                                <p class="font-bold text-lg md:text-xl mt-1">鮭魚</p>
+                            </div>
+                            <div onclick="checkFind(this, '雞蛋')" class="shelf-item bg-white p-3 md:p-4 text-center rounded-xl" data-name="雞蛋">
+                                <div class="text-4xl md:text-6xl">🥚</div>
+                                <p class="font-bold text-lg md:text-xl mt-1">雞蛋</p>
+                            </div>
+                            <div onclick="checkFind(this, '橘子')" class="shelf-item bg-white p-3 md:p-4 text-center rounded-xl" data-name="橘子">
+                                <div class="text-4xl md:text-6xl">🍊</div>
+                                <p class="font-bold text-lg md:text-xl mt-1">橘子</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="find-feedback" class="text-center text-2xl font-bold mb-4 min-h-[40px]"></div>
+                
+                <div class="flex justify-center gap-2 mb-4" id="find-progress">
+                    <div class="progress-dot active"></div>
+                    <div class="progress-dot"></div>
+                    <div class="progress-dot"></div>
+                    <div class="progress-dot"></div>
+                    <div class="progress-dot"></div>
+                    <div class="progress-dot"></div>
+                </div>
+
+                <div id="game1-complete" class="hidden text-center">
+                    <div class="text-6xl mb-4">🎉🌟🎉</div>
+                    <p class="text-huge font-black text-[#00b894] mb-6">太厲害了！全部找到啦！</p>
+                    <button onclick="playSound('complete'); earnStar(2); showSection('game2')" class="hand-drawn-btn px-10 py-5 bg-gradient-to-r from-[#55efc4] to-[#00b894] text-white text-huge font-black">
+                        ➡️ 下一個遊戲：加法識字
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- 遊戲2: 加法識字 -->
+        <section id="game2" class="game-section max-w-5xl mx-auto">
+            <div class="watercolor-card p-6 md:p-10 mb-6">
+                <h2 class="text-huge font-bold text-[#6c5ce7] mb-4 text-center">🧩 加法識字小遊戲</h2>
+                <p class="text-large text-center text-[#636e72] mb-6">把兩個部分加起來，看看變成什麼字！</p>
+
+                <div id="addition-game">
+                    <div class="text-center mb-6">
+                        <p class="text-2xl font-bold text-[#e17055]">請組成：<span id="addition-target" class="text-4xl text-[#6c5ce7]">糖果的糖</span></p>
+                    </div>
+
+                    <div class="flex flex-wrap justify-center items-center gap-4 mb-8 min-h-[120px]" id="addition-result-area">
+                        <div class="result-box" id="add-slot1" onclick="removeFromSlot(1)"></div>
+                        <div class="text-5xl font-bold">+</div>
+                        <div class="result-box" id="add-slot2" onclick="removeFromSlot(2)"></div>
+                        <div class="text-5xl font-bold">=</div>
+                        <div class="result-box text-[#00b894]" id="add-result">?</div>
+                    </div>
+
+                    <div class="text-center mb-4">
+                        <p class="text-xl font-bold text-[#636e72]">點擊下面的部件：</p>
+                    </div>
+
+                    <div class="flex flex-wrap justify-center gap-4" id="addition-parts">
+                        <div onclick="addToSlot(this, '米')" class="radical-box bg-gradient-to-br from-[#ffeaa7] to-[#fdcb6e] text-[#2d3436]" data-char="米">米</div>
+                        <div onclick="addToSlot(this, '唐')" class="radical-box bg-gradient-to-br from-[#74b9ff] to-[#0984e3]" data-char="唐">唐</div>
+                        <div onclick="addToSlot(this, '分')" class="radical-box bg-gradient-to-br from-[#55efc4] to-[#00b894]" data-char="分">分</div>
+                        <div onclick="addToSlot(this, '山')" class="radical-box bg-gradient-to-br from-[#a29bfe] to-[#6c5ce7]" data-char="山">山</div>
+                        <div onclick="addToSlot(this, '水')" class="radical-box bg-gradient-to-br from-[#81ecec] to-[#00cec9]" data-char="水">水</div>
+                    </div>
+
+                    <div id="addition-feedback" class="text-center text-2xl font-bold mt-6 min-h-[40px]"></div>
+                </div>
+
+                <div class="flex justify-center gap-2 mb-4" id="addition-progress">
+                    <div class="progress-dot active"></div>
+                    <div class="progress-dot"></div>
+                </div>
+
+                <div id="addition-hint" class="text-center mt-4">
+                    <p class="text-lg text-gray-500">💡 提示：米字旁加上另一個部分，想想課文裡的字！</p>
+                </div>
+
+                <div id="game2-complete" class="hidden text-center mt-8">
+                    <div class="text-6xl mb-4">🎊✨🎊</div>
+                    <p class="text-huge font-black text-[#6c5ce7] mb-6">加法識字高手！</p>
+                    <button onclick="playSound('complete'); earnStar(3); showSection('game3')" class="hand-drawn-btn px-10 py-5 bg-gradient-to-r from-[#ff7675] to-[#d63031] text-white text-huge font-black">
+                        ➡️ 下一個遊戲：偏旁找朋友
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- 遊戲3: 偏旁識字 -->
+        <section id="game3" class="game-section max-w-5xl mx-auto">
+            <div class="watercolor-card p-6 md:p-10 mb-6">
+                <h2 class="text-huge font-bold text-[#e17055] mb-4 text-center">🐟 偏旁找朋友</h2>
+                <p class="text-large text-center text-[#636e72] mb-6">哪些字有「魚」字旁？點擊它們！</p>
+
+                <div class="text-center mb-6">
+                    <div class="inline-block bg-gradient-to-br from-blue-400 to-blue-600 text-white text-5xl font-black px-8 py-4 rounded-2xl border-4 border-blue-800">
+                        魚
+                    </div>
+                    <p class="text-xl mt-3 text-blue-600 font-bold">魚字旁的字大多和魚有關哦！</p>
+                </div>
+
+                <div class="grid grid-cols-3 md:grid-cols-4 gap-4 mb-8" id="radical-grid">
+                    <div onclick="checkRadical(this, true)" class="character-card p-4 md:p-6 text-center cursor-pointer" data-fish="true">
+                        <p class="text-5xl md:text-6xl font-bold text-[#0984e3]">鰻</p>
+                        <p class="text-lg mt-2">鰻魚</p>
+                    </div>
+                    <div onclick="checkRadical(this, false)" class="character-card p-4 md:p-6 text-center cursor-pointer" data-fish="false">
+                        <p class="text-5xl md:text-6xl font-bold text-[#00b894]">糖</p>
+                        <p class="text-lg mt-2">糖果</p>
+                    </div>
+                    <div onclick="checkRadical(this, true)" class="character-card p-4 md:p-6 text-center cursor-pointer" data-fish="true">
+                        <p class="text-5xl md:text-6xl font-bold text-[#0984e3]">鮭</p>
+                        <p class="text-lg mt-2">鮭魚</p>
+                    </div>
+                    <div onclick="checkRadical(this, false)" class="character-card p-4 md:p-6 text-center cursor-pointer" data-fish="false">
+                        <p class="text-5xl md:text-6xl font-bold text-[#e17055]">粉</p>
+                        <p class="text-lg mt-2">米粉</p>
+                    </div>
+                    <div onclick="checkRadical(this, false)" class="character-card p-4 md:p-6 text-center cursor-pointer" data-fish="false">
+                        <p class="text-5xl md:text-6xl font-bold text-[#6c5ce7]">奶</p>
+                        <p class="text-lg mt-2">牛奶</p>
+                    </div>
+                    <div onclick="checkRadical(this, true)" class="character-card p-4 md:p-6 text-center cursor-pointer" data-fish="true">
+                        <p class="text-5xl md:text-6xl font-bold text-[#0984e3]">鯉</p>
+                        <p class="text-lg mt-2">鯉魚</p>
+                    </div>
+                    <div onclick="checkRadical(this, false)" class="character-card p-4 md:p-6 text-center cursor-pointer" data-fish="false">
+                        <p class="text-5xl md:text-6xl font-bold text-[#fdcb6e]">餅</p>
+                        <p class="text-lg mt-2">餅乾</p>
+                    </div>
+                    <div onclick="checkRadical(this, true)" class="character-card p-4 md:p-6 text-center cursor-pointer" data-fish="true">
+                        <p class="text-5xl md:text-6xl font-bold text-[#0984e3]">鮮</p>
+                        <p class="text-lg mt-2">新鮮</p>
+                    </div>
+                </div>
+
+                <div class="text-center mb-4">
+                    <p class="text-xl font-bold">找到的魚字旁字：<span id="fish-count" class="text-[#0984e3] text-3xl">0</span> / 4</p>
+                </div>
+
+                <div id="radical-feedback" class="text-center text-2xl font-bold mb-4 min-h-[40px]"></div>
+
+                <div id="game3-complete" class="hidden text-center">
+                    <div class="text-6xl mb-4">🏆🌟🏆</div>
+                    <p class="text-huge font-black text-[#e17055] mb-4">偏旁小博士！</p>
+                    <p class="text-xl text-gray-600 mb-6">你已經學會認識魚字旁的字了！</p>
+                    <button onclick="playSound('complete'); earnStar(4); showFinal()" class="hand-drawn-btn px-10 py-5 bg-gradient-to-r from-[#fdcb6e] to-[#ffa502] text-white text-huge font-black">
+                        🎯 看我的成績單！
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- 結算頁面 -->
+        <section id="final" class="game-section max-w-4xl mx-auto">
+            <div class="watercolor-card p-8 md:p-12 text-center">
+                <h2 class="text-huge font-black text-[#00b894] mb-8">🎉 學習完成！ 🎉</h2>
+                
+                <div class="text-8xl mb-6">👨‍🎓📚✨</div>
+                
+                <div class="bg-gradient-to-r from-yellow-100 to-orange-100 rounded-3xl p-8 mb-8 border-4 border-[#ffa502]">
+                    <p class="text-3xl font-bold mb-6">我得到的星星：</p>
+                    <div class="text-7xl mb-6" id="final-stars">
+                        ⭐⭐⭐⭐⭐
+                    </div>
+                    <p class="text-2xl text-[#e17055] font-bold" id="final-comment">你超棒的！</p>
+                </div>
+
+                <div class="grid md:grid-cols-2 gap-6 mb-8">
+                    <div class="hand-drawn bg-blue-50 p-6">
+                        <h3 class="text-2xl font-bold text-blue-600 mb-4">📖 我學會了</h3>
+                        <ul class="text-left text-xl space-y-2">
+                            <li>✅ 在生活中認識生字</li>
+                            <li>✅ 用加法組合識字</li>
+                            <li>✅ 認識魚字旁的字</li>
+                            <li>✅ 超級市場裡的常見字</li>
+                        </ul>
+                    </div>
+                    <div class="hand-drawn bg-pink-50 p-6">
+                        <h3 class="text-2xl font-bold text-pink-600 mb-4">💡 爸爸的話</h3>
+                        <p class="text-xl leading-relaxed">
+                            「生活裡處處能識字，你只要多注意，識字就很容易！」
+                        </p>
+                    </div>
+                </div>
+
+                <div class="flex flex-wrap justify-center gap-4">
+                    <button onclick="playSound('click'); resetGame(); showSection('intro')" class="hand-drawn-btn px-8 py-4 bg-[#74b9ff] text-white text-2xl font-bold">
+                        🔄 再玩一次
+                    </button>
+                    <button onclick="playSound('click'); showSection('story')" class="hand-drawn-btn px-8 py-4 bg-[#a29bfe] text-white text-2xl font-bold">
+                        📖 重讀課文
+                    </button>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <script>
+        // 音效系統
+        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        
+        function playSound(type) {
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+            
+            switch(type) {
+                case 'click':
+                    oscillator.frequency.setValueAtTime(800, audioContext.currentTime);
+                    oscillator.frequency.exponentialRampToValueAtTime(600, audioContext.currentTime + 0.1);
+                    gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.1);
+                    oscillator.start(audioContext.currentTime);
+                    oscillator.stop(audioContext.currentTime + 0.1);
+                    break;
+                case 'pop':
+                    oscillator.frequency.setValueAtTime(600, audioContext.currentTime);
+                    oscillator.frequency.exponentialRampToValueAtTime(900, audioContext.currentTime + 0.15);
+                    gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.15);
+                    oscillator.start(audioContext.currentTime);
+                    oscillator.stop(audioContext.currentTime + 0.15);
+                    break;
+                case 'correct':
+                    oscillator.frequency.setValueAtTime(523, audioContext.currentTime);
+                    oscillator.frequency.setValueAtTime(659, audioContext.currentTime + 0.1);
+                    oscillator.frequency.setValueAtTime(784, audioContext.currentTime + 0.2);
+                    gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.4);
+                    oscillator.start(audioContext.currentTime);
+                    oscillator.stop(audioContext.currentTime + 0.4);
+                    break;
+                case 'wrong':
+                    oscillator.frequency.setValueAtTime(300, audioContext.currentTime);
+                    oscillator.frequency.exponentialRampToValueAtTime(200, audioContext.currentTime + 0.3);
+                    gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
+                    oscillator.start(audioContext.currentTime);
+                    oscillator.stop(audioContext.currentTime + 0.3);
+                    break;
+                case 'complete':
+                    const notes = [523, 587, 659, 698, 784, 880, 988, 1047];
+                    notes.forEach((freq, i) => {
+                        const osc = audioContext.createOscillator();
+                        const gain = audioContext.createGain();
+                        osc.connect(gain);
+                        gain.connect(audioContext.destination);
+                        osc.frequency.setValueAtTime(freq, audioContext.currentTime + i * 0.1);
+                        gain.gain.setValueAtTime(0.2, audioContext.currentTime + i * 0.1);
+                        gain.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + i * 0.1 + 0.2);
+                        osc.start(audioContext.currentTime + i * 0.1);
+                        osc.stop(audioContext.currentTime + i * 0.1 + 0.2);
+                    });
+                    createConfetti();
+                    break;
+                case 'start':
+                    oscillator.frequency.setValueAtTime(400, audioContext.currentTime);
+                    oscillator.frequency.exponentialRampToValueAtTime(800, audioContext.currentTime + 0.3);
+                    gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
+                    oscillator.start(audioContext.currentTime);
+                    oscillator.stop(audioContext.currentTime + 0.3);
+                    break;
+            }
+        }
+
+        function createConfetti() {
+            const colors = ['#ff6b6b', '#feca57', '#48dbfb', '#ff9ff3', '#54a0ff', '#5f27cd', '#00d2d3', '#1dd1a1'];
+            for (let i = 0; i < 50; i++) {
+                setTimeout(() => {
+                    const confetti = document.createElement('div');
+                    confetti.className = 'confetti';
+                    confetti.style.left = Math.random() * 100 + 'vw';
+                    confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                    confetti.style.borderRadius = Math.random() > 0.5 ? '50%' : '0';
+                    document.body.appendChild(confetti);
+                    setTimeout(() => confetti.remove(), 3000);
+                }, i * 50);
+            }
+        }
+
+        // 語音朗讀
+        function speakText(element) {
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.cancel();
+                document.querySelectorAll('.reading-text').forEach(el => el.classList.remove('highlight'));
+                element.classList.add('highlight');
+                
+                const utterance = new SpeechSynthesisUtterance(element.textContent.trim());
+                utterance.lang = 'zh-CN';
+                utterance.rate = 0.8;
+                utterance.pitch = 1.1;
+                utterance.onend = () => {
+                    element.classList.remove('highlight');
+                };
+                window.speechSynthesis.speak(utterance);
+                playSound('click');
+            }
+        }
+
+        let isReading = false;
+        let readingQueue = [];
+
+        function toggleReading() {
+            if (isReading) {
+                stopReading();
+                return;
+            }
+            isReading = true;
+            document.getElementById('read-btn').textContent = '⏸️ 暫停朗讀';
+            const texts = ['text1', 'text2', 'text3', 'text4', 'text5', 'text6', 'text7'];
+            readNext(texts, 0);
+        }
+
+        function readNext(textIds, index) {
+            if (!isReading || index >= textIds.length) {
+                stopReading();
+                playSound('complete');
+                earnStar(1);
+                return;
+            }
+            const element = document.getElementById(textIds[index]);
+            document.querySelectorAll('.reading-text').forEach(el => el.classList.remove('highlight'));
+            element.classList.add('highlight');
+            
+            const utterance = new SpeechSynthesisUtterance(element.textContent.trim());
+            utterance.lang = 'zh-CN';
+            utterance.rate = 0.75;
+            utterance.pitch = 1.1;
+            utterance.onend = () => {
+                setTimeout(() => readNext(textIds, index + 1), 500);
+            };
+            window.speechSynthesis.speak(utterance);
+        }
+
+        function stopReading() {
+            isReading = false;
+            window.speechSynthesis.cancel();
+            document.getElementById('read-btn').textContent = '🔊 朗讀全文';
+            document.querySelectorAll('.reading-text').forEach(el => el.classList.remove('highlight'));
+        }
+
+        // 頁面切換
+        function showSection(sectionId) {
+            document.querySelectorAll('.game-section').forEach(s => s.classList.remove('active'));
+            document.getElementById(sectionId).classList.add('active');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        // 星星系統
+        let stars = 1;
+        function earnStar(num) {
+            if (num <= 5 && num > stars - 1) {
+                stars = num + 1;
+                for (let i = 1; i <= 5; i++) {
+                    const star = document.getElementById('star' + i);
+                    if (i <= stars) {
+                        setTimeout(() => {
+                            star.classList.add('earned');
+                        }, i * 200);
+                    }
+                }
+            }
+        }
+
+        // Q1 回答
+        function answerQ1(yes) {
+            playSound('correct');
+            const feedback = document.getElementById('q1-feedback');
+            feedback.classList.remove('hidden');
+            feedback.textContent = '太棒了！在超級市場可以認識好多好多生字哦！ 🎉';
+            feedback.classList.add('text-green-600');
+        }
+
+        // Q2 選擇
+        let q2Selected = 0;
+        function selectQ2Item(el) {
+            if (el.classList.contains('found')) return;
+            el.classList.add('found', 'bg-green-200');
+            q2Selected++;
+            playSound('pop');
+            const feedback = document.getElementById('q2-feedback');
+            if (q2Selected >= 4) {
+                feedback.textContent = '太厲害了！超級市場裡有這麼多東西可以學！ 🌟';
+                feedback.classList.add('text-green-600');
+                earnStar(0);
+            } else {
+                feedback.textContent = `好棒！繼續點選，你選了 ${q2Selected} 個！`;
+            }
+        }
+
+        // 遊戲1: 找一找
+        const findItems = ['牛奶', '餅乾', '糖果', '米粉', '鰻魚', '鮭魚'];
+        let currentFind = 0;
+        let foundItems = [];
+
+        function checkFind(el, itemName) {
+            if (foundItems.includes(itemName)) return;
+            
+            const target = findItems[currentFind];
+            if (itemName === target) {
+                playSound('correct');
+                el.classList.add('found', 'ring-4', 'ring-yellow-400', 'bg-yellow-100');
+                foundItems.push(itemName);
+                
+                document.getElementById('find-feedback').textContent = '太棒了！找到 ' + itemName + ' 了！ ✨';
+                document.getElementById('find-feedback').className = 'text-center text-2xl font-bold mb-4 min-h-[40px] text-green-600';
+                
+                // 更新進度
+                const dots = document.querySelectorAll('#find-progress .progress-dot');
+                dots[currentFind].classList.remove('active');
+                dots[currentFind].classList.add('completed');
+                
+                currentFind++;
+                if (currentFind < findItems.length) {
+                    dots[currentFind].classList.add('active');
+                    document.getElementById('find-target').textContent = findItems[currentFind];
+                } else {
+                    document.getElementById('find-task').classList.add('hidden');
+                    document.getElementById('game1-complete').classList.remove('hidden');
+                    playSound('complete');
+                }
+            } else {
+                playSound('wrong');
+                el.classList.add('ring-4', 'ring-red-400');
+                document.getElementById('find-feedback').textContent = '再找找看，不是這個哦！ 💪';
+                document.getElementById('find-feedback').className = 'text-center text-2xl font-bold mb-4 min-h-[40px] text-red-500';
+                setTimeout(() => el.classList.remove('ring-4', 'ring-red-400'), 500);
+            }
+        }
+
+        // 遊戲2: 加法識字
+        let addSlot1 = null;
+        let addSlot2 = null;
+        const additionQuestions = [
+            { parts: ['米', '唐'], result: '糖', hint: '糖果的糖' },
+            { parts: ['米', '分'], result: '粉', hint: '米粉的粉' }
+        ];
+        let currentAddition = 0;
+
+        function addToSlot(el, char) {
+            playSound('pop');
+            if (!addSlot1) {
+                addSlot1 = char;
+                document.getElementById('add-slot1').textContent = char;
+                document.getElementById('add-slot1').style.background = 'linear-gradient(145deg, #ffeaa7, #fdcb6e)';
+                el.style.opacity = '0.5';
+                el.style.pointerEvents = 'none';
+            } else if (!addSlot2) {
+                addSlot2 = char;
+                document.getElementById('add-slot2').textContent = char;
+                document.getElementById('add-slot2').style.background = 'linear-gradient(145deg, #74b9ff, #0984e3)';
+                document.getElementById('add-slot2').style.color = 'white';
+                el.style.opacity = '0.5';
+                el.style.pointerEvents = 'none';
+                checkAddition();
+            }
+        }
+
+        function removeFromSlot(slot) {
+            playSound('click');
+            if (slot === 1 && addSlot1) {
+                const char = addSlot1;
+                addSlot1 = null;
+                document.getElementById('add-slot1').textContent = '';
+                document.getElementById('add-slot1').style.background = 'rgba(253, 203, 110, 0.2)';
+                document.querySelectorAll('#addition-parts .radical-box').forEach(el => {
+                    if (el.dataset.char === char) {
+                        el.style.opacity = '1';
+                        el.style.pointerEvents = 'auto';
+                    }
+                });
+                document.getElementById('add-result').textContent = '?';
+                document.getElementById('add-result').style.color = '#00b894';
+            } else if (slot === 2 && addSlot2) {
+                const char = addSlot2;
+                addSlot2 = null;
+                document.getElementById('add-slot2').textContent = '';
+                document.getElementById('add-slot2').style.background = 'rgba(253, 203, 110, 0.2)';
+                document.getElementById('add-slot2').style.color = 'inherit';
+                document.querySelectorAll('#addition-parts .radical-box').forEach(el => {
+                    if (el.dataset.char === char) {
+                        el.style.opacity = '1';
+                        el.style.pointerEvents = 'auto';
+                    }
+                });
+                document.getElementById('add-result').textContent = '?';
+                document.getElementById('add-result').style.color = '#00b894';
+            }
+        }
+
+        function checkAddition() {
+            const q = additionQuestions[currentAddition];
+            const resultBox = document.getElementById('add-result');
+            
+            if ((addSlot1 === q.parts[0] && addSlot2 === q.parts[1]) ||
+                (addSlot1 === q.parts[1] && addSlot2 === q.parts[0])) {
+                playSound('correct');
+                resultBox.textContent = q.result;
+                resultBox.style.background = 'linear-gradient(145deg, #a8e6cf, #88d8b0)';
+                resultBox.style.fontSize = '4rem';
+                document.getElementById('addition-feedback').textContent = '答對了！' + q.parts.join('+') + '=' + q.result + '，' + q.hint + '！ 🎉';
+                document.getElementById('addition-feedback').className = 'text-center text-2xl font-bold mt-6 min-h-[40px] text-green-600';
+                
+                setTimeout(() => {
+                    currentAddition++;
+                    if (currentAddition < additionQuestions.length) {
+                        // 下一題
+                        const dots = document.querySelectorAll('#addition-progress .progress-dot');
+                        dots[currentAddition - 1].classList.remove('active');
+                        dots[currentAddition - 1].classList.add('completed');
+                        dots[currentAddition].classList.add('active');
+                        
+                        resetAdditionGame();
+                        document.getElementById('addition-target').textContent = additionQuestions[currentAddition].hint;
+                    } else {
+                        document.getElementById('addition-hint').classList.add('hidden');
+                        document.getElementById('addition-game').classList.add('hidden');
+                        document.getElementById('game2-complete').classList.remove('hidden');
+                        playSound('complete');
+                    }
+                }, 1500);
+            } else {
+                playSound('wrong');
+                document.getElementById('addition-feedback').textContent = '不對哦，再試試看！ 💪';
+                document.getElementById('addition-feedback').className = 'text-center text-2xl font-bold mt-6 min-h-[40px] text-red-500';
+                setTimeout(() => {
+                    removeFromSlot(2);
+                }, 800);
+            }
+        }
+
+        function resetAdditionGame() {
+            addSlot1 = null;
+            addSlot2 = null;
+            document.getElementById('add-slot1').textContent = '';
+            document.getElementById('add-slot1').style.background = 'rgba(253, 203, 110, 0.2)';
+            document.getElementById('add-slot2').textContent = '';
+            document.getElementById('add-slot2').style.background = 'rgba(253, 203, 110, 0.2)';
+            document.getElementById('add-slot2').style.color = 'inherit';
+            document.getElementById('add-result').textContent = '?';
+            document.getElementById('add-result').style.background = 'rgba(253, 203, 110, 0.2)';
+            document.getElementById('add-result').style.fontSize = '3rem';
+            document.getElementById('addition-feedback').textContent = '';
+            document.querySelectorAll('#addition-parts .radical-box').forEach(el => {
+                el.style.opacity = '1';
+                el.style.pointerEvents = 'auto';
+            });
+        }
+
+        // 遊戲3: 偏旁找朋友
+        let fishFound = 0;
+        const totalFish = 4;
+
+        function checkRadical(el, isFish) {
+            if (el.classList.contains('correct') || el.classList.contains('wrong')) return;
+            
+            if (isFish) {
+                playSound('correct');
+                el.classList.add('correct');
+                fishFound++;
+                document.getElementById('fish-count').textContent = fishFound;
+                document.getElementById('radical-feedback').textContent = '太棒了！這是魚字旁的字！ 🐟';
+                document.getElementById('radical-feedback').className = 'text-center text-2xl font-bold mb-4 min-h-[40px] text-green-600';
+                
+                if (fishFound >= totalFish) {
+                    setTimeout(() => {
+                        document.getElementById('game3-complete').classList.remove('hidden');
+                        playSound('complete');
+                    }, 500);
+                }
+            } else {
+                playSound('wrong');
+                el.classList.add('wrong');
+                document.getElementById('radical-feedback').textContent = '這個不是魚字旁哦，再看看！ 👀';
+                document.getElementById('radical-feedback').className = 'text-center text-2xl font-bold mb-4 min-h-[40px] text-red-500';
+                setTimeout(() => el.classList.remove('wrong'), 800);
+            }
+        }
+
+        // 最終頁面
+        function showFinal() {
+            showSection('final');
+            earnStar(5);
+            const finalStars = document.getElementById('final-stars');
+            const finalComment = document.getElementById('final-comment');
+            
+            if (stars >= 5) {
+                finalComment.textContent = '你是識字小天才！老師以你為榮！ 🏆';
+            } else if (stars >= 3) {
+                finalComment.textContent = '表現很棒！繼續加油！ 🌟';
+            } else {
+                finalComment.textContent = '不錯哦，多練習會更棒！ 💪';
+            }
+        }
+
+        // 重置遊戲
+        function resetGame() {
+            stars = 1;
+            currentFind = 0;
+            foundItems = [];
+            currentAddition = 0;
+            fishFound = 0;
+            q2Selected = 0;
+            addSlot1 = null;
+            addSlot2 = null;
+            
+            // 重置星星
+            for (let i = 1; i <= 5; i++) {
+                document.getElementById('star' + i).classList.remove('earned');
+            }
+            document.getElementById('star1').classList.add('earned');
+            
+            // 重置Q2
+            document.querySelectorAll('#q2-items .shelf-item').forEach(el => {
+                el.classList.remove('found', 'bg-green-200');
+            });
+            document.getElementById('q1-feedback').classList.add('hidden');
+            document.getElementById('q2-feedback').textContent = '';
+            
+            // 重置遊戲1
+            document.querySelectorAll('[data-name]').forEach(el => {
+                el.classList.remove('found', 'ring-4', 'ring-yellow-400', 'bg-yellow-100', 'ring-red-400');
+            });
+            document.getElementById('find-target').textContent = findItems[0];
+            document.getElementById('find-task').classList.remove('hidden');
+            document.getElementById('game1-complete').classList.add('hidden');
+            document.getElementById('find-feedback').textContent = '';
+            document.querySelectorAll('#find-progress .progress-dot').forEach((dot, i) => {
+                dot.classList.remove('active', 'completed');
+                if (i === 0) dot.classList.add('active');
+            });
+            
+            // 重置遊戲2
+            resetAdditionGame();
+            document.getElementById('addition-target').textContent = additionQuestions[0].hint;
+            document.getElementById('addition-hint').classList.remove('hidden');
+            document.getElementById('addition-game').classList.remove('hidden');
+            document.getElementById('game2-complete').classList.add('hidden');
+            document.querySelectorAll('#addition-progress .progress-dot').forEach((dot, i) => {
+                dot.classList.remove('active', 'completed');
+                if (i === 0) dot.classList.add('active');
+            });
+            
+            // 重置遊戲3
+            document.querySelectorAll('.character-card').forEach(el => {
+                el.classList.remove('correct', 'wrong', 'selected');
+            });
+            document.getElementById('fish-count').textContent = '0';
+            document.getElementById('radical-feedback').textContent = '';
+            document.getElementById('game3-complete').classList.add('hidden');
+        }
+
+        // 初始化
+        document.addEventListener('DOMContentLoaded', () => {
+            // 預熱語音引擎
+            if ('speechSynthesis' in window) {
+                const empty = new SpeechSynthesisUtterance('');
+                window.speechSynthesis.speak(empty);
+            }
+        });
+    </script>
+</body>
+</html>

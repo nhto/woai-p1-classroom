@@ -1,0 +1,1316 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>青字歌 - 情景互動識字遊戲</title>
+    <script src="https://aisearch-task.bj.bcebos.com/static/tailwindcss-3.4.17.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&family=ZCOOL+KuaiLe&display=swap');
+        
+        * {
+            font-family: 'ZCOOL KuaiLe', 'Noto Sans TC', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(180deg, #87CEEB 0%, #B0E0E6 30%, #F0F9E8 60%, #E8F5D8 100%);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+        
+        .watercolor-bg {
+            background-image: 
+                radial-gradient(ellipse at 20% 80%, rgba(144, 238, 144, 0.3) 0%, transparent 50%),
+                radial-gradient(ellipse at 80% 20%, rgba(255, 218, 185, 0.3) 0%, transparent 50%),
+                radial-gradient(ellipse at 50% 50%, rgba(255, 255, 224, 0.2) 0%, transparent 70%);
+        }
+        
+        .card-watercolor {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(10px);
+            border: 4px solid rgba(255, 255, 255, 0.9);
+            box-shadow: 
+                0 8px 32px rgba(34, 139, 34, 0.15),
+                inset 0 0 60px rgba(255, 255, 255, 0.5);
+            border-radius: 30px;
+        }
+        
+        .btn-watercolor {
+            background: linear-gradient(135deg, #7CCD7C 0%, #45B845 50%, #3CB371 100%);
+            border: 4px solid #fff;
+            box-shadow: 0 6px 0 #2E8B57, 0 8px 20px rgba(46, 139, 87, 0.3);
+            transition: all 0.15s ease;
+        }
+        
+        .btn-watercolor:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 0 #2E8B57, 0 12px 25px rgba(46, 139, 87, 0.4);
+        }
+        
+        .btn-watercolor:active {
+            transform: translateY(4px);
+            box-shadow: 0 2px 0 #2E8B57, 0 4px 10px rgba(46, 139, 87, 0.3);
+        }
+        
+        .nav-btn {
+            transition: all 0.2s ease;
+            position: relative;
+        }
+        
+        .nav-btn.active {
+            transform: scale(1.15) translateY(-2px);
+            filter: brightness(1.15) saturate(1.3);
+            outline: 4px solid #FFD700;
+            outline-offset: 2px;
+        }
+        
+        .nav-btn.active::after {
+            content: '✓';
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            background: #FFD700;
+            color: #fff;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            font-weight: bold;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+        }
+        
+        .btn-yellow {
+            background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
+            box-shadow: 0 6px 0 #E69500, 0 8px 20px rgba(255, 165, 0, 0.3);
+        }
+        
+        .btn-yellow:hover {
+            box-shadow: 0 8px 0 #E69500, 0 12px 25px rgba(255, 165, 0, 0.4);
+        }
+        
+        .btn-yellow:active {
+            box-shadow: 0 2px 0 #E69500, 0 4px 10px rgba(255, 165, 0, 0.3);
+        }
+        
+        .btn-blue {
+            background: linear-gradient(135deg, #87CEEB 0%, #4169E1 100%);
+            box-shadow: 0 6px 0 #2E4BA8, 0 8px 20px rgba(65, 105, 225, 0.3);
+        }
+        
+        .btn-blue:hover {
+            box-shadow: 0 8px 0 #2E4BA8, 0 12px 25px rgba(65, 105, 225, 0.4);
+        }
+        
+        .btn-pink {
+            background: linear-gradient(135deg, #FFB6C1 0%, #FF69B4 100%);
+            box-shadow: 0 6px 0 #DB4A8B, 0 8px 20px rgba(255, 105, 180, 0.3);
+        }
+        
+        .btn-pink:hover {
+            box-shadow: 0 8px 0 #DB4A8B, 0 12px 25px rgba(255, 105, 180, 0.4);
+        }
+        
+        .poem-text {
+            font-size: clamp(1.8rem, 5vw, 3rem);
+            line-height: 2;
+            letter-spacing: 0.1em;
+        }
+        
+        .char-highlight {
+            color: #228B22;
+            font-weight: 900;
+            text-shadow: 2px 2px 0 #98FB98;
+            position: relative;
+        }
+        
+        .char-highlight::after {
+            content: '';
+            position: absolute;
+            bottom: -5px;
+            left: 0;
+            width: 100%;
+            height: 8px;
+            background: linear-gradient(90deg, #7CCD7C, #98FB98);
+            border-radius: 4px;
+            opacity: 0.6;
+        }
+        
+        .scene-image {
+            border-radius: 25px;
+            border: 6px solid #fff;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+            transition: transform 0.3s ease;
+        }
+        
+        .scene-image:hover {
+            transform: scale(1.02) rotate(1deg);
+        }
+        
+        .frog-bounce {
+            animation: frogBounce 2s ease-in-out infinite;
+        }
+        
+        @keyframes frogBounce {
+            0%, 100% { transform: translateY(0) rotate(-2deg); }
+            50% { transform: translateY(-15px) rotate(2deg); }
+        }
+        
+        .cloud-float {
+            animation: cloudFloat 8s ease-in-out infinite;
+        }
+        
+        @keyframes cloudFloat {
+            0%, 100% { transform: translateX(0); }
+            50% { transform: translateX(20px); }
+        }
+        
+        .sun-pulse {
+            animation: sunPulse 3s ease-in-out infinite;
+        }
+        
+        @keyframes sunPulse {
+            0%, 100% { transform: scale(1); filter: drop-shadow(0 0 20px rgba(255,200,0,0.5)); }
+            50% { transform: scale(1.05); filter: drop-shadow(0 0 40px rgba(255,200,0,0.8)); }
+        }
+        
+        .water-ripple {
+            animation: ripple 3s ease-in-out infinite;
+        }
+        
+        @keyframes ripple {
+            0%, 100% { opacity: 0.6; }
+            50% { opacity: 1; }
+        }
+        
+        .char-card {
+            background: linear-gradient(135deg, #FFF8DC 0%, #FFEFD5 100%);
+            border: 5px solid #fff;
+            border-radius: 20px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .char-card:hover {
+            transform: translateY(-8px) rotate(2deg);
+            box-shadow: 0 15px 35px rgba(34,139,34,0.2);
+        }
+        
+        .char-card.selected {
+            background: linear-gradient(135deg, #98FB98 0%, #7CCD7C 100%);
+            border-color: #228B22;
+            transform: scale(1.1);
+        }
+        
+        .char-card.correct {
+            background: linear-gradient(135deg, #90EE90 0%, #32CD32 100%);
+            animation: correctPop 0.5s ease;
+        }
+        
+        .char-card.wrong {
+            background: linear-gradient(135deg, #FFB6C1 0%, #FF6B6B 100%);
+            animation: wrongShake 0.5s ease;
+        }
+        
+        @keyframes correctPop {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.2); }
+        }
+        
+        @keyframes wrongShake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
+        }
+        
+        .radical-box {
+            background: linear-gradient(135deg, #FFE4B5 0%, #FFDAB9 100%);
+            border: 5px solid #FF8C00;
+            border-radius: 20px;
+        }
+        
+        .progress-dot {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #ddd;
+            border: 3px solid #fff;
+            transition: all 0.3s ease;
+        }
+        
+        .progress-dot.active {
+            background: #4CAF50;
+            transform: scale(1.3);
+            box-shadow: 0 0 15px rgba(76,175,80,0.5);
+        }
+        
+        .progress-dot.completed {
+            background: #81C784;
+        }
+        
+        .modal-overlay {
+            background: rgba(0,0,0,0.5);
+            backdrop-filter: blur(5px);
+        }
+        
+        .star {
+            font-size: 3rem;
+            animation: starPop 0.5s ease forwards;
+            opacity: 0;
+        }
+        
+        @keyframes starPop {
+            0% { transform: scale(0) rotate(-180deg); opacity: 0; }
+            50% { transform: scale(1.3) rotate(10deg); }
+            100% { transform: scale(1) rotate(0deg); opacity: 1; }
+        }
+        
+        .confetti {
+            position: fixed;
+            font-size: 2rem;
+            animation: confettiFall 3s ease-out forwards;
+            pointer-events: none;
+            z-index: 1000;
+        }
+        
+        @keyframes confettiFall {
+            0% { transform: translateY(-100vh) rotate(0deg); opacity: 1; }
+            100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
+        }
+        
+        .reading-highlight {
+            background: linear-gradient(180deg, transparent 60%, #FFD700 60%);
+            padding: 0 5px;
+            border-radius: 5px;
+        }
+        
+        .sound-btn {
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .sound-btn:hover {
+            transform: scale(1.1);
+        }
+        
+        .sound-btn:active {
+            transform: scale(0.95);
+        }
+        
+        .lotus-leaf {
+            position: absolute;
+            opacity: 0.7;
+        }
+        
+        .dragonfly {
+            position: absolute;
+            animation: dragonflyFly 10s linear infinite;
+        }
+        
+        @keyframes dragonflyFly {
+            0% { transform: translate(0, 0) rotate(15deg); }
+            25% { transform: translate(100px, -30px) rotate(-10deg); }
+            50% { transform: translate(200px, 20px) rotate(5deg); }
+            75% { transform: translate(100px, -20px) rotate(-15deg); }
+            100% { transform: translate(0, 0) rotate(15deg); }
+        }
+        
+        .page {
+            display: none;
+            min-height: calc(100vh - 100px);
+            padding: 20px;
+        }
+        
+        .page.active {
+            display: block;
+            animation: fadeIn 0.5s ease;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .hint-bubble {
+            background: #fff;
+            border: 3px solid #87CEEB;
+            border-radius: 20px;
+            padding: 15px 25px;
+            position: relative;
+            box-shadow: 0 5px 20px rgba(135,206,235,0.3);
+        }
+        
+        .hint-bubble::after {
+            content: '';
+            position: absolute;
+            bottom: -15px;
+            left: 50px;
+            border: 10px solid transparent;
+            border-top-color: #87CEEB;
+        }
+        
+        .quiz-option {
+            background: linear-gradient(135deg, #fff 0%, #f8f8f8 100%);
+            border: 4px solid #e0e0e0;
+            border-radius: 20px;
+            padding: 20px;
+            margin: 10px 0;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: clamp(1.3rem, 4vw, 2rem);
+        }
+        
+        .quiz-option:hover {
+            border-color: #7CCD7C;
+            background: linear-gradient(135deg, #f0fff0 0%, #e8f5e8 100%);
+            transform: translateX(10px);
+        }
+        
+        .quiz-option.correct-answer {
+            background: linear-gradient(135deg, #90EE90 0%, #32CD32 100%);
+            border-color: #228B22;
+            color: #fff;
+        }
+        
+        .quiz-option.wrong-answer {
+            background: linear-gradient(135deg, #FFB6C1 0%, #FF6B6B 100%);
+            border-color: #DC143C;
+            color: #fff;
+        }
+        
+        @media (max-width: 768px) {
+            .poem-text {
+                font-size: clamp(1.5rem, 6vw, 2rem);
+                line-height: 1.8;
+            }
+            .sound-btn {
+                width: 60px;
+                height: 60px;
+                font-size: 1.8rem;
+            }
+        }
+    </style>
+</head>
+<body class="watercolor-bg">
+    <!-- 装饰元素 -->
+    <div class="fixed top-10 left-10 text-8xl sun-pulse opacity-80 pointer-events-none z-0">☀️</div>
+    <div class="fixed top-20 right-20 text-6xl cloud-float opacity-70 pointer-events-none z-0">☁️</div>
+    <div class="fixed top-40 right-40 text-5xl cloud-float opacity-60 pointer-events-none z-0" style="animation-delay: 2s;">☁️</div>
+    <div class="fixed bottom-20 left-5 text-5xl lotus-leaf water-ripple pointer-events-none z-0">🍃</div>
+    <div class="fixed bottom-10 right-10 text-6xl lotus-leaf water-ripple pointer-events-none z-0" style="animation-delay: 1s;">🌿</div>
+    <div class="fixed top-1/3 left-5 text-4xl dragonfly pointer-events-none z-0">🦋</div>
+
+    <!-- 顶部导航栏 -->
+    <nav class="sticky top-0 z-50 bg-white/80 backdrop-blur-md shadow-lg">
+        <div class="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
+            <h1 class="text-2xl md:text-4xl font-bold text-green-700 flex items-center gap-2">
+                <span class="frog-bounce inline-block">🐸</span>
+                青字歌
+            </h1>
+            <div class="flex gap-2 md:gap-4">
+                <button onclick="goToPage('scene1'); this.classList.add('active')" class="nav-btn btn-watercolor text-white px-3 md:px-6 py-2 md:py-3 rounded-full text-base md:text-xl font-bold">
+                    📖 故事
+                </button>
+                <button onclick="goToPage('reading'); this.classList.add('active')" class="nav-btn btn-yellow text-white px-3 md:px-6 py-2 md:py-3 rounded-full text-base md:text-xl font-bold">
+                    🔊 朗讀
+                </button>
+                <button onclick="goToPage('game'); this.classList.add('active'); startGame();" class="nav-btn btn-pink text-white px-3 md:px-6 py-2 md:py-3 rounded-full text-base md:text-xl font-bold">
+                    🎮 識字
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- 进度指示器 -->
+    <div class="flex justify-center gap-3 py-4 z-10 relative">
+        <div class="progress-dot active" id="dot-0"></div>
+        <div class="progress-dot" id="dot-1"></div>
+        <div class="progress-dot" id="dot-2"></div>
+        <div class="progress-dot" id="dot-3"></div>
+        <div class="progress-dot" id="dot-4"></div>
+    </div>
+
+    <main class="max-w-6xl mx-auto relative z-10 pb-20">
+        
+        <!-- 第1页：封面 -->
+        <div class="page active" id="page-cover">
+            <div class="flex flex-col items-center justify-center min-h-[70vh]">
+                <div class="card-watercolor p-8 md:p-12 text-center w-full max-w-3xl">
+                    <div class="text-8xl md:text-9xl mb-6 frog-bounce">🐸</div>
+                    <h2 class="text-5xl md:text-7xl font-black text-green-600 mb-6">青字歌</h2>
+                    <p class="text-xl md:text-2xl text-green-700 mb-8 leading-relaxed">
+                        一起來和小青蛙學習<br>
+                        「青」字家族的漢字吧！
+                    </p>
+                    <div class="flex flex-col gap-4 items-center">
+                        <button onclick="startStory()" class="btn-watercolor text-white text-2xl md:text-3xl px-10 py-5 rounded-full font-bold">
+                            🎬 開始故事
+                        </button>
+                        <div class="flex gap-4 mt-4">
+                            <button onclick="goToPage('reading')" class="btn-yellow text-white text-lg md:text-xl px-6 py-3 rounded-full font-bold">
+                                🔊 直接朗讀
+                            </button>
+                            <button onclick="goToPage('game')" class="btn-blue text-white text-lg md:text-xl px-6 py-3 rounded-full font-bold">
+                                🎮 識字遊戲
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="flex gap-8 mt-10 text-5xl md:text-6xl">
+                    <span class="frog-bounce" style="animation-delay: 0s;">🌿</span>
+                    <span class="frog-bounce" style="animation-delay: 0.3s;">🪷</span>
+                    <span class="frog-bounce" style="animation-delay: 0.6s;">🦋</span>
+                    <span class="frog-bounce" style="animation-delay: 0.9s;">🌸</span>
+                    <span class="frog-bounce" style="animation-delay: 1.2s;">🐸</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- 第2页：情景互动 - 河水清清 -->
+        <div class="page" id="page-scene1">
+            <div class="grid md:grid-cols-2 gap-8 items-center">
+                <div class="card-watercolor p-6 md:p-8">
+                    <div class="hint-bubble mb-6 inline-block">
+                        <p class="text-lg md:text-xl text-blue-600">👆 點擊圖片聽聲音，找找看「青」在哪裡？</p>
+                    </div>
+                    
+                    <div class="relative">
+                        <img src="https://skillagent.bj.bcebos.com/sandbox_exports/20261019/53c719a_qwen_1792371352340333580_1.png?responseContentDisposition=attachment%3B+filename%3D%22qwen_1792371352340333580_1.png" 
+                             alt="河水清清天氣晴" 
+                             class="scene-image w-full cursor-pointer"
+                             onclick="playSound('water'); showChar('清', '氵')">
+                        
+                        <div class="sound-btn btn-blue absolute bottom-4 right-4" onclick="playSound('water'); event.stopPropagation();">
+                            🔊
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card-watercolor p-6 md:p-10">
+                    <div class="poem-text text-center mb-6">
+                        <p>河水<span class="char-highlight" onclick="playSound('char-qing1')">清</span><span class="char-highlight">清</span>天氣<span class="char-highlight" onclick="playSound('char-qing2')">晴</span>，</p>
+                    </div>
+                    
+                    <div class="bg-green-50 rounded-2xl p-6 mb-6">
+                        <h3 class="text-2xl font-bold text-green-700 mb-4">💡 找一找：</h3>
+                        <p class="text-xl text-gray-700 mb-4">點擊顏色標註的字，它們都有一個共同的部分——</p>
+                        <div class="text-center">
+                            <span class="inline-block radical-box text-6xl md:text-8xl font-black text-orange-600 px-8 py-4">青</span>
+                        </div>
+                        <p class="text-lg text-center mt-4 text-gray-600">
+                            「清」加了三點水「氵」和水有關<br>
+                            「晴」加了日字旁「日」和太陽有關
+                        </p>
+                    </div>
+                    
+                    <div class="flex justify-center gap-4">
+                        <button onclick="prevPage()" class="btn-watercolor text-white text-xl px-8 py-4 rounded-full font-bold">
+                            ⬅️ 上一頁
+                        </button>
+                        <button onclick="nextPage()" class="btn-watercolor text-white text-xl px-8 py-4 rounded-full font-bold">
+                            下一頁 ➡️
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 第3页：情景互动 - 小青蛙唱歌 -->
+        <div class="page" id="page-scene2">
+            <div class="grid md:grid-cols-2 gap-8 items-center">
+                <div class="card-watercolor p-6 md:p-8">
+                    <div class="hint-bubble mb-6 inline-block">
+                        <p class="text-lg md:text-xl text-blue-600">👆 點青蛙聽牠唱歌！</p>
+                    </div>
+                    
+                    <div class="relative">
+                        <img src="https://skillagent.bj.bcebos.com/sandbox_exports/20261019/8b6f25b_qwen_1792371368687520419_1.png?responseContentDisposition=attachment%3B+filename%3D%22qwen_1792371368687520419_1.png" 
+                             alt="小青蛙好心情" 
+                             class="scene-image w-full cursor-pointer"
+                             onclick="playSound('frog'); showChar('情', '忄')">
+                        
+                        <div class="sound-btn btn-yellow absolute bottom-4 right-4" onclick="playSound('frog'); event.stopPropagation();">
+                            🐸
+                        </div>
+                    </div>
+                    
+                    <div class="flex justify-center gap-4 mt-4 text-4xl">
+                        <span class="frog-bounce" style="animation-delay: 0s;">🎵</span>
+                        <span class="frog-bounce" style="animation-delay: 0.2s;">🎶</span>
+                        <span class="frog-bounce" style="animation-delay: 0.4s;">🎵</span>
+                        <span class="frog-bounce" style="animation-delay: 0.6s;">🎶</span>
+                    </div>
+                </div>
+                
+                <div class="card-watercolor p-6 md:p-10">
+                    <div class="poem-text text-center mb-6">
+                        <p>小小<span class="char-highlight" onclick="playSound('char-qing')">青</span><span class="char-highlight" onclick="playSound('char-wa')">蛙</span>好心<span class="char-highlight" onclick="playSound('char-qing3')">情</span>，</p>
+                        <p>呱呱呱呱叫不停。</p>
+                    </div>
+                    
+                    <div class="bg-yellow-50 rounded-2xl p-6 mb-6">
+                        <h3 class="text-2xl font-bold text-orange-700 mb-4">💡 想一想：</h3>
+                        <p class="text-xl text-gray-700 mb-4">小青蛙今天心情很好哦！</p>
+                        <div class="flex justify-center gap-4 mb-4">
+                            <div class="text-center">
+                                <div class="radical-box text-5xl font-black text-orange-600 px-6 py-3">情</div>
+                                <p class="text-lg mt-2">心情、感情</p>
+                            </div>
+                            <div class="text-4xl flex items-center">=</div>
+                            <div class="text-center">
+                                <div class="bg-red-100 border-4 border-red-300 rounded-xl text-5xl font-black text-red-600 px-4 py-3">忄</div>
+                                <p class="text-lg mt-2">豎心旁<br>和心情有關</p>
+                            </div>
+                            <div class="text-4xl flex items-center">+</div>
+                            <div class="text-center">
+                                <div class="radical-box text-5xl font-black text-orange-600 px-4 py-3">青</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="quiz-option" onclick="checkQuiz(this, true)">
+                        🤔 「心情」的「情」為什麼是豎心旁？
+                        <span class="text-green-600 text-lg block mt-2">點擊看答案</span>
+                    </div>
+                    
+                    <div class="flex justify-center gap-4 mt-6">
+                        <button onclick="prevPage()" class="btn-watercolor text-white text-xl px-8 py-4 rounded-full font-bold">
+                            ⬅️ 上一頁
+                        </button>
+                        <button onclick="nextPage()" class="btn-watercolor text-white text-xl px-8 py-4 rounded-full font-bold">
+                            下一頁 ➡️
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 第4页：情景互动 - 瞪大眼睛 -->
+        <div class="page" id="page-scene3">
+            <div class="grid md:grid-cols-2 gap-8 items-center">
+                <div class="card-watercolor p-6 md:p-8">
+                    <div class="hint-bubble mb-6 inline-block">
+                        <p class="text-lg md:text-xl text-blue-600">👆 發生什麼事了？小青蛙為什麼安靜了？</p>
+                    </div>
+                    
+                    <div class="relative">
+                        <img src="https://skillagent.bj.bcebos.com/sandbox_exports/20261019/895c35c_qwen_1792371383672306491_1.png?responseContentDisposition=attachment%3B+filename%3D%22qwen_1792371383672306491_1.png" 
+                             alt="瞪大眼睛很安靜" 
+                             class="scene-image w-full cursor-pointer"
+                             onclick="playSound('surprise'); showChar('睛', '目')">
+                        
+                        <div class="sound-btn btn-pink absolute bottom-4 right-4" onclick="playSound('surprise'); event.stopPropagation();">
+                            ❓
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card-watercolor p-6 md:p-10">
+                    <div class="poem-text text-center mb-6">
+                        <p>忽然間，</p>
+                        <p>小<span class="char-highlight" onclick="playSound('char-qing')">青</span>蛙，</p>
+                        <p>瞪大眼<span class="char-highlight" onclick="playSound('char-qing4')">睛</span>很安靜。</p>
+                        <p>小朋友，請猜猜，</p>
+                        <p>發生<span class="char-highlight" onclick="playSound('char-shen')">甚</span>麼大事情？</p>
+                    </div>
+                    
+                    <div class="bg-pink-50 rounded-2xl p-6 mb-6">
+                        <h3 class="text-2xl font-bold text-pink-700 mb-4">💡 猜一猜：</h3>
+                        <p class="text-xl text-gray-700 mb-4">「眼睛」的「睛」是什麼部首呢？</p>
+                        <div class="flex justify-center gap-4">
+                            <div class="text-center">
+                                <div class="radical-box text-5xl font-black text-orange-600 px-6 py-3">睛</div>
+                                <p class="text-lg mt-2">眼睛</p>
+                            </div>
+                            <div class="text-4xl flex items-center">=</div>
+                            <div class="text-center">
+                                <div class="bg-blue-100 border-4 border-blue-300 rounded-xl text-5xl font-black text-blue-600 px-4 py-3">目</div>
+                                <p class="text-lg mt-2">目字旁<br>和眼睛有關</p>
+                            </div>
+                            <div class="text-4xl flex items-center">+</div>
+                            <div class="text-center">
+                                <div class="radical-box text-5xl font-black text-orange-600 px-4 py-3">青</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-blue-50 rounded-2xl p-4 mb-4">
+                        <p class="text-lg text-blue-700 text-center">
+                            🎯 原來小青蛙看見了害蟲！牠正準備捕捉害蟲，保護莊稼呢！
+                        </p>
+                    </div>
+                    
+                    <div class="flex justify-center gap-4">
+                        <button onclick="prevPage()" class="btn-watercolor text-white text-xl px-8 py-4 rounded-full font-bold">
+                            ⬅️ 上一頁
+                        </button>
+                        <button onclick="nextPage()" class="btn-watercolor text-white text-xl px-8 py-4 rounded-full font-bold">
+                            去朗讀 ➡️
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 朗读页面 -->
+        <div class="page" id="page-reading">
+            <div class="card-watercolor p-6 md:p-12">
+                <div class="text-center mb-8">
+                    <h2 class="text-4xl md:text-5xl font-black text-green-700 mb-4">🔊 普通話朗讀</h2>
+                    <p class="text-xl text-gray-600">跟著一起讀，注意「青」字家族的讀音哦！</p>
+                </div>
+                
+                <div class="bg-gradient-to-br from-green-50 to-blue-50 rounded-3xl p-8 md:p-12 mb-8 relative overflow-hidden">
+                    <div class="absolute top-4 right-4 text-6xl opacity-20">🐸</div>
+                    <div class="absolute bottom-4 left-4 text-5xl opacity-20">🌿</div>
+                    
+                    <div class="poem-text text-center text-gray-800 relative z-10" id="poem-content">
+                        <p class="mb-4" id="line-0">河水清清天氣晴，</p>
+                        <p class="mb-4" id="line-1">小小青<span class="char-highlight" onclick="speakChar('蛙'); event.stopPropagation();">蛙</span>好心情，</p>
+                        <p class="mb-4" id="line-2">呱呱呱呱叫不停。</p>
+                        <p class="mb-4" id="line-3">忽然間，</p>
+                        <p class="mb-4" id="line-4">小青蛙，</p>
+                        <p class="mb-4" id="line-5">瞪大眼睛很安靜。</p>
+                        <p class="mb-4" id="line-6">小朋友，請猜猜，</p>
+                        <p id="line-7">發生<span class="char-highlight" onclick="speakChar('甚'); event.stopPropagation();">甚</span>麼大事情？</p>
+                    </div>
+                </div>
+                
+                <div class="flex flex-wrap justify-center gap-4 mb-8">
+                    <button onclick="readAll()" id="btn-read-all" class="btn-watercolor text-white text-xl md:text-2xl px-8 py-4 rounded-full font-bold flex items-center gap-2">
+                        <span id="read-icon">▶️</span>
+                        <span id="read-text">全文朗讀</span>
+                    </button>
+                    <button onclick="stopReading()" class="btn-yellow text-white text-xl md:text-2xl px-8 py-4 rounded-full font-bold">
+                        ⏹️ 停止
+                    </button>
+                </div>
+                
+                <div class="grid grid-cols-2 md:grid-cols-3 gap-4 mb-8">
+                    <div class="char-card p-4 text-center" onclick="speakChar('清')">
+                        <div class="text-5xl md:text-6xl font-bold text-blue-600">清</div>
+                        <div class="text-sm md:text-base text-gray-600 mt-2">qīng 清水</div>
+                    </div>
+                    <div class="char-card p-4 text-center" onclick="speakChar('晴')">
+                        <div class="text-5xl md:text-6xl font-bold text-yellow-600">晴</div>
+                        <div class="text-sm md:text-base text-gray-600 mt-2">qíng 晴天</div>
+                    </div>
+                    <div class="char-card p-4 text-center" onclick="speakChar('情')">
+                        <div class="text-5xl md:text-6xl font-bold text-pink-600">情</div>
+                        <div class="text-sm md:text-base text-gray-600 mt-2">qíng 心情</div>
+                    </div>
+                    <div class="char-card p-4 text-center" onclick="speakChar('睛')">
+                        <div class="text-5xl md:text-6xl font-bold text-purple-600">睛</div>
+                        <div class="text-sm md:text-base text-gray-600 mt-2">jīng 眼睛</div>
+                    </div>
+                    <div class="char-card p-4 text-center" onclick="speakChar('蛙')">
+                        <div class="text-5xl md:text-6xl font-bold text-green-600">蛙</div>
+                        <div class="text-sm md:text-base text-gray-600 mt-2">wā 青蛙</div>
+                    </div>
+                    <div class="char-card p-4 text-center" onclick="speakChar('甚')">
+                        <div class="text-5xl md:text-6xl font-bold text-orange-600">甚</div>
+                        <div class="text-sm md:text-base text-gray-600 mt-2">shén 甚麼</div>
+                    </div>
+                </div>
+                
+                <div class="text-center">
+                    <button onclick="goToPage('game')" class="btn-pink text-white text-2xl px-10 py-5 rounded-full font-bold">
+                        🎮 去玩識字遊戲
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 识字游戏页面 -->
+        <div class="page" id="page-game">
+            <div class="card-watercolor p-6 md:p-12">
+                <div class="text-center mb-8">
+                    <h2 class="text-4xl md:text-5xl font-black text-green-700 mb-4">🎮 青部識字遊戲</h2>
+                    <p class="text-xl text-gray-600" id="game-instruction">幫小青蛙選出正確的字！</p>
+                </div>
+                
+                <!-- 游戏分数 -->
+                <div class="flex justify-center gap-8 mb-8">
+                    <div class="bg-yellow-100 border-4 border-yellow-400 rounded-2xl px-6 py-3">
+                        <span class="text-2xl">⭐ 分數：</span>
+                        <span class="text-3xl font-black text-orange-600" id="score">0</span>
+                    </div>
+                    <div class="bg-green-100 border-4 border-green-400 rounded-2xl px-6 py-3">
+                        <span class="text-2xl">📝 題目：</span>
+                        <span class="text-3xl font-black text-green-600"><span id="current-q">1</span>/5</span>
+                    </div>
+                </div>
+                
+                <!-- 题目区域 -->
+                <div class="bg-gradient-to-br from-blue-50 to-green-50 rounded-3xl p-8 mb-8 text-center" id="quiz-area">
+                    <div class="text-6xl md:text-8xl mb-6" id="question-emoji">🐸</div>
+                    <div class="text-2xl md:text-4xl font-bold text-gray-700 mb-8" id="question-text">
+                        河水___清天氣晴
+                    </div>
+                    
+                    <!-- 选项 -->
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 justify-items-center" id="options-area">
+                        <!-- 选项由JS生成 -->
+                    </div>
+                </div>
+                
+                <!-- 结果反馈 -->
+                <div id="feedback" class="hidden text-center mb-8">
+                    <div class="text-6xl mb-4" id="feedback-emoji">🎉</div>
+                    <div class="text-3xl font-bold" id="feedback-text">答對了！</div>
+                </div>
+                
+                <!-- 游戏完成 -->
+                <div id="game-complete" class="hidden text-center">
+                    <img src="https://skillagent.bj.bcebos.com/sandbox_exports/20261019/3aec620_qwen_1792371407305112204_1.png?responseContentDisposition=attachment%3B+filename%3D%22qwen_1792371407305112204_1.png" 
+                         alt="恭喜完成" class="w-64 h-48 object-cover rounded-3xl mx-auto mb-6 border-6 border-white shadow-lg">
+                    <div class="text-5xl mb-4">
+                        <span class="star" style="animation-delay: 0s;">⭐</span>
+                        <span class="star" style="animation-delay: 0.2s;">⭐</span>
+                        <span class="star" style="animation-delay: 0.4s;">⭐</span>
+                    </div>
+                    <h3 class="text-4xl font-black text-green-700 mb-4">太棒了！</h3>
+                    <p class="text-2xl text-gray-700 mb-6">你獲得了 <span class="text-orange-600 font-bold text-3xl" id="final-score">0</span> 分！</p>
+                    
+                    <!-- 青字家族总结 -->
+                    <div class="bg-yellow-50 rounded-2xl p-6 mb-8 max-w-2xl mx-auto">
+                        <h4 class="text-2xl font-bold text-orange-700 mb-4">📚 青字家族總結</h4>
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                            <div class="bg-white rounded-xl p-3">
+                                <div class="text-4xl font-bold text-blue-600">清</div>
+                                <div class="text-sm">氵 + 青 = 清水</div>
+                            </div>
+                            <div class="bg-white rounded-xl p-3">
+                                <div class="text-4xl font-bold text-yellow-600">晴</div>
+                                <div class="text-sm">日 + 青 = 晴天</div>
+                            </div>
+                            <div class="bg-white rounded-xl p-3">
+                                <div class="text-4xl font-bold text-pink-600">情</div>
+                                <div class="text-sm">忄 + 青 = 心情</div>
+                            </div>
+                            <div class="bg-white rounded-xl p-3">
+                                <div class="text-4xl font-bold text-purple-600">睛</div>
+                                <div class="text-sm">目 + 青 = 眼睛</div>
+                            </div>
+                        </div>
+                        <p class="text-lg mt-4 text-gray-600">還有更多：請、蜻、精、晴...</p>
+                    </div>
+                    
+                    <div class="flex flex-wrap justify-center gap-4">
+                        <button onclick="restartGame()" class="btn-pink text-white text-xl px-8 py-4 rounded-full font-bold">
+                            🔄 再玩一次
+                        </button>
+                        <button onclick="goToPage('reading')" class="btn-yellow text-white text-xl px-8 py-4 rounded-full font-bold">
+                            🔊 再聽朗讀
+                        </button>
+                        <button onclick="goToPage('cover')" class="btn-watercolor text-white text-xl px-8 py-4 rounded-full font-bold">
+                            🏠 回到首頁
+                        </button>
+                    </div>
+                </div>
+                
+                <div id="game-controls" class="text-center mt-8">
+                    <button onclick="prevPage()" class="btn-watercolor text-white text-xl px-8 py-4 rounded-full font-bold">
+                        ⬅️ 返回故事
+                    </button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // 音效系统 - 使用Web Audio API
+        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        
+        function playTone(frequency, duration, type = 'sine', volume = 0.3) {
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+            
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+            
+            oscillator.frequency.value = frequency;
+            oscillator.type = type;
+            gainNode.gain.setValueAtTime(volume, audioContext.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + duration);
+            
+            oscillator.start(audioContext.currentTime);
+            oscillator.stop(audioContext.currentTime + duration);
+        }
+        
+        function playSound(type) {
+            if (audioContext.state === 'suspended') {
+                audioContext.resume();
+            }
+            
+            switch(type) {
+                case 'water':
+                    // 流水声
+                    for(let i = 0; i < 5; i++) {
+                        setTimeout(() => playTone(800 + Math.random() * 400, 0.2, 'sine', 0.1), i * 100);
+                    }
+                    speak('河水清清');
+                    break;
+                case 'frog':
+                    // 青蛙叫
+                    playTone(200, 0.15, 'square', 0.2);
+                    setTimeout(() => playTone(180, 0.15, 'square', 0.2), 200);
+                    setTimeout(() => playTone(200, 0.15, 'square', 0.2), 400);
+                    setTimeout(() => playTone(180, 0.15, 'square', 0.2), 600);
+                    speak('呱呱呱呱');
+                    break;
+                case 'surprise':
+                    // 惊讶声
+                    playTone(400, 0.1, 'sine', 0.2);
+                    setTimeout(() => playTone(600, 0.2, 'sine', 0.2), 100);
+                    setTimeout(() => playTone(800, 0.3, 'sine', 0.2), 300);
+                    speak('發生什么大事情了？');
+                    break;
+                case 'correct':
+                    // 正确音效
+                    playTone(523, 0.15, 'sine', 0.3);
+                    setTimeout(() => playTone(659, 0.15, 'sine', 0.3), 150);
+                    setTimeout(() => playTone(784, 0.3, 'sine', 0.3), 300);
+                    break;
+                case 'wrong':
+                    // 错误音效
+                    playTone(200, 0.2, 'square', 0.2);
+                    setTimeout(() => playTone(150, 0.3, 'square', 0.2), 200);
+                    break;
+                case 'char-qing':
+                    speak('青，第一聲，青蛙的青');
+                    break;
+                case 'char-qing1':
+                    speak('清，第一聲，清水的清，三點水');
+                    break;
+                case 'char-qing2':
+                    speak('晴，第二聲，晴天的晴，日字旁');
+                    break;
+                case 'char-qing3':
+                    speak('情，第二聲，心情的情，豎心旁');
+                    break;
+                case 'char-qing4':
+                    speak('睛，第一聲，眼睛的睛，目字旁');
+                    break;
+                case 'char-wa':
+                    speak('蛙，第一聲，青蛙的蛙，蟲字旁');
+                    break;
+                case 'char-shen':
+                    speak('甚，第二聲，什麼的甚');
+                    break;
+            }
+        }
+        
+        // 语音合成（普通话朗读）
+        function speak(text) {
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.cancel();
+                const utterance = new SpeechSynthesisUtterance(text);
+                utterance.lang = 'zh-CN';
+                utterance.rate = 0.8;
+                utterance.pitch = 1.1;
+                window.speechSynthesis.speak(utterance);
+            }
+        }
+        
+        function speakChar(char) {
+            const words = {
+                '清': '清，第一聲，清水的清，三點水加青',
+                '晴': '晴，第二聲，晴天的晴，日字旁加青',
+                '情': '情，第二聲，心情的情，豎心旁加青',
+                '睛': '睛，第一聲，眼睛的睛，目字旁加青',
+                '蛙': '蛙，第一聲，青蛙的蛙，左邊是蟲字旁',
+                '甚': '甚，第二聲，什麼的甚，讀音同神'
+            };
+            speak(words[char] || char);
+        }
+        
+        let isReading = false;
+        let readingTimeout = null;
+        
+        function readAll() {
+            if (isReading) {
+                stopReading();
+                return;
+            }
+            
+            isReading = true;
+            document.getElementById('read-icon').textContent = '⏸️';
+            document.getElementById('read-text').textContent = '暫停朗讀';
+            
+            const lines = [
+                '河水清清天氣晴，',
+                '小小青蛙好心情，',
+                '呱呱呱呱叫不停。',
+                '忽然間，',
+                '小青蛙，',
+                '瞪大眼睛很安靜。',
+                '小朋友，請猜猜，',
+                '發生什么大事情？'
+            ];
+            
+            let currentLine = 0;
+            
+            function readLine() {
+                if (!isReading || currentLine >= lines.length) {
+                    stopReading();
+                    return;
+                }
+                
+                // 清除之前的高亮
+                for (let i = 0; i < 8; i++) {
+                    document.getElementById(`line-${i}`).classList.remove('reading-highlight');
+                }
+                
+                // 高亮当前行
+                const lineEl = document.getElementById(`line-${currentLine}`);
+                lineEl.classList.add('reading-highlight');
+                lineEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                
+                // 朗读
+                const utterance = new SpeechSynthesisUtterance(lines[currentLine]);
+                utterance.lang = 'zh-CN';
+                utterance.rate = 0.7;
+                utterance.pitch = 1.1;
+                
+                utterance.onend = () => {
+                    currentLine++;
+                    readingTimeout = setTimeout(readLine, 500);
+                };
+                
+                window.speechSynthesis.speak(utterance);
+            }
+            
+            readLine();
+        }
+        
+        function stopReading() {
+            isReading = false;
+            window.speechSynthesis.cancel();
+            clearTimeout(readingTimeout);
+            document.getElementById('read-icon').textContent = '▶️';
+            document.getElementById('read-text').textContent = '全文朗讀';
+            
+            for (let i = 0; i < 8; i++) {
+                const el = document.getElementById(`line-${i}`);
+                if (el) el.classList.remove('reading-highlight');
+            }
+        }
+        
+        // 页面导航
+        let currentPage = 0;
+        const totalPages = 5; // cover, scene1, scene2, scene3, reading, game
+        
+        function updateProgress() {
+            for (let i = 0; i < 5; i++) {
+                const dot = document.getElementById(`dot-${i}`);
+                dot.classList.remove('active', 'completed');
+                if (i < currentPage) dot.classList.add('completed');
+                if (i === currentPage) dot.classList.add('active');
+            }
+        }
+        
+        function goToPage(pageName) {
+            stopReading();
+            
+            // 更新导航按钮状态
+            document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
+            if (pageName === 'story' || pageName.startsWith('scene')) {
+                document.querySelectorAll('.nav-btn')[0].classList.add('active');
+            } else if (pageName === 'reading') {
+                document.querySelectorAll('.nav-btn')[1].classList.add('active');
+            } else if (pageName === 'game') {
+                document.querySelectorAll('.nav-btn')[2].classList.add('active');
+            }
+            
+            // 隐藏所有页面
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            
+            // 显示目标页面
+            document.getElementById(`page-${pageName}`).classList.add('active');
+            
+            // 更新当前页索引
+            const pageMap = { 'cover': 0, 'scene1': 1, 'scene2': 2, 'scene3': 3, 'reading': 4, 'game': 4, 'story': 1 };
+            currentPage = pageMap[pageName] || 0;
+            
+            if (pageName === 'story') {
+                document.getElementById('page-scene1').classList.add('active');
+                currentPage = 1;
+                setTimeout(() => playSound('water'), 300);
+            }
+            
+            if (pageName === 'game') {
+                currentPage = 4;
+                if (!gameStarted) startGame();
+            }
+            
+            updateProgress();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+        
+        function startStory() {
+            goToPage('scene1');
+            document.querySelectorAll('.nav-btn')[0].classList.add('active');
+            setTimeout(() => playSound('water'), 500);
+        }
+        
+        function nextPage() {
+            const pages = ['cover', 'scene1', 'scene2', 'scene3', 'reading', 'game'];
+            const currentIndex = pages.findIndex(p => document.getElementById(`page-${p}`).classList.contains('active'));
+            if (currentIndex < pages.length - 1) {
+                goToPage(pages[currentIndex + 1]);
+                // 更新导航状态
+                document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
+                if (currentIndex + 1 <= 3) {
+                    document.querySelectorAll('.nav-btn')[0].classList.add('active');
+                } else if (currentIndex + 1 === 4) {
+                    document.querySelectorAll('.nav-btn')[1].classList.add('active');
+                } else {
+                    document.querySelectorAll('.nav-btn')[2].classList.add('active');
+                }
+            }
+        }
+        
+        function prevPage() {
+            const pages = ['cover', 'scene1', 'scene2', 'scene3', 'reading', 'game'];
+            const currentIndex = pages.findIndex(p => document.getElementById(`page-${p}`).classList.contains('active'));
+            if (currentIndex > 0) {
+                goToPage(pages[currentIndex - 1]);
+                // 更新导航状态
+                document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
+                if (currentIndex - 1 <= 3) {
+                    document.querySelectorAll('.nav-btn')[0].classList.add('active');
+                } else if (currentIndex - 1 === 4) {
+                    document.querySelectorAll('.nav-btn')[1].classList.add('active');
+                }
+            }
+        }
+        
+        function showChar(char, radical) {
+            // 可以在这里添加更多字符展示动画
+            console.log(`Showing character: ${char} with radical: ${radical}`);
+        }
+        
+        function checkQuiz(el, isCorrect) {
+            if (isCorrect) {
+                el.classList.add('correct-answer');
+                el.innerHTML = '😃 答對了！因為心情和心有關，所以用豎心旁（心字的變形）。';
+                playSound('correct');
+                setTimeout(() => {
+                    el.classList.remove('correct-answer');
+                    el.innerHTML = '🤔 「心情」的「情」為什麼是豎心旁？<span class="text-green-600 text-lg block mt-2">點擊看答案</span>';
+                }, 3000);
+            }
+        }
+        
+        // 识字游戏逻辑
+        const questions = [
+            {
+                emoji: '💧',
+                sentence: '河水___清天氣晴',
+                answer: '清',
+                options: ['清', '晴', '情', '睛'],
+                hint: '和水有關，三點水旁'
+            },
+            {
+                emoji: '☀️',
+                sentence: '河水清清天氣___',
+                answer: '晴',
+                options: ['清', '晴', '情', '睛'],
+                hint: '和太陽有關，日字旁'
+            },
+            {
+                emoji: '❤️',
+                sentence: '小小青蛙好心___',
+                answer: '情',
+                options: ['清', '晴', '情', '睛'],
+                hint: '和心情有關，豎心旁'
+            },
+            {
+                emoji: '👀',
+                sentence: '瞪大眼___很安靜',
+                answer: '睛',
+                options: ['清', '晴', '情', '睛'],
+                hint: '和眼睛有關，目字旁'
+            },
+            {
+                emoji: '🐸',
+                sentence: '小小___蛙大眼睛',
+                answer: '青',
+                options: ['青', '清', '晴', '情'],
+                hint: '這是本來的「青」字哦'
+            }
+        ];
+        
+        let gameStarted = false;
+        let score = 0;
+        let currentQuestion = 0;
+        let shuffledQuestions = [];
+        
+        function shuffleArray(array) {
+            const shuffled = [...array];
+            for (let i = shuffled.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+            }
+            return shuffled;
+        }
+        
+        function startGame() {
+            gameStarted = true;
+            score = 0;
+            currentQuestion = 0;
+            shuffledQuestions = shuffleArray(questions);
+            document.getElementById('score').textContent = '0';
+            document.getElementById('game-complete').classList.add('hidden');
+            document.getElementById('quiz-area').classList.remove('hidden');
+            document.getElementById('game-controls').classList.remove('hidden');
+            document.getElementById('feedback').classList.add('hidden');
+            showQuestion();
+        }
+        
+        function showQuestion() {
+            if (currentQuestion >= shuffledQuestions.length) {
+                endGame();
+                return;
+            }
+            
+            const q = shuffledQuestions[currentQuestion];
+            document.getElementById('current-q').textContent = currentQuestion + 1;
+            document.getElementById('question-emoji').textContent = q.emoji;
+            document.getElementById('question-text').textContent = q.sentence;
+            
+            const optionsArea = document.getElementById('options-area');
+            const shuffledOptions = shuffleArray(q.options);
+            
+            optionsArea.innerHTML = shuffledOptions.map(opt => `
+                <div class="char-card p-4 md:p-6 w-full" onclick="selectAnswer('${opt}', this)">
+                    <div class="text-5xl md:text-7xl font-bold ${getCharColor(opt)}">${opt}</div>
+                </div>
+            `).join('');
+            
+            document.getElementById('feedback').classList.add('hidden');
+        }
+        
+        function getCharColor(char) {
+            const colors = {
+                '清': 'text-blue-600',
+                '晴': 'text-yellow-600',
+                '情': 'text-pink-600',
+                '睛': 'text-purple-600',
+                '青': 'text-green-600'
+            };
+            return colors[char] || 'text-gray-700';
+        }
+        
+        function selectAnswer(answer, element) {
+            const q = shuffledQuestions[currentQuestion];
+            const allOptions = document.querySelectorAll('#options-area .char-card');
+            
+            // 禁用所有选项
+            allOptions.forEach(opt => opt.style.pointerEvents = 'none');
+            
+            if (answer === q.answer) {
+                // 答对了
+                element.classList.add('correct');
+                score += 20;
+                document.getElementById('score').textContent = score;
+                playSound('correct');
+                
+                document.getElementById('feedback').classList.remove('hidden');
+                document.getElementById('feedback-emoji').textContent = '🎉';
+                document.getElementById('feedback-text').textContent = '答對了！' + q.hint;
+                document.getElementById('feedback-text').className = 'text-3xl font-bold text-green-600';
+                
+                createConfetti();
+                speak('答對了！');
+                
+                setTimeout(() => {
+                    currentQuestion++;
+                    showQuestion();
+                }, 2000);
+            } else {
+                // 答错了
+                element.classList.add('wrong');
+                playSound('wrong');
+                
+                // 显示正确答案
+                allOptions.forEach(opt => {
+                    if (opt.querySelector('div').textContent === q.answer) {
+                        opt.classList.add('correct');
+                    }
+                });
+                
+                document.getElementById('feedback').classList.remove('hidden');
+                document.getElementById('feedback-emoji').textContent = '🤔';
+                document.getElementById('feedback-text').textContent = '再想想看，正確答案是「' + q.answer + '」，' + q.hint;
+                document.getElementById('feedback-text').className = 'text-3xl font-bold text-orange-600';
+                
+                speak('正確答案是' + q.answer);
+                
+                setTimeout(() => {
+                    currentQuestion++;
+                    showQuestion();
+                }, 3000);
+            }
+        }
+        
+        function endGame() {
+            document.getElementById('quiz-area').classList.add('hidden');
+            document.getElementById('game-controls').classList.add('hidden');
+            document.getElementById('feedback').classList.add('hidden');
+            document.getElementById('game-complete').classList.remove('hidden');
+            document.getElementById('final-score').textContent = score;
+            
+            createConfetti();
+            createConfetti();
+            
+            // 播放完成音效
+            playSound('correct');
+            setTimeout(() => playSound('correct'), 200);
+            setTimeout(() => playSound('correct'), 400);
+            
+            speak('太棒了！你獲得了' + score + '分！');
+        }
+        
+        function restartGame() {
+            startGame();
+        }
+        
+        function createConfetti() {
+            const emojis = ['🎉', '⭐', '🌟', '✨', '🎊', '🐸', '🍀', '🌸'];
+            for (let i = 0; i < 20; i++) {
+                const confetti = document.createElement('div');
+                confetti.className = 'confetti';
+                confetti.textContent = emojis[Math.floor(Math.random() * emojis.length)];
+                confetti.style.left = Math.random() * 100 + 'vw';
+                confetti.style.animationDelay = Math.random() * 0.5 + 's';
+                document.body.appendChild(confetti);
+                
+                setTimeout(() => confetti.remove(), 3000);
+            }
+        }
+        
+        // 初始化
+        document.addEventListener('DOMContentLoaded', () => {
+            // 預熱音頻上下文
+            document.addEventListener('click', () => {
+                if (audioContext.state === 'suspended') {
+                    audioContext.resume();
+                }
+            }, { once: true });
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,969 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>燕子媽媽笑了 - 情景互動遊戲</title>
+    <script src="https://aisearch-task.bj.bcebos.com/static/tailwindcss-3.4.17.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap');
+        
+        * {
+            font-family: 'Noto Sans TC', 'PingFang TC', 'Microsoft JhengHei', sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #fef9e7 0%, #e8f6f3 50%, #fdebd0 100%);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+        
+        .watercolor-bg {
+            background-image: 
+                radial-gradient(ellipse at 20% 30%, rgba(255, 218, 185, 0.4) 0%, transparent 50%),
+                radial-gradient(ellipse at 80% 70%, rgba(175, 238, 238, 0.4) 0%, transparent 50%),
+                radial-gradient(ellipse at 50% 50%, rgba(255, 255, 224, 0.3) 0%, transparent 60%);
+        }
+        
+        .card-watercolor {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(10px);
+            border-radius: 30px;
+            box-shadow: 
+                0 8px 32px rgba(139, 69, 19, 0.15),
+                inset 0 0 60px rgba(255, 248, 220, 0.5);
+            border: 3px solid rgba(255, 182, 193, 0.3);
+        }
+        
+        .btn-watercolor {
+            background: linear-gradient(135deg, #ffb347 0%, #ffcc33 100%);
+            border-radius: 50px;
+            box-shadow: 0 6px 20px rgba(255, 165, 0, 0.4);
+            transition: all 0.3s ease;
+            border: 3px solid #fff;
+        }
+        
+        .btn-watercolor:hover {
+            transform: translateY(-3px) scale(1.02);
+            box-shadow: 0 10px 30px rgba(255, 165, 0, 0.5);
+        }
+        
+        .btn-watercolor:active {
+            transform: translateY(0) scale(0.98);
+        }
+        
+        .btn-green {
+            background: linear-gradient(135deg, #56ab2f 0%, #a8e063 100%);
+            box-shadow: 0 6px 20px rgba(86, 171, 47, 0.4);
+        }
+        
+        .btn-blue {
+            background: linear-gradient(135deg, #5ee7df 0%, #b490ca 100%);
+            box-shadow: 0 6px 20px rgba(94, 231, 223, 0.4);
+        }
+        
+        .btn-pink {
+            background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%);
+            box-shadow: 0 6px 20px rgba(255, 154, 158, 0.4);
+        }
+        
+        .vegetable-card {
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 25px;
+            border: 4px dashed #ddd;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .vegetable-card:hover {
+            transform: scale(1.05);
+            border-color: #ffb347;
+        }
+        
+        .vegetable-card.correct {
+            border-color: #56ab2f;
+            border-style: solid;
+            background: rgba(168, 224, 99, 0.2);
+            animation: correctPulse 0.5s ease;
+        }
+        
+        .vegetable-card.wrong {
+            border-color: #ff6b6b;
+            border-style: solid;
+            background: rgba(255, 107, 107, 0.2);
+            animation: shake 0.5s ease;
+        }
+        
+        @keyframes correctPulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+        
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
+        }
+        
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+        
+        @keyframes flyIn {
+            from { opacity: 0; transform: translateY(30px) scale(0.9); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        
+        .float-animation {
+            animation: float 3s ease-in-out infinite;
+        }
+        
+        .page-enter {
+            animation: flyIn 0.6s cubic-bezier(.2,.8,.2,1) forwards;
+        }
+        
+        .swallow {
+            position: absolute;
+            font-size: 60px;
+            animation: flyAround 8s ease-in-out infinite;
+        }
+        
+        @keyframes flyAround {
+            0%, 100% { transform: translate(0, 0) rotate(0deg); }
+            25% { transform: translate(30px, -20px) rotate(5deg); }
+            50% { transform: translate(0, -40px) rotate(0deg); }
+            75% { transform: translate(-30px, -20px) rotate(-5deg); }
+        }
+        
+        .cloud {
+            position: absolute;
+            opacity: 0.6;
+            animation: cloudFloat 20s linear infinite;
+        }
+        
+        @keyframes cloudFloat {
+            from { transform: translateX(-100px); }
+            to { transform: translateX(calc(100vw + 100px)); }
+        }
+        
+        .progress-dot {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #ddd;
+            transition: all 0.3s ease;
+        }
+        
+        .progress-dot.active {
+            background: linear-gradient(135deg, #ffb347 0%, #ffcc33 100%);
+            transform: scale(1.3);
+        }
+        
+        .progress-dot.completed {
+            background: #56ab2f;
+        }
+        
+        .story-text {
+            font-size: clamp(20px, 4vw, 28px);
+            line-height: 1.8;
+            color: #5d4037;
+            font-weight: 500;
+        }
+        
+        .dialog-bubble {
+            background: white;
+            border-radius: 30px;
+            padding: 20px 30px;
+            position: relative;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        
+        .dialog-bubble::after {
+            content: '';
+            position: absolute;
+            bottom: -15px;
+            left: 40px;
+            border: 15px solid transparent;
+            border-top-color: white;
+            border-bottom: 0;
+        }
+        
+        .speaking {
+            animation: speaking 0.3s ease-in-out infinite;
+        }
+        
+        @keyframes speaking {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+        
+        .star {
+            font-size: 40px;
+            animation: starPop 0.5s ease forwards;
+            opacity: 0;
+        }
+        
+        @keyframes starPop {
+            0% { opacity: 0; transform: scale(0) rotate(0deg); }
+            50% { opacity: 1; transform: scale(1.3) rotate(180deg); }
+            100% { opacity: 1; transform: scale(1) rotate(360deg); }
+        }
+        
+        .draggable {
+            cursor: grab;
+            transition: all 0.2s ease;
+            user-select: none;
+        }
+        
+        .draggable:active {
+            cursor: grabbing;
+        }
+        
+        .drop-zone {
+            border: 4px dashed #ccc;
+            border-radius: 20px;
+            min-height: 120px;
+            transition: all 0.3s ease;
+        }
+        
+        .drop-zone.highlight {
+            border-color: #56ab2f;
+            background: rgba(168, 224, 99, 0.2);
+        }
+        
+        .drop-zone.correct-drop {
+            border-color: #56ab2f;
+            border-style: solid;
+            background: rgba(168, 224, 99, 0.3);
+        }
+    </style>
+</head>
+<body class="watercolor-bg">
+    <!-- 背景裝飾 -->
+    <div class="fixed inset-0 pointer-events-none overflow-hidden">
+        <div class="cloud text-6xl" style="top: 10%; animation-delay: 0s;">☁️</div>
+        <div class="cloud text-5xl" style="top: 25%; animation-delay: -7s;">☁️</div>
+        <div class="cloud text-7xl" style="top: 5%; animation-delay: -14s;">☁️</div>
+        <div class="swallow" style="top: 15%; right: 20%;">🐦</div>
+    </div>
+
+    <div class="container mx-auto px-4 py-6 md:py-10 relative z-10 max-w-5xl">
+        <!-- 開始頁面 -->
+        <div id="startPage" class="page-enter">
+            <div class="text-center mb-8">
+                <h1 class="text-4xl md:text-6xl font-black text-amber-700 mb-4 drop-shadow-lg">
+                    🐦 燕子媽媽笑了 🐦
+                </h1>
+                <p class="text-xl md:text-2xl text-amber-600 font-medium">李少白</p>
+            </div>
+            
+            <div class="card-watercolor p-6 md:p-10 mb-8">
+                <div class="flex flex-col md:flex-row items-center gap-6 md:gap-10">
+                    <div class="w-64 h-64 md:w-80 md:h-80 flex-shrink-0 float-animation">
+                        <img src="https://skillagent.bj.bcebos.com/sandbox_exports/20261019/dea8a15_qwen_1792373456545315032_1.png?responseContentDisposition=attachment%3B+filename%3D%22qwen_1792373456545315032_1.png%22" 
+                             alt="燕子媽媽和小燕子" 
+                             class="w-full h-full object-cover rounded-3xl shadow-lg">
+                    </div>
+                    <div class="flex-1 text-center md:text-left">
+                        <div class="dialog-bubble mb-6">
+                            <p class="story-text">
+                                小朋友們好！我是燕子媽媽～<br>
+                                今天要帶小燕子去菜園觀察冬瓜和茄子，
+                                一起來幫幫小燕子吧！🌟
+                            </p>
+                        </div>
+                        <div class="flex flex-wrap gap-4 justify-center md:justify-start">
+                            <div class="bg-amber-100 rounded-2xl px-4 py-2">
+                                <svg class="w-6 h-6 inline text-amber-600 mr-2" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>
+                                <span class="text-amber-700 font-bold">3個探索關卡</span>
+                            </div>
+                            <div class="bg-green-100 rounded-2xl px-4 py-2">
+                                <svg class="w-6 h-6 inline text-green-600 mr-2" fill="currentColor" viewBox="0 0 20 20"><path d="M18 3a1 1 0 00-1.196-.98l-10 2A1 1 0 006 5v9.114A4.369 4.369 0 005 14c-1.657 0-3 .895-3 2s1.343 2 3 2 3-.895 3-2V7.82l8-1.6v5.894A4.37 4.37 0 0015 12c-1.657 0-3 .895-3 2s1.343 2 3 2 3-.895 3-2V3z"/></svg>
+                                <span class="text-green-700 font-bold">有聲音效果</span>
+                            </div>
+                            <div class="bg-blue-100 rounded-2xl px-4 py-2">
+                                <svg class="w-6 h-6 inline text-blue-600 mr-2" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>
+                                <span class="text-blue-700 font-bold">普通話朗讀</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="text-center">
+                <button onclick="startGame()" class="btn-watercolor text-white text-2xl md:text-3xl font-bold px-12 py-5">
+                    🎮 開始遊戲
+                </button>
+            </div>
+        </div>
+
+        <!-- 遊戲頁面 -->
+        <div id="gamePage" class="hidden">
+            <!-- 進度指示 -->
+            <div class="flex justify-center items-center gap-4 mb-6">
+                <div class="progress-dot" id="dot1"></div>
+                <div class="w-12 h-1 bg-gray-300 rounded" id="line1"></div>
+                <div class="progress-dot" id="dot2"></div>
+                <div class="w-12 h-1 bg-gray-300 rounded" id="line2"></div>
+                <div class="progress-dot" id="dot3"></div>
+            </div>
+
+            <!-- 關卡1：大小對比 -->
+            <div id="level1" class="page-enter">
+                <div class="card-watercolor p-6 md:p-8 mb-6">
+                    <div class="flex items-start gap-4 mb-6">
+                        <div class="text-6xl md:text-7xl flex-shrink-0">🐦</div>
+                        <div class="dialog-bubble flex-1">
+                            <p class="text-lg md:text-xl font-bold text-amber-700 mb-2">燕子媽媽說：</p>
+                            <p class="story-text" id="dialog1">你能不能飛到菜園裏去，看看冬瓜和茄子長得一樣不一樣？</p>
+                            <button onclick="speakText('你能不能飛到菜園裏去，看看冬瓜和茄子長得一樣不一樣？')" 
+                                    class="mt-3 btn-blue text-white font-bold px-4 py-2 rounded-full text-sm">
+                                🔊 聽一聽
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="text-center mb-6">
+                    <p class="text-2xl md:text-3xl font-bold text-amber-800 mb-2">🌟 第一次觀察：大小比一比</p>
+                    <p class="text-lg text-amber-600">點擊看看，哪個是大的冬瓜？哪個是小的茄子？</p>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                    <div class="vegetable-card p-6 text-center" onclick="checkSize('big', this)" id="bigVeg">
+                        <div class="w-48 h-48 md:w-64 md:h-64 mx-auto mb-4">
+                            <div class="w-full h-full bg-green-100 rounded-3xl flex items-center justify-center text-8xl">
+                                🥒
+                            </div>
+                        </div>
+                        <p class="text-2xl font-bold text-gray-700">點擊我！</p>
+                        <p class="text-gray-500 mt-2">這是大的還是小的？</p>
+                    </div>
+                    
+                    <div class="vegetable-card p-6 text-center" onclick="checkSize('small', this)" id="smallVeg">
+                        <div class="w-32 h-32 md:w-40 md:h-40 mx-auto mb-4">
+                            <div class="w-full h-full bg-purple-100 rounded-3xl flex items-center justify-center text-6xl">
+                                🍆
+                            </div>
+                        </div>
+                        <p class="text-2xl font-bold text-gray-700">點擊我！</p>
+                        <p class="text-gray-500 mt-2">這是大的還是小的？</p>
+                    </div>
+                </div>
+
+                <div id="level1Result" class="hidden text-center">
+                    <div class="card-watercolor p-6 bg-green-50">
+                        <p class="text-2xl font-bold text-green-700 mb-3">🎉 太棒了！</p>
+                        <p class="text-xl text-green-600">冬瓜是大的，茄子是小的！</p>
+                        <div class="mt-4">
+                            <button onclick="nextLevel(2)" class="btn-watercolor btn-green text-white text-xl font-bold px-8 py-4">
+                                繼續觀察 →
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 關卡2：顏色對比 -->
+            <div id="level2" class="hidden page-enter">
+                <div class="card-watercolor p-6 md:p-8 mb-6">
+                    <div class="flex items-start gap-4 mb-6">
+                        <div class="text-6xl md:text-7xl flex-shrink-0">🐦</div>
+                        <div class="dialog-bubble flex-1">
+                            <p class="text-lg md:text-xl font-bold text-amber-700 mb-2">燕子媽媽說：</p>
+                            <p class="story-text">不錯。你再去看看，還有甚麼不一樣？</p>
+                            <button onclick="speakText('不錯。你再去看看，還有甚麼不一樣？')" 
+                                    class="mt-3 btn-blue text-white font-bold px-4 py-2 rounded-full text-sm">
+                                🔊 聽一聽
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="text-center mb-6">
+                    <p class="text-2xl md:text-3xl font-bold text-amber-800 mb-2">🎨 第二次觀察：顏色找一找</p>
+                    <p class="text-lg text-amber-600">幫小燕子把蔬菜拖到對應顏色的籃子裡！</p>
+                    <p class="text-sm text-amber-500 mt-2">（手機用戶：先點選蔬菜，再點選對應顏色的籃子）</p>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                    <div class="text-center">
+                        <div class="drop-zone bg-green-50 p-6" id="greenBasket" ondrop="drop(event, 'green')" ondragover="allowDrop(event)" ondragenter="highlightZone(event, true)" ondragleave="highlightZone(event, false)">
+                            <p class="text-2xl font-bold text-green-700 mb-2">🟢 青色籃子</p>
+                            <p class="text-green-600">放青色的蔬菜</p>
+                        </div>
+                    </div>
+                    <div class="text-center">
+                        <div class="drop-zone bg-purple-50 p-6" id="purpleBasket" ondrop="drop(event, 'purple')" ondragover="allowDrop(event)" ondragenter="highlightZone(event, true)" ondragleave="highlightZone(event, false)">
+                            <p class="text-2xl font-bold text-purple-700 mb-2">🟣 紫色籃子</p>
+                            <p class="text-purple-600">放紫色的蔬菜</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex justify-center gap-8 mb-8">
+                    <div class="draggable text-center" draggable="true" ondragstart="drag(event)" id="winterMelon" data-type="green">
+                        <div class="w-32 h-32 md:w-40 md:h-40 bg-green-200 rounded-3xl flex items-center justify-center text-7xl shadow-lg">
+                            🥒
+                        </div>
+                        <p class="text-xl font-bold text-green-700 mt-2">冬瓜</p>
+                    </div>
+                    <div class="draggable text-center" draggable="true" ondragstart="drag(event)" id="eggplant" data-type="purple">
+                        <div class="w-32 h-32 md:w-40 md:h-40 bg-purple-200 rounded-3xl flex items-center justify-center text-7xl shadow-lg">
+                            🍆
+                        </div>
+                        <p class="text-xl font-bold text-purple-700 mt-2">茄子</p>
+                    </div>
+                </div>
+
+                <div id="level2Result" class="hidden text-center">
+                    <div class="card-watercolor p-6 bg-green-50">
+                        <p class="text-2xl font-bold text-green-700 mb-3">🎉 太厲害了！</p>
+                        <p class="text-xl text-green-600">冬瓜是青色的，茄子是紫色的！</p>
+                        <div class="mt-4">
+                            <button onclick="nextLevel(3)" class="btn-watercolor btn-green text-white text-xl font-bold px-8 py-4">
+                                再仔細看看 →
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 關卡3：軟硬對比 -->
+            <div id="level3" class="hidden page-enter">
+                <div class="card-watercolor p-6 md:p-8 mb-6">
+                    <div class="flex items-start gap-4 mb-6">
+                        <div class="text-6xl md:text-7xl flex-shrink-0">🐦</div>
+                        <div class="dialog-bubble flex-1">
+                            <p class="text-lg md:text-xl font-bold text-amber-700 mb-2">燕子媽媽說：</p>
+                            <p class="story-text">很好。你再去認真地看看，它們還有甚麼不一樣？</p>
+                            <button onclick="speakText('很好。你再去認真地看看，它們還有甚麼不一樣？')" 
+                                    class="mt-3 btn-blue text-white font-bold px-4 py-2 rounded-full text-sm">
+                                🔊 聽一聽
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="text-center mb-6">
+                    <p class="text-2xl md:text-3xl font-bold text-amber-800 mb-2">✋ 第三次觀察：觸感摸一摸</p>
+                    <p class="text-lg text-amber-600">點擊蔬菜摸摸看，哪個皮硬？哪個皮軟？</p>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                    <div class="vegetable-card p-6 text-center" onclick="checkTouch('hard', this)">
+                        <div class="w-48 h-48 md:w-64 md:h-64 mx-auto mb-4 relative">
+                            <div class="w-full h-full bg-green-200 rounded-3xl flex items-center justify-center text-8xl cursor-pointer hover:scale-105 transition-transform" id="hardVeg">
+                                🥒
+                            </div>
+                        </div>
+                        <p class="text-2xl font-bold text-gray-700">👆 點擊摸摸看</p>
+                        <p class="text-gray-500 mt-2">這個摸起來感覺如何？</p>
+                    </div>
+                    
+                    <div class="vegetable-card p-6 text-center" onclick="checkTouch('soft', this)">
+                        <div class="w-40 h-40 md:w-52 md:h-52 mx-auto mb-4 relative">
+                            <div class="w-full h-full bg-purple-200 rounded-3xl flex items-center justify-center text-7xl cursor-pointer hover:scale-105 transition-transform" id="softVeg">
+                                🍆
+                            </div>
+                        </div>
+                        <p class="text-2xl font-bold text-gray-700">👆 點擊摸摸看</p>
+                        <p class="text-gray-500 mt-2">這個摸起來感覺如何？</p>
+                    </div>
+                </div>
+
+                <div id="level3Result" class="hidden text-center">
+                    <div class="card-watercolor p-6 bg-green-50">
+                        <p class="text-2xl font-bold text-green-700 mb-3">🎉 觀察完成！</p>
+                        <p class="text-xl text-green-600">冬瓜的皮是硬的，茄子的皮是軟的！</p>
+                        <div class="mt-4">
+                            <button onclick="showEnding()" class="btn-watercolor btn-pink text-white text-xl font-bold px-8 py-4">
+                                看看燕子媽媽的笑容 😊
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 結局頁面 -->
+        <div id="endingPage" class="hidden page-enter">
+            <div class="text-center mb-8">
+                <h2 class="text-4xl md:text-5xl font-black text-pink-600 mb-4">
+                    😊 燕子媽媽高興地笑了！
+                </h2>
+                <div class="flex justify-center gap-2 mb-4">
+                    <span class="star" style="animation-delay: 0s;">⭐</span>
+                    <span class="star" style="animation-delay: 0.2s;">⭐</span>
+                    <span class="star" style="animation-delay: 0.4s;">⭐</span>
+                </div>
+            </div>
+
+            <div class="card-watercolor p-6 md:p-10 mb-8">
+                <div class="flex flex-col md:flex-row items-center gap-8">
+                    <div class="w-64 h-64 md:w-80 md:h-80 flex-shrink-0">
+                        <img src="https://skillagent.bj.bcebos.com/sandbox_exports/20261019/10a885c_qwen_1792373456641881925_1.png?responseContentDisposition=attachment%3B+filename%3D%22qwen_1792373456641881925_1.png%22" 
+                             alt="菜園裡的冬瓜和茄子" 
+                             class="w-full h-full object-cover rounded-3xl shadow-lg">
+                    </div>
+                    <div class="flex-1">
+                        <div class="dialog-bubble mb-6">
+                            <p class="story-text">
+                                小燕子真棒！學會了認真觀察事物～<br>
+                                讓我們一起來讀讀這個故事吧！📖
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 全文朗讀區域 -->
+            <div class="card-watercolor p-6 md:p-10 mb-8" id="storyCard">
+                <h3 class="text-2xl md:text-3xl font-bold text-amber-800 text-center mb-6">📖 課文全文</h3>
+                
+                <div class="flex justify-center gap-4 mb-6 flex-wrap">
+                    <button onclick="readFullStory()" id="readBtn" class="btn-watercolor btn-blue text-white font-bold px-6 py-3 text-lg">
+                        ▶️ 播放普通話朗讀
+                    </button>
+                    <button onclick="stopReading()" id="stopBtn" class="btn-watercolor btn-pink text-white font-bold px-6 py-3 text-lg hidden">
+                        ⏸️ 停止朗讀
+                    </button>
+                </div>
+
+                <div class="bg-amber-50 rounded-3xl p-6 md:p-8" id="fullStory">
+                    <div class="story-paragraph mb-4 p-3 rounded-xl transition-all" id="para1">
+                        <p class="story-text"><span class="font-bold text-amber-700"></span> 燕子媽媽問小燕子：「你能不能飛到菜園裏去，看看冬瓜和茄子長得一樣不一樣？」</p>
+                    </div>
+                    <div class="story-paragraph mb-4 p-3 rounded-xl transition-all" id="para2">
+                        <p class="story-text"><span class="font-bold text-amber-700"></span> 小燕子飛去了，回來說：「媽媽，冬瓜是大的，茄子是小的。」</p>
+                    </div>
+                    <div class="story-paragraph mb-4 p-3 rounded-xl transition-all" id="para3">
+                        <p class="story-text"><span class="font-bold text-amber-700"></span> 燕子媽媽說：「不錯。你再去看看，還有甚麼不一樣？」</p>
+                    </div>
+                    <div class="story-paragraph mb-4 p-3 rounded-xl transition-all" id="para4">
+                        <p class="story-text"><span class="font-bold text-amber-700"></span> 小燕子又飛去了，回來說：「媽媽，冬瓜是青色的，茄子是紫色的！」</p>
+                    </div>
+                    <div class="story-paragraph mb-4 p-3 rounded-xl transition-all" id="para5">
+                        <p class="story-text"><span class="font-bold text-amber-700"></span> 燕子媽媽點點頭，說：「很好。你再去認真地看看，它們還有甚麼不一樣？」</p>
+                    </div>
+                    <div class="story-paragraph mb-4 p-3 rounded-xl transition-all" id="para6">
+                        <p class="story-text"><span class="font-bold text-amber-700"></span> 小燕子又飛去了，回來說：「媽媽，冬瓜的皮是硬的，茄子的皮是軟的！」</p>
+                    </div>
+                    <div class="story-paragraph p-3 rounded-xl transition-all" id="para7">
+                        <p class="story-text font-bold text-pink-700"><span class="font-bold text-amber-700"></span> 燕子媽媽高興地笑了。</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card-watercolor p-6 mb-8 bg-green-50">
+                <h3 class="text-2xl font-bold text-green-800 text-center mb-4">🎯 學習小筆記</h3>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div class="bg-white rounded-2xl p-4 text-center shadow">
+                        <div class="text-4xl mb-2">📏</div>
+                        <p class="font-bold text-lg text-gray-700">大小不同</p>
+                        <p class="text-gray-600">冬瓜大，茄子小</p>
+                    </div>
+                    <div class="bg-white rounded-2xl p-4 text-center shadow">
+                        <div class="text-4xl mb-2">🎨</div>
+                        <p class="font-bold text-lg text-gray-700">顏色不同</p>
+                        <p class="text-gray-600">冬瓜青，茄子紫</p>
+                    </div>
+                    <div class="bg-white rounded-2xl p-4 text-center shadow">
+                        <div class="text-4xl mb-2">✋</div>
+                        <p class="font-bold text-lg text-gray-700">觸感不同</p>
+                        <p class="text-gray-600">冬瓜硬，茄子軟</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="text-center">
+                <button onclick="restartGame()" class="btn-watercolor text-white text-xl font-bold px-10 py-4">
+                    🔄 再玩一次
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 音效系統
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        let audioCtx = null;
+
+        function initAudio() {
+            if (!audioCtx) {
+                audioCtx = new AudioContext();
+            }
+        }
+
+        function playSound(type) {
+            initAudio();
+            const oscillator = audioCtx.createOscillator();
+            const gainNode = audioCtx.createGain();
+            
+            oscillator.connect(gainNode);
+            gainNode.connect(audioCtx.destination);
+            
+            switch(type) {
+                case 'click':
+                    oscillator.frequency.setValueAtTime(800, audioCtx.currentTime);
+                    oscillator.frequency.exponentialRampToValueAtTime(600, audioCtx.currentTime + 0.1);
+                    gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
+                    oscillator.start(audioCtx.currentTime);
+                    oscillator.stop(audioCtx.currentTime + 0.1);
+                    break;
+                case 'correct':
+                    const notes = [523, 659, 784];
+                    notes.forEach((freq, i) => {
+                        const osc = audioCtx.createOscillator();
+                        const gain = audioCtx.createGain();
+                        osc.connect(gain);
+                        gain.connect(audioCtx.destination);
+                        osc.frequency.setValueAtTime(freq, audioCtx.currentTime + i * 0.15);
+                        gain.gain.setValueAtTime(0.2, audioCtx.currentTime + i * 0.15);
+                        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + i * 0.15 + 0.2);
+                        osc.start(audioCtx.currentTime + i * 0.15);
+                        osc.stop(audioCtx.currentTime + i * 0.15 + 0.2);
+                    });
+                    break;
+                case 'wrong':
+                    oscillator.frequency.setValueAtTime(200, audioCtx.currentTime);
+                    oscillator.frequency.exponentialRampToValueAtTime(150, audioCtx.currentTime + 0.3);
+                    gainNode.gain.setValueAtTime(0.2, audioCtx.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+                    oscillator.start(audioCtx.currentTime);
+                    oscillator.stop(audioCtx.currentTime + 0.3);
+                    break;
+                case 'levelup':
+                    const levelNotes = [523, 659, 784, 1047];
+                    levelNotes.forEach((freq, i) => {
+                        const osc = audioCtx.createOscillator();
+                        const gain = audioCtx.createGain();
+                        osc.connect(gain);
+                        gain.connect(audioCtx.destination);
+                        osc.frequency.setValueAtTime(freq, audioCtx.currentTime + i * 0.1);
+                        gain.gain.setValueAtTime(0.2, audioCtx.currentTime + i * 0.1);
+                        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + i * 0.1 + 0.2);
+                        osc.start(audioCtx.currentTime + i * 0.1);
+                        osc.stop(audioCtx.currentTime + i * 0.1 + 0.2);
+                    });
+                    break;
+                case 'drum':
+                    oscillator.type = 'triangle';
+                    oscillator.frequency.setValueAtTime(150, audioCtx.currentTime);
+                    oscillator.frequency.exponentialRampToValueAtTime(50, audioCtx.currentTime + 0.1);
+                    gainNode.gain.setValueAtTime(0.3, audioCtx.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
+                    oscillator.start(audioCtx.currentTime);
+                    oscillator.stop(audioCtx.currentTime + 0.1);
+                    break;
+                case 'squish':
+                    oscillator.type = 'sine';
+                    oscillator.frequency.setValueAtTime(400, audioCtx.currentTime);
+                    oscillator.frequency.exponentialRampToValueAtTime(200, audioCtx.currentTime + 0.2);
+                    gainNode.gain.setValueAtTime(0.2, audioCtx.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.2);
+                    oscillator.start(audioCtx.currentTime);
+                    oscillator.stop(audioCtx.currentTime + 0.2);
+                    break;
+            }
+        }
+
+        // 語音朗讀
+        function speakText(text) {
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.cancel();
+                const utterance = new SpeechSynthesisUtterance(text);
+                utterance.lang = 'zh-CN';
+                utterance.rate = 0.8;
+                utterance.pitch = 1.1;
+                window.speechSynthesis.speak(utterance);
+                playSound('click');
+            }
+        }
+
+        function readFullStory() {
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.cancel();
+                document.getElementById('readBtn').classList.add('hidden');
+                document.getElementById('stopBtn').classList.remove('hidden');
+                
+                const paragraphs = [
+                    { id: 'para1', text: '燕子媽媽問小燕子：「你能不能飛到菜園裏去，看看冬瓜和茄子長得一樣不一樣？」' },
+                    { id: 'para2', text: '小燕子飛去了，回來說：「媽媽，冬瓜是大的，茄子是小的。」' },
+                    { id: 'para3', text: '燕子媽媽說：「不錯。你再去看看，還有甚麼不一樣？」' },
+                    { id: 'para4', text: '小燕子又飛去了，回來說：「媽媽，冬瓜是青色的，茄子是紫色的！」' },
+                    { id: 'para5', text: '燕子媽媽點點頭，說：「很好。你再去認真地看看，它們還有甚麼不一樣？」' },
+                    { id: 'para6', text: '小燕子又飛去了，回來說：「媽媽，冬瓜的皮是硬的，茄子的皮是軟的！」' },
+                    { id: 'para7', text: '燕子媽媽高興地笑了。' }
+                ];
+
+                function readParagraph(index) {
+                    if (index >= paragraphs.length) {
+                        stopReading();
+                        return;
+                    }
+
+                    document.querySelectorAll('.story-paragraph').forEach(p => {
+                        p.classList.remove('bg-yellow-200', 'speaking');
+                    });
+
+                    const para = paragraphs[index];
+                    const paraEl = document.getElementById(para.id);
+                    paraEl.classList.add('bg-yellow-200', 'speaking');
+                    
+                    const utterance = new SpeechSynthesisUtterance(para.text);
+                    utterance.lang = 'zh-CN';
+                    utterance.rate = 0.75;
+                    utterance.pitch = 1.1;
+                    
+                    utterance.onend = () => {
+                        setTimeout(() => readParagraph(index + 1), 300);
+                    };
+                    
+                    window.speechSynthesis.speak(utterance);
+                }
+
+                readParagraph(0);
+            }
+        }
+
+        function stopReading() {
+            window.speechSynthesis.cancel();
+            document.getElementById('readBtn').classList.remove('hidden');
+            document.getElementById('stopBtn').classList.add('hidden');
+            document.querySelectorAll('.story-paragraph').forEach(p => {
+                p.classList.remove('bg-yellow-200', 'speaking');
+            });
+        }
+
+        // 遊戲邏輯
+        let currentLevel = 1;
+        let level2Complete = { green: false, purple: false };
+        let level3Complete = { hard: false, soft: false };
+        let touchAttempts = 0;
+
+        function startGame() {
+            playSound('levelup');
+            document.getElementById('startPage').classList.add('hidden');
+            document.getElementById('gamePage').classList.remove('hidden');
+            updateProgress();
+        }
+
+        function updateProgress() {
+            for (let i = 1; i <= 3; i++) {
+                const dot = document.getElementById(`dot${i}`);
+                dot.classList.remove('active', 'completed');
+                if (i < currentLevel) {
+                    dot.classList.add('completed');
+                } else if (i === currentLevel) {
+                    dot.classList.add('active');
+                }
+            }
+            if (currentLevel > 1) document.getElementById('line1').style.background = '#56ab2f';
+            if (currentLevel > 2) document.getElementById('line2').style.background = '#56ab2f';
+        }
+
+        function nextLevel(level) {
+            playSound('levelup');
+            document.getElementById(`level${currentLevel}`).classList.add('hidden');
+            document.getElementById(`level${level}`).classList.remove('hidden');
+            currentLevel = level;
+            updateProgress();
+            
+            if (level === 2) {
+                level2Complete = { green: false, purple: false };
+            }
+            if (level === 3) {
+                level3Complete = { hard: false, soft: false };
+                touchAttempts = 0;
+            }
+        }
+
+        // 關卡1：大小
+        function checkSize(size, element) {
+            playSound('click');
+            
+            if (size === 'big') {
+                element.classList.add('correct');
+                element.querySelector('p:first-of-type').textContent = '✅ 大冬瓜！';
+                playSound('correct');
+                
+                setTimeout(() => {
+                    document.getElementById('smallVeg').click();
+                }, 500);
+            } else {
+                if (!document.getElementById('bigVeg').classList.contains('correct')) {
+                    element.classList.add('wrong');
+                    playSound('wrong');
+                    setTimeout(() => element.classList.remove('wrong'), 500);
+                    return;
+                }
+                
+                element.classList.add('correct');
+                element.querySelector('p:first-of-type').textContent = '✅ 小茄子！';
+                playSound('correct');
+                
+                setTimeout(() => {
+                    speakText('媽媽，冬瓜是大的，茄子是小的。');
+                    document.getElementById('level1Result').classList.remove('hidden');
+                }, 500);
+            }
+        }
+
+        // 關卡2：顏色（拖放）
+        function allowDrop(ev) {
+            ev.preventDefault();
+        }
+
+        function drag(ev) {
+            playSound('click');
+            ev.dataTransfer.setData("text", ev.target.closest('.draggable').id);
+        }
+
+        function highlightZone(ev, highlight) {
+            ev.preventDefault();
+            const zone = ev.target.closest('.drop-zone');
+            if (zone) {
+                if (highlight) {
+                    zone.classList.add('highlight');
+                } else {
+                    zone.classList.remove('highlight');
+                }
+            }
+        }
+
+        function drop(ev, basketColor) {
+            ev.preventDefault();
+            const zone = ev.target.closest('.drop-zone');
+            if (zone) zone.classList.remove('highlight');
+            
+            const data = ev.dataTransfer.getData("text");
+            const draggedElement = document.getElementById(data);
+            if (!draggedElement) return;
+            const vegType = draggedElement.dataset.type;
+            
+            if (vegType === basketColor) {
+                playSound('correct');
+                if (zone) {
+                    zone.appendChild(draggedElement);
+                    zone.classList.add('correct-drop');
+                }
+                draggedElement.draggable = false;
+                draggedElement.style.cursor = 'default';
+                
+                level2Complete[basketColor] = true;
+                
+                if (level2Complete.green && level2Complete.purple) {
+                    setTimeout(() => {
+                        speakText('媽媽，冬瓜是青色的，茄子是紫色的！');
+                        document.getElementById('level2Result').classList.remove('hidden');
+                    }, 500);
+                }
+            } else {
+                playSound('wrong');
+                if (zone) {
+                    zone.classList.add('wrong');
+                    setTimeout(() => zone.classList.remove('wrong'), 500);
+                }
+            }
+        }
+
+        // 關卡3：軟硬
+        function checkTouch(type, element) {
+            touchAttempts++;
+            playSound('click');
+            
+            if (type === 'hard') {
+                playSound('drum');
+                document.getElementById('hardVeg').style.animation = 'shake 0.3s ease';
+                setTimeout(() => document.getElementById('hardVeg').style.animation = '', 300);
+                
+                element.classList.add('correct');
+                element.querySelector('p:first-of-type').textContent = '💪 硬硬的！';
+                level3Complete.hard = true;
+                playSound('correct');
+            } else {
+                playSound('squish');
+                const softVeg = document.getElementById('softVeg');
+                softVeg.style.transform = 'scale(0.9)';
+                setTimeout(() => softVeg.style.transform = '', 200);
+                
+                element.classList.add('correct');
+                element.querySelector('p:first-of-type').textContent = '🤏 軟軟的！';
+                level3Complete.soft = true;
+                playSound('correct');
+            }
+            
+            if (level3Complete.hard && level3Complete.soft) {
+                setTimeout(() => {
+                    speakText('媽媽，冬瓜的皮是硬的，茄子的皮是軟的！');
+                    document.getElementById('level3Result').classList.remove('hidden');
+                }, 500);
+            }
+        }
+
+        function showEnding() {
+            playSound('levelup');
+            document.getElementById('gamePage').classList.add('hidden');
+            document.getElementById('endingPage').classList.remove('hidden');
+        }
+
+        function restartGame() {
+            playSound('click');
+            location.reload();
+        }
+
+        // 為觸控設備添加點擊替代方案
+        document.addEventListener('DOMContentLoaded', () => {
+            let selectedVeg = null;
+            
+            document.querySelectorAll('.draggable').forEach(veg => {
+                veg.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    if (this.draggable === false) return;
+                    playSound('click');
+                    document.querySelectorAll('.draggable').forEach(v => {
+                        v.style.opacity = '0.5';
+                        v.style.boxShadow = '';
+                    });
+                    this.style.opacity = '1';
+                    this.style.boxShadow = '0 0 20px #ffb347';
+                    selectedVeg = this;
+                });
+            });
+            
+            document.getElementById('greenBasket').addEventListener('click', function(e) {
+                e.stopPropagation();
+                if (selectedVeg && selectedVeg.dataset.type === 'green') {
+                    const mockEvent = { 
+                        preventDefault: () => {}, 
+                        dataTransfer: { getData: () => selectedVeg.id }, 
+                        target: this 
+                    };
+                    drop(mockEvent, 'green');
+                    selectedVeg = null;
+                } else if (selectedVeg) {
+                    playSound('wrong');
+                }
+            });
+            
+            document.getElementById('purpleBasket').addEventListener('click', function(e) {
+                e.stopPropagation();
+                if (selectedVeg && selectedVeg.dataset.type === 'purple') {
+                    const mockEvent = { 
+                        preventDefault: () => {}, 
+                        dataTransfer: { getData: () => selectedVeg.id }, 
+                        target: this 
+                    };
+                    drop(mockEvent, 'purple');
+                    selectedVeg = null;
+                } else if (selectedVeg) {
+                    playSound('wrong');
+                }
+            });
+        });
+    </script>
+</body>
+</html>

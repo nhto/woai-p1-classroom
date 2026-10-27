@@ -1,0 +1,1480 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>小熊住山洞 - 情景互動遊戲</title>
+<script src="https://aisearch-task.bj.bcebos.com/static/tailwindcss-3.4.17.js"></script>
+<script src="https://aisearch-task.bj.bcebos.com/static/gsap-3.12.7.min.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@400;600;700;900&family=ZCOOL+KuaiLe&display=swap');
+
+:root {
+  --spring: #8BC34A;
+  --summer: #FF9800;
+  --autumn: #E65100;
+  --winter: #64B5F6;
+  --wood: #8D6E63;
+  --cave: #5D4037;
+}
+
+* { -webkit-tap-highlight-color: transparent; }
+
+body {
+  font-family: 'ZCOOL KuaiLe', 'Noto Serif TC', 'PingFang TC', 'Microsoft JhengHei', sans-serif;
+  background: linear-gradient(135deg, #FFF8E1 0%, #E8F5E9 50%, #FFF3E0 100%);
+  overflow: hidden;
+  touch-action: manipulation;
+}
+
+.page {
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  display: flex;
+  flex-direction: column;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.6s ease;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+.page.active { opacity: 1; pointer-events: auto; }
+
+/* 水彩纸纹理背景 */
+.watercolor-bg {
+  background-image:
+    radial-gradient(ellipse at 20% 50%, rgba(139,195,74,0.08) 0%, transparent 50%),
+    radial-gradient(ellipse at 80% 20%, rgba(255,152,0,0.06) 0%, transparent 50%),
+    radial-gradient(ellipse at 50% 80%, rgba(100,181,246,0.08) 0%, transparent 50%);
+}
+
+/* 场景卡 */
+.scene-card {
+  border-radius: 28px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.1), inset 0 0 60px rgba(255,255,255,0.3);
+  border: 3px solid rgba(255,255,255,0.6);
+  position: relative;
+  overflow: hidden;
+}
+
+.scene-spring { background: linear-gradient(160deg, #E8F5E9, #C8E6C9, #A5D6A7); }
+.scene-summer { background: linear-gradient(160deg, #FFF8E1, #FFECB3, #FFE082); }
+.scene-autumn { background: linear-gradient(160deg, #FBE9E7, #FFCCBC, #FFAB91); }
+.scene-winter { background: linear-gradient(160deg, #E3F2FD, #BBDEFB, #90CAF9); }
+.scene-cave { background: linear-gradient(160deg, #EFEBE9, #D7CCC8, #BCAAA4); }
+.scene-end { background: linear-gradient(160deg, #FCE4EC, #F8BBD9, #F48FB1); }
+
+/* 按钮样式 */
+.btn-primary {
+  background: linear-gradient(135deg, #FF7043, #FF5722);
+  color: white;
+  border-radius: 50px;
+  padding: 16px 40px;
+  font-size: 22px;
+  font-weight: bold;
+  border: none;
+  cursor: pointer;
+  box-shadow: 0 6px 20px rgba(255,87,34,0.4);
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+.btn-primary:hover { transform: translateY(-3px); box-shadow: 0 10px 28px rgba(255,87,34,0.5); }
+.btn-primary:active { transform: translateY(0); }
+
+.btn-season {
+  border-radius: 20px;
+  padding: 20px;
+  font-size: 20px;
+  font-weight: bold;
+  border: 4px solid white;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+  color: white;
+  text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+.btn-season:hover { transform: scale(1.06); }
+.btn-season:active { transform: scale(0.98); }
+
+.btn-sound {
+  width: 60px; height: 60px;
+  border-radius: 50%;
+  background: white;
+  border: 3px solid rgba(0,0,0,0.1);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  transition: all 0.3s ease;
+}
+.btn-sound:hover { transform: scale(1.1); }
+
+/* 可点击的树 */
+.tree-clickable {
+  cursor: pointer;
+  transition: transform 0.3s ease;
+  position: relative;
+}
+.tree-clickable:hover { transform: scale(1.05); }
+.tree-clickable.shake { animation: treeShake 0.6s ease; }
+
+@keyframes treeShake {
+  0%,100% { transform: rotate(0deg); }
+  20% { transform: rotate(-5deg); }
+  40% { transform: rotate(5deg); }
+  60% { transform: rotate(-3deg); }
+  80% { transform: rotate(3deg); }
+}
+
+/* 斧头脉冲动画 */
+.axe-pulse {
+  cursor: pointer;
+  transform-origin: 45px 30px;
+  animation: axePulse 1.2s ease-in-out infinite;
+}
+@keyframes axePulse {
+  0%,100% { transform: scale(1); filter: drop-shadow(0 0 0 rgba(255,152,0,0)); }
+  50% { transform: scale(1.15); filter: drop-shadow(0 0 12px rgba(255,152,0,0.8)); }
+}
+.axe-ring {
+  animation: ringPulse 1.5s ease-in-out infinite;
+  transform-origin: 45px 30px;
+}
+@keyframes ringPulse {
+  0% { r: 22; opacity: 0.9; stroke-width: 3; }
+  50% { r: 34; opacity: 0.3; stroke-width: 5; }
+  100% { r: 22; opacity: 0.9; stroke-width: 3; }
+}
+.axe-swing {
+  animation: axeSwing 0.5s ease-out;
+}
+@keyframes axeSwing {
+  0% { transform: rotate(0deg) scale(1); }
+  30% { transform: rotate(-45deg) scale(1.2); }
+  60% { transform: rotate(-25deg) scale(1.15); }
+  100% { transform: rotate(0deg) scale(1); }
+}
+
+/* 漂浮物动画 */
+.floater {
+  position: absolute;
+  pointer-events: none;
+  animation: floatDown 3s ease-in forwards;
+  font-size: 28px;
+}
+
+@keyframes floatDown {
+  0% { opacity: 1; transform: translateY(0) rotate(0deg); }
+  100% { opacity: 0; transform: translateY(120px) rotate(360deg); }
+}
+
+/* 弹出对话框 */
+.speech-bubble {
+  background: white;
+  border-radius: 24px;
+  padding: 20px 28px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+  position: relative;
+  font-size: 22px;
+  line-height: 1.6;
+}
+.speech-bubble::after {
+  content: '';
+  position: absolute;
+  bottom: -14px;
+  left: 40px;
+  width: 0; height: 0;
+  border-left: 14px solid transparent;
+  border-right: 14px solid transparent;
+  border-top: 16px solid white;
+}
+
+/* 进度点 */
+.progress-dot {
+  width: 14px; height: 14px;
+  border-radius: 50%;
+  background: rgba(0,0,0,0.15);
+  transition: all 0.3s ease;
+}
+.progress-dot.active { background: #FF5722; transform: scale(1.4); }
+.progress-dot.done { background: #4CAF50; }
+
+/* 星星奖励 */
+.star-reward {
+  animation: starPop 0.6s cubic-bezier(.2,.8,.2,1);
+}
+
+@keyframes starPop {
+  0% { transform: scale(0) rotate(-180deg); opacity: 0; }
+  60% { transform: scale(1.3) rotate(10deg); }
+  100% { transform: scale(1) rotate(0deg); opacity: 1; }
+}
+
+/* 动物进场 */
+.animal-enter {
+  animation: animalBounce 0.8s cubic-bezier(.2,.8,.2,1) forwards;
+}
+
+@keyframes animalBounce {
+  0% { transform: translateX(-100px) scale(0); opacity: 0; }
+  60% { transform: translateX(10px) scale(1.1); }
+  100% { transform: translateX(0) scale(1); opacity: 1; }
+}
+
+/* 朗读进度高亮 */
+.read-highlight {
+  background: linear-gradient(120deg, #FFF9C4 0%, #FFE082 100%);
+  border-radius: 8px;
+  padding: 2px 6px;
+  transition: all 0.3s ease;
+}
+
+/* 小熊动画 */
+.bear-idle {
+  animation: bearBounce 2s ease-in-out infinite;
+}
+@keyframes bearBounce {
+  0%,100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+
+/* 季节切换过渡 */
+.season-transition {
+  animation: seasonFade 0.8s ease;
+}
+@keyframes seasonFade {
+  0% { opacity: 0; transform: scale(0.95); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+/* 粒子效果容器 */
+#particles {
+  position: fixed;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  pointer-events: none;
+  z-index: 999;
+}
+
+/* 滚动条美化 */
+::-webkit-scrollbar { width: 8px; }
+::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.15); border-radius: 4px; }
+
+/* 響應式字體 */
+.text-huge { font-size: clamp(28px, 5vw, 48px); }
+.text-big { font-size: clamp(20px, 3.5vw, 32px); }
+.text-normal { font-size: clamp(16px, 2.5vw, 24px); }
+.text-small { font-size: clamp(14px, 2vw, 20px); }
+</style>
+</head>
+<body class="watercolor-bg">
+
+<div id="particles"></div>
+
+<!-- ========== 開始頁 ========== -->
+<div id="page-start" class="page active">
+  <div class="flex flex-col items-center justify-start px-6 py-6 min-h-screen overflow-y-auto">
+    <!-- 標題 -->
+    <div class="text-center mb-4 mt-2">
+      <div class="inline-block bg-white/70 backdrop-blur rounded-[32px] px-6 py-4 shadow-lg">
+        <h1 class="text-huge font-black text-[#5D4037] leading-tight">🐻 小熊住山洞 🏠</h1>
+        <p class="text-big text-[#8D6E63] mt-1">胡木仁</p>
+      </div>
+    </div>
+
+    <!-- 可愛小熊SVG -->
+    <div class="my-3 bear-idle">
+      <svg width="180" height="180" viewBox="0 0 220 220" class="drop-shadow-xl">
+        <!-- 山洞 -->
+        <ellipse cx="110" cy="200" rx="100" ry="25" fill="#8D6E63" opacity="0.3"/>
+        <path d="M 40 190 Q 40 70 110 50 Q 180 70 180 190 Z" fill="#6D4C41" stroke="#5D4037" stroke-width="3"/>
+        <path d="M 55 190 Q 55 90 110 70 Q 165 90 165 190 Z" fill="#3E2723"/>
+        <!-- 小熊 -->
+        <ellipse cx="110" cy="150" rx="38" ry="42" fill="#A1887F"/>
+        <circle cx="95" cy="105" r="14" fill="#8D6E63"/>
+        <circle cx="125" cy="105" r="14" fill="#8D6E63"/>
+        <circle cx="95" cy="105" r="9" fill="#FFCCBC"/>
+        <circle cx="125" cy="105" r="9" fill="#FFCCBC"/>
+        <ellipse cx="110" cy="125" rx="30" ry="28" fill="#BCAAA4"/>
+        <circle cx="100" cy="122" r="5" fill="#3E2723"/>
+        <circle cx="120" cy="122" r="5" fill="#3E2723"/>
+        <circle cx="102" cy="120" r="2" fill="white"/>
+        <circle cx="122" cy="120" r="2" fill="white"/>
+        <ellipse cx="110" cy="135" rx="8" ry="6" fill="#3E2723"/>
+        <path d="M 103 140 Q 110 148 117 140" stroke="#3E2723" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+        <!-- 樹 -->
+        <rect x="25" y="130" width="12" height="60" fill="#6D4C41" rx="3"/>
+        <circle cx="31" cy="120" r="28" fill="#66BB6A"/>
+        <circle cx="20" cy="128" r="18" fill="#81C784"/>
+        <circle cx="42" cy="128" r="18" fill="#81C784"/>
+        <rect x="183" y="135" width="10" height="55" fill="#6D4C41" rx="3"/>
+        <circle cx="188" cy="125" r="24" fill="#66BB6A"/>
+        <!-- 花 -->
+        <circle cx="55" cy="185" r="6" fill="#F48FB1"/>
+        <circle cx="55" cy="185" r="3" fill="#FFEB3B"/>
+        <circle cx="170" cy="188" r="5" fill="#CE93D8"/>
+        <circle cx="170" cy="188" r="2.5" fill="#FFEB3B"/>
+      </svg>
+    </div>
+
+    <!-- 遊戲說明 -->
+    <div class="bg-white/80 backdrop-blur rounded-3xl p-5 max-w-md w-full mb-4 shadow-lg">
+      <p class="text-normal text-[#5D4037] text-center leading-relaxed">
+        🌲 跟著小熊一起走進森林<br>
+        🌸 體驗四季美麗的變化<br>
+        💝 學會愛護樹木和大自然
+      </p>
+    </div>
+
+    <!-- 開始按鈕 -->
+    <button class="btn-primary mb-4" onclick="playSfx('click');goToPage('page-intro')">
+      🎮 開始遊戲
+    </button>
+  </div>
+</div>
+
+<!-- 全局聲音按鈕(固定) -->
+<button class="fixed top-3 right-3 z-50 w-12 h-12 rounded-full bg-white/90 backdrop-blur shadow-lg flex items-center justify-center text-2xl border-2 border-[#8D6E63]/20 cursor-pointer" id="soundToggle" onclick="toggleSound()" style="pointer-events:auto">
+  🔊
+</button>
+
+<!-- ========== 介紹頁：熊爸爸說話 ========== -->
+<div id="page-intro" class="page">
+  <div class="flex-1 flex flex-col items-center justify-center px-6 py-8 min-h-screen">
+    <div class="text-center mb-4">
+      <span class="inline-block bg-[#8D6E63] text-white px-5 py-2 rounded-full text-small font-bold">故事開始</span>
+    </div>
+
+    <!-- 場景圖 -->
+    <div class="scene-card scene-cave w-full max-w-lg p-6 mb-6">
+      <svg viewBox="0 0 400 300" class="w-full" id="introSvg">
+        <!-- 草地 -->
+        <ellipse cx="200" cy="290" rx="200" ry="25" fill="#81C784"/>
+        <!-- 山洞 -->
+        <path d="M 80 280 Q 80 80 200 50 Q 320 80 320 280 Z" fill="#6D4C41" stroke="#5D4037" stroke-width="4"/>
+        <path d="M 100 280 Q 100 110 200 85 Q 300 110 300 280 Z" fill="#3E2723"/>
+        <!-- 石頭 -->
+        <ellipse cx="70" cy="275" rx="20" ry="12" fill="#9E9E9E"/>
+        <ellipse cx="340" cy="278" rx="18" ry="10" fill="#9E9E9E"/>
+        <!-- 熊爸爸 -->
+        <g transform="translate(120,180)">
+          <ellipse cx="0" cy="45" rx="34" ry="38" fill="#8D6E63"/>
+          <circle cx="-16" cy="5" r="14" fill="#795548"/>
+          <circle cx="16" cy="5" r="14" fill="#795548"/>
+          <circle cx="-16" cy="5" r="9" fill="#BCAAA4"/>
+          <circle cx="16" cy="5" r="9" fill="#BCAAA4"/>
+          <ellipse cx="0" cy="24" rx="27" ry="25" fill="#A1887F"/>
+          <circle cx="-10" cy="20" r="4.5" fill="#3E2723"/>
+          <circle cx="10" cy="20" r="4.5" fill="#3E2723"/>
+          <circle cx="-8" cy="18" r="1.5" fill="white"/>
+          <circle cx="12" cy="18" r="1.5" fill="white"/>
+          <ellipse cx="0" cy="31" rx="7" ry="5" fill="#3E2723"/>
+          <path d="M -7 36 Q 0 42 7 36" stroke="#3E2723" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+          <!-- 熊爸爸的手 -->
+          <ellipse cx="28" cy="40" rx="10" ry="8" fill="#A1887F"/>
+        </g>
+        <!-- 小熊 -->
+        <g transform="translate(260,195)" class="bear-idle">
+          <ellipse cx="0" cy="35" rx="24" ry="28" fill="#BCAAA4"/>
+          <circle cx="-10" cy="2" r="10" fill="#A1887F"/>
+          <circle cx="10" cy="2" r="10" fill="#A1887F"/>
+          <circle cx="-10" cy="2" r="6" fill="#D7CCC8"/>
+          <circle cx="10" cy="2" r="6" fill="#D7CCC8"/>
+          <ellipse cx="0" cy="16" rx="19" ry="18" fill="#D7CCC8"/>
+          <circle cx="-7" cy="13" r="3.5" fill="#3E2723"/>
+          <circle cx="7" cy="13" r="3.5" fill="#3E2723"/>
+          <circle cx="-5" cy="11.5" r="1.2" fill="white"/>
+          <circle cx="9" cy="11.5" r="1.2" fill="white"/>
+          <ellipse cx="0" cy="22" rx="5" ry="3.5" fill="#3E2723"/>
+          <path d="M -4 26 Q 0 30 4 26" stroke="#3E2723" stroke-width="2" fill="none" stroke-linecap="round"/>
+        </g>
+
+        <!-- 可點擊的斧頭（放大、加熱點、脈衝動畫） -->
+        <g id="axeBtn" onclick="clickAxe()" style="cursor:pointer;pointer-events:all;">
+          <!-- 加大的透明點擊熱區 -->
+          <circle cx="165" cy="215" r="45" fill="rgba(255,152,0,0.0)" stroke="none"/>
+          <!-- 斧柄 -->
+          <g class="axe-pulse" id="axeGraphic" style="transform-origin:165px 215px;">
+            <rect x="152" y="215" width="8" height="55" fill="#795548" rx="3" transform="rotate(-25 156 242)"/>
+            <rect x="150" y="220" width="3" height="50" fill="#5D4037" rx="1" transform="rotate(-25 151 245)" opacity="0.5"/>
+            <!-- 斧頭金屬部分 -->
+            <path d="M 160 200 L 185 188 L 195 208 L 170 220 Z" fill="#BDBDBD" stroke="#616161" stroke-width="2"/>
+            <path d="M 165 202 L 182 193 L 188 205 L 172 213 Z" fill="#E0E0E0"/>
+            <!-- 光澤 -->
+            <path d="M 168 200 L 180 194" stroke="white" stroke-width="2" stroke-linecap="round" opacity="0.7"/>
+          </g>
+          <!-- 點擊提示光圈（動畫） -->
+          <circle cx="172" cy="205" r="28" fill="none" stroke="#FF9800" stroke-width="4" class="axe-ring" opacity="0.8"/>
+          <!-- 「點我」文字 -->
+          <g id="axeText">
+            <rect x="140" y="268" width="70" height="28" rx="14" fill="#FF5722"/>
+            <text x="175" y="287" text-anchor="middle" font-size="16" fill="white" font-weight="bold">👆 點我！</text>
+          </g>
+        </g>
+
+        <!-- 對話框（熊爸爸） -->
+        <g id="dadDialog1">
+          <rect x="40" y="15" width="320" height="55" rx="16" fill="white" stroke="#BCAAA4" stroke-width="2"/>
+          <text x="200" y="40" text-anchor="middle" font-size="19" fill="#5D4037" font-weight="bold">熊爸爸：我們去砍些樹，</text>
+          <text x="200" y="62" text-anchor="middle" font-size="19" fill="#5D4037" font-weight="bold">造一間木頭房子來住吧！</text>
+        </g>
+      </svg>
+    </div>
+
+    <!-- 課文 -->
+    <div class="speech-bubble max-w-lg mx-4 mb-6">
+      <p class="text-big text-[#5D4037] font-bold text-center leading-relaxed">
+        小熊一家住在山洞裏。<br>
+        熊爸爸對小熊說：<br>
+        <span class="text-[#FF5722]">「我們去砍些樹，造一間木頭房子來住。」</span>
+      </p>
+    </div>
+
+    <!-- 互動提示 -->
+    <p id="axeHint" class="text-normal text-[#FF5722] mb-4 text-center font-bold animate-bounce">🪓 點擊斧頭，和熊爸爸一起出發！</p>
+
+    <button class="btn-primary hidden" id="introNext" onclick="playSfx('click');goToPage('page-spring')">
+      🌲 走進春天的森林 →
+    </button>
+
+    <!-- 進度 -->
+    <div class="flex gap-2 mt-6 mb-4">
+      <div class="progress-dot active"></div>
+      <div class="progress-dot"></div>
+      <div class="progress-dot"></div>
+      <div class="progress-dot"></div>
+      <div class="progress-dot"></div>
+      <div class="progress-dot"></div>
+      <div class="progress-dot"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ========== 春天場景 ========== -->
+<div id="page-spring" class="page">
+  <div class="flex-1 flex flex-col items-center px-6 py-6 min-h-screen">
+    <div class="text-center mb-3">
+      <span class="inline-block bg-[var(--spring)] text-white px-5 py-2 rounded-full text-big font-bold">🌸 春天來了</span>
+    </div>
+
+    <div class="scene-card scene-spring w-full max-w-lg p-4 mb-4 relative" id="springScene">
+      <svg viewBox="0 0 400 300" class="w-full" id="springSvg">
+        <rect width="400" height="300" fill="transparent"/>
+        <ellipse cx="200" cy="295" rx="210" ry="40" fill="#66BB6A"/>
+        <ellipse cx="80" cy="290" rx="60" ry="20" fill="#81C784"/>
+        <ellipse cx="320" cy="290" rx="60" ry="20" fill="#81C784"/>
+        <g fill="white" opacity="0.8">
+          <ellipse cx="60" cy="40" rx="25" ry="15"/>
+          <ellipse cx="80" cy="35" rx="20" ry="14"/>
+          <ellipse cx="350" cy="50" rx="22" ry="13"/>
+        </g>
+        <circle cx="350" cy="50" r="25" fill="#FFD54F" opacity="0.9"/>
+        <g stroke="#FFD54F" stroke-width="3" stroke-linecap="round">
+          <line x1="350" y1="15" x2="350" y2="5"/>
+          <line x1="375" y1="25" x2="383" y2="18"/>
+          <line x1="380" y1="50" x2="390" y2="50"/>
+        </g>
+        <g class="tree-clickable" id="springTree" onclick="onTreeClick('spring','綠葉')">
+          <rect x="180" y="150" width="20" height="120" fill="#795548" rx="5"/>
+          <circle cx="150" cy="130" r="45" fill="#4CAF50"/>
+          <circle cx="200" cy="100" r="50" fill="#66BB6A"/>
+          <circle cx="250" cy="135" r="42" fill="#4CAF50"/>
+          <circle cx="170" cy="150" r="30" fill="#81C784"/>
+          <circle cx="230" cy="155" r="28" fill="#81C784"/>
+          <circle cx="140" cy="120" r="6" fill="#A5D6A7"/>
+          <circle cx="210" cy="90" r="7" fill="#C8E6C9"/>
+          <circle cx="260" cy="125" r="6" fill="#A5D6A7"/>
+          <circle cx="175" cy="165" r="5" fill="#C8E6C9"/>
+        </g>
+        <g>
+          <circle cx="50" cy="270" r="7" fill="#F48FB1"/><circle cx="50" cy="270" r="3" fill="#FFEB3B"/>
+          <circle cx="100" cy="278" r="6" fill="#CE93D8"/><circle cx="100" cy="278" r="2.5" fill="#FFEB3B"/>
+          <circle cx="330" cy="272" r="7" fill="#F48FB1"/><circle cx="330" cy="272" r="3" fill="#FFEB3B"/>
+          <circle cx="370" cy="280" r="5" fill="#FFF59D"/><circle cx="370" cy="280" r="2" fill="#FF9800"/>
+        </g>
+        <g transform="translate(90,190)" class="bear-idle">
+          <ellipse cx="0" cy="30" rx="22" ry="26" fill="#BCAAA4"/>
+          <circle cx="-9" cy="0" r="9" fill="#A1887F"/>
+          <circle cx="9" cy="0" r="9" fill="#A1887F"/>
+          <circle cx="-9" cy="0" r="5.5" fill="#D7CCC8"/>
+          <circle cx="9" cy="0" r="5.5" fill="#D7CCC8"/>
+          <ellipse cx="0" cy="14" rx="17" ry="16" fill="#D7CCC8"/>
+          <circle cx="-6" cy="11" r="3" fill="#3E2723"/>
+          <circle cx="6" cy="11" r="3" fill="#3E2723"/>
+          <ellipse cx="0" cy="19" rx="4" ry="3" fill="#3E2723"/>
+          <path d="M -4 22 Q 0 20 4 22" stroke="#3E2723" stroke-width="1.5" fill="none"/>
+          <line x1="18" y1="25" x2="40" y2="0" stroke="#BCAAA4" stroke-width="8" stroke-linecap="round"/>
+        </g>
+        <g id="springDialog" opacity="0">
+          <rect x="30" y="130" width="140" height="45" rx="14" fill="white" stroke="#A5D6A7" stroke-width="2"/>
+          <text x="100" y="150" text-anchor="middle" font-size="16" fill="#5D4037" font-weight="bold">樹上長滿了綠葉，</text>
+          <text x="100" y="170" text-anchor="middle" font-size="16" fill="#5D4037" font-weight="bold">我捨不得砍！</text>
+        </g>
+      </svg>
+      <div id="springHint" class="absolute top-3 right-3 bg-white/90 rounded-full px-3 py-1 text-small text-[#4CAF50] font-bold animate-pulse">👆 點點大樹</div>
+    </div>
+
+    <div class="bg-white/80 backdrop-blur rounded-2xl p-5 max-w-lg mb-4 shadow-md">
+      <p class="text-big text-[#5D4037] text-center leading-relaxed font-bold">
+        春天，他們走進森林。<br>
+        樹上長滿了<span class="text-[#4CAF50] text-[1.2em]">綠葉</span>，<br>
+        小熊<span class="text-[#E91E63]">捨不得砍</span>。
+      </p>
+    </div>
+
+    <button class="btn-primary" id="springNext" onclick="goToPage('page-summer')" disabled style="opacity:0.5;filter:grayscale(0.5)">
+      ➋ 夏天來了 →
+    </button>
+
+    <div class="flex gap-2 mt-5 mb-3">
+      <div class="progress-dot done"></div>
+      <div class="progress-dot active"></div>
+      <div class="progress-dot"></div>
+      <div class="progress-dot"></div>
+      <div class="progress-dot"></div>
+      <div class="progress-dot"></div>
+      <div class="progress-dot"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ========== 夏天場景 ========== -->
+<div id="page-summer" class="page">
+  <div class="flex-1 flex flex-col items-center px-6 py-6 min-h-screen">
+    <div class="text-center mb-3">
+      <span class="inline-block bg-[var(--summer)] text-white px-5 py-2 rounded-full text-big font-bold">🌻 夏天來了</span>
+    </div>
+
+    <div class="scene-card scene-summer w-full max-w-lg p-4 mb-4 relative" id="summerScene">
+      <svg viewBox="0 0 400 300" class="w-full" id="summerSvg">
+        <ellipse cx="200" cy="295" rx="210" ry="40" fill="#9CCC65"/>
+        <circle cx="340" cy="45" r="32" fill="#FFB300"/>
+        <g stroke="#FFB300" stroke-width="4" stroke-linecap="round">
+          <line x1="340" y1="5" x2="340" y2="-5"/>
+          <line x1="370" y1="15" x2="380" y2="8"/>
+          <line x1="380" y1="45" x2="395" y2="45"/>
+          <line x1="370" y1="75" x2="380" y2="82"/>
+          <line x1="310" y1="15" x2="300" y2="8"/>
+        </g>
+        <path d="M 70 50 Q 80 42 90 50 Q 100 42 110 50" stroke="#5D4037" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+        <g class="tree-clickable" id="summerTree" onclick="onTreeClick('summer','花兒')">
+          <rect x="175" y="150" width="22" height="120" fill="#6D4C41" rx="5"/>
+          <circle cx="145" cy="125" r="48" fill="#388E3C"/>
+          <circle cx="200" cy="95" r="55" fill="#43A047"/>
+          <circle cx="258" cy="130" r="45" fill="#388E3C"/>
+          <circle cx="170" cy="150" r="32" fill="#66BB6A"/>
+          <circle cx="235" cy="152" r="30" fill="#66BB6A"/>
+          <g id="summerFlowers">
+            <circle cx="130" cy="110" r="8" fill="#E91E63"/><circle cx="130" cy="110" r="3" fill="#FFEB3B"/>
+            <circle cx="200" cy="70" r="9" fill="#FF5722"/><circle cx="200" cy="70" r="3.5" fill="#FFEB3B"/>
+            <circle cx="270" cy="110" r="8" fill="#9C27B0"/><circle cx="270" cy="110" r="3" fill="#FFEB3B"/>
+            <circle cx="160" cy="140" r="7" fill="#FFC107"/><circle cx="160" cy="140" r="2.5" fill="#FF5722"/>
+            <circle cx="240" cy="135" r="7" fill="#E91E63"/><circle cx="240" cy="135" r="2.5" fill="#FFEB3B"/>
+            <circle cx="185" cy="100" r="6" fill="#FF9800"/><circle cx="185" cy="100" r="2" fill="#FFF"/>
+            <circle cx="220" cy="110" r="6" fill="#F44336"/><circle cx="220" cy="110" r="2" fill="#FFF"/>
+          </g>
+        </g>
+        <g transform="translate(80,200)">
+          <ellipse cx="-8" cy="0" rx="8" ry="10" fill="#F48FB1" opacity="0.8"/>
+          <ellipse cx="8" cy="0" rx="8" ry="10" fill="#F48FB1" opacity="0.8"/>
+          <rect x="-1" y="-8" width="2" height="16" fill="#5D4037" rx="1"/>
+        </g>
+        <g>
+          <circle cx="40" cy="275" r="9" fill="#E91E63"/><circle cx="40" cy="275" r="4" fill="#FFEB3B"/>
+          <circle cx="360" cy="275" r="8" fill="#FF5722"/><circle cx="360" cy="275" r="3" fill="#FFEB3B"/>
+        </g>
+        <g transform="translate(80,195)" class="bear-idle">
+          <ellipse cx="0" cy="30" rx="22" ry="26" fill="#BCAAA4"/>
+          <circle cx="-9" cy="0" r="9" fill="#A1887F"/>
+          <circle cx="9" cy="0" r="9" fill="#A1887F"/>
+          <ellipse cx="0" cy="14" rx="17" ry="16" fill="#D7CCC8"/>
+          <circle cx="-6" cy="11" r="3" fill="#3E2723"/>
+          <circle cx="6" cy="11" r="3" fill="#3E2723"/>
+          <ellipse cx="0" cy="19" rx="4" ry="3" fill="#3E2723"/>
+          <path d="M -5 23 Q 0 25 5 23" stroke="#3E2723" stroke-width="1.5" fill="none"/>
+          <line x1="18" y1="22" x2="45" y2="-20" stroke="#BCAAA4" stroke-width="7" stroke-linecap="round"/>
+        </g>
+        <g id="summerDialog" opacity="0">
+          <rect x="30" y="140" width="145" height="45" rx="14" fill="white" stroke="#FFE082" stroke-width="2"/>
+          <text x="102" y="160" text-anchor="middle" font-size="16" fill="#5D4037" font-weight="bold">樹上開滿了花兒，</text>
+          <text x="102" y="180" text-anchor="middle" font-size="16" fill="#5D4037" font-weight="bold">我捨不得砍！</text>
+        </g>
+      </svg>
+      <div id="summerHint" class="absolute top-3 right-3 bg-white/90 rounded-full px-3 py-1 text-small text-[#FF9800] font-bold animate-pulse">👆 點點大樹</div>
+    </div>
+
+    <div class="bg-white/80 backdrop-blur rounded-2xl p-5 max-w-lg mb-4 shadow-md">
+      <p class="text-big text-[#5D4037] text-center leading-relaxed font-bold">
+        夏天，他們走進森林。<br>
+        樹上開滿了<span class="text-[#E91E63] text-[1.2em]">花兒</span>，<br>
+        小熊<span class="text-[#E91E63]">捨不得砍</span>。
+      </p>
+    </div>
+
+    <button class="btn-primary" id="summerNext" onclick="goToPage('page-autumn')" disabled style="opacity:0.5;filter:grayscale(0.5)">
+      ➌ 秋天來了 →
+    </button>
+
+    <div class="flex gap-2 mt-5 mb-3">
+      <div class="progress-dot done"></div>
+      <div class="progress-dot done"></div>
+      <div class="progress-dot active"></div>
+      <div class="progress-dot"></div>
+      <div class="progress-dot"></div>
+      <div class="progress-dot"></div>
+      <div class="progress-dot"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ========== 秋天場景 ========== -->
+<div id="page-autumn" class="page">
+  <div class="flex-1 flex flex-col items-center px-6 py-6 min-h-screen">
+    <div class="text-center mb-3">
+      <span class="inline-block bg-[var(--autumn)] text-white px-5 py-2 rounded-full text-big font-bold">🍎 秋天來了</span>
+    </div>
+
+    <div class="scene-card scene-autumn w-full max-w-lg p-4 mb-4 relative" id="autumnScene">
+      <svg viewBox="0 0 400 300" class="w-full" id="autumnSvg">
+        <g fill="#FF8F00" opacity="0.5">
+          <ellipse cx="60" cy="80" rx="5" ry="8" transform="rotate(30 60 80)"/>
+          <ellipse cx="320" cy="100" rx="4" ry="7" transform="rotate(-20 320 100)"/>
+        </g>
+        <ellipse cx="200" cy="295" rx="210" ry="40" fill="#C5A369"/>
+        <g class="tree-clickable" id="autumnTree" onclick="onTreeClick('autumn','果子')">
+          <rect x="175" y="145" width="24" height="130" fill="#5D4037" rx="5"/>
+          <circle cx="140" cy="120" r="50" fill="#E65100"/>
+          <circle cx="200" cy="85" r="58" fill="#EF6C00"/>
+          <circle cx="260" cy="120" r="48" fill="#E65100"/>
+          <circle cx="165" cy="145" r="33" fill="#FF8F00"/>
+          <circle cx="240" cy="148" r="30" fill="#FF8F00"/>
+          <g id="autumnFruits">
+            <circle cx="130" cy="100" r="9" fill="#D32F2F"/>
+            <circle cx="128" cy="96" r="2" fill="#FFEB3B" opacity="0.6"/>
+            <circle cx="195" cy="65" r="10" fill="#F57C00"/>
+            <circle cx="193" cy="61" r="2.5" fill="#FFEB3B" opacity="0.6"/>
+            <circle cx="270" cy="95" r="9" fill="#C62828"/>
+            <circle cx="268" cy="91" r="2" fill="#FFEB3B" opacity="0.6"/>
+            <circle cx="155" cy="130" r="8" fill="#E65100"/>
+            <circle cx="235" cy="125" r="8" fill="#D32F2F"/>
+            <circle cx="185" cy="100" r="7" fill="#F57C00"/>
+            <circle cx="220" cy="110" r="7" fill="#C62828"/>
+            <circle cx="170" cy="80" r="6" fill="#D32F2F"/>
+            <circle cx="245" cy="85" r="6" fill="#E65100"/>
+          </g>
+        </g>
+        <ellipse cx="340" cy="270" rx="25" ry="10" fill="#FF8F00" opacity="0.6"/>
+        <ellipse cx="50" cy="272" rx="20" ry="8" fill="#E65100" opacity="0.5"/>
+        <g transform="translate(75,190)" class="bear-idle">
+          <ellipse cx="0" cy="32" rx="23" ry="27" fill="#BCAAA4"/>
+          <circle cx="-9" cy="0" r="9" fill="#A1887F"/>
+          <circle cx="9" cy="0" r="9" fill="#A1887F"/>
+          <ellipse cx="0" cy="15" rx="17" ry="16" fill="#D7CCC8"/>
+          <circle cx="-6" cy="12" r="3" fill="#3E2723"/>
+          <circle cx="6" cy="12" r="3" fill="#3E2723"/>
+          <ellipse cx="0" cy="20" rx="4" ry="3" fill="#3E2723"/>
+          <path d="M -4 24 Q 0 27 4 24" stroke="#3E2723" stroke-width="1.5" fill="none"/>
+          <path d="M 20 30 Q 20 22 30 22 Q 40 22 40 30 L 38 38 Q 30 42 22 38 Z" fill="#8D6E63"/>
+          <line x1="20" y1="30" x2="40" y2="30" stroke="#6D4C41" stroke-width="2"/>
+        </g>
+        <g id="autumnDialog" opacity="0">
+          <rect x="20" y="140" width="140" height="45" rx="14" fill="white" stroke="#FFAB91" stroke-width="2"/>
+          <text x="90" y="160" text-anchor="middle" font-size="16" fill="#5D4037" font-weight="bold">樹上結滿了果子，</text>
+          <text x="90" y="180" text-anchor="middle" font-size="16" fill="#5D4037" font-weight="bold">我捨不得砍！</text>
+        </g>
+      </svg>
+      <div id="autumnHint" class="absolute top-3 right-3 bg-white/90 rounded-full px-3 py-1 text-small text-[#E65100] font-bold animate-pulse">👆 點點大樹</div>
+    </div>
+
+    <div class="bg-white/80 backdrop-blur rounded-2xl p-5 max-w-lg mb-4 shadow-md">
+      <p class="text-big text-[#5D4037] text-center leading-relaxed font-bold">
+        秋天，他們走進森林。<br>
+        樹上結滿了<span class="text-[#D32F2F] text-[1.2em]">果子</span>，<br>
+        小熊<span class="text-[#E91E63]">捨不得砍</span>。
+      </p>
+    </div>
+
+    <button class="btn-primary" id="autumnNext" onclick="goToPage('page-winter')" disabled style="opacity:0.5;filter:grayscale(0.5)">
+      ➍ 冬天來了 →
+    </button>
+
+    <div class="flex gap-2 mt-5 mb-3">
+      <div class="progress-dot done"></div>
+      <div class="progress-dot done"></div>
+      <div class="progress-dot done"></div>
+      <div class="progress-dot active"></div>
+      <div class="progress-dot"></div>
+      <div class="progress-dot"></div>
+      <div class="progress-dot"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ========== 冬天場景 ========== -->
+<div id="page-winter" class="page">
+  <div class="flex-1 flex flex-col items-center px-6 py-6 min-h-screen">
+    <div class="text-center mb-3">
+      <span class="inline-block bg-[var(--winter)] text-white px-5 py-2 rounded-full text-big font-bold">❄️ 冬天來了</span>
+    </div>
+
+    <div class="scene-card scene-winter w-full max-w-lg p-4 mb-4 relative" id="winterScene">
+      <svg viewBox="0 0 400 300" class="w-full" id="winterSvg">
+        <g fill="white" opacity="0.8">
+          <text x="50" y="40" font-size="16">❄</text>
+          <text x="300" y="60" font-size="14">❄</text>
+          <text x="150" y="30" font-size="12">❄</text>
+          <text x="370" y="90" font-size="18">❄</text>
+        </g>
+        <ellipse cx="200" cy="295" rx="210" ry="40" fill="#E3F2FD"/>
+        <ellipse cx="80" cy="290" rx="70" ry="20" fill="white"/>
+        <ellipse cx="320" cy="288" rx="70" ry="22" fill="white"/>
+        <g class="tree-clickable" id="winterTree" onclick="onTreeClick('winter','鳥兒')">
+          <rect x="183" y="130" width="20" height="140" fill="#5D4037" rx="5"/>
+          <line x1="193" y1="160" x2="130" y2="120" stroke="#5D4037" stroke-width="8" stroke-linecap="round"/>
+          <line x1="193" y1="140" x2="260" y2="100" stroke="#5D4037" stroke-width="9" stroke-linecap="round"/>
+          <line x1="193" y1="175" x2="140" y2="160" stroke="#5D4037" stroke-width="7" stroke-linecap="round"/>
+          <line x1="193" y1="155" x2="250" y2="135" stroke="#5D4037" stroke-width="7" stroke-linecap="round"/>
+          <path d="M 130 120 Q 160 113 193 120" stroke="white" stroke-width="6" fill="none" stroke-linecap="round"/>
+          <path d="M 193 100 Q 225 93 260 100" stroke="white" stroke-width="7" fill="none" stroke-linecap="round"/>
+          <ellipse cx="195" cy="125" rx="22" ry="12" fill="#8D6E63"/>
+          <path d="M 175 125 Q 195 105 215 125" stroke="#6D4C41" stroke-width="4" fill="none"/>
+          <g id="winterBirds">
+            <ellipse cx="185" cy="118" rx="7" ry="6" fill="#F44336"/>
+            <circle cx="179" cy="114" r="5" fill="#E53935"/>
+            <circle cx="177" cy="113" r="1.5" fill="#3E2723"/>
+            <path d="M 174 114 L 170 115 L 174 117" fill="#FF9800"/>
+            <ellipse cx="205" cy="116" rx="7" ry="6" fill="#2196F3"/>
+            <circle cx="211" cy="112" r="5" fill="#1E88E5"/>
+            <circle cx="213" cy="111" r="1.5" fill="#3E2723"/>
+            <path d="M 216 112 L 220 113 L 216 115" fill="#FF9800"/>
+            <ellipse cx="195" cy="110" rx="6" ry="5" fill="#FFEB3B"/>
+            <circle cx="190" cy="107" r="4" fill="#FDD835"/>
+            <circle cx="188" cy="106" r="1.2" fill="#3E2723"/>
+            <path d="M 186 108 L 182 109 L 186 110" fill="#FF9800"/>
+          </g>
+        </g>
+        <g transform="translate(330,220)">
+          <circle cx="0" cy="30" r="22" fill="white" stroke="#CFD8DC" stroke-width="2"/>
+          <circle cx="0" cy="5" r="16" fill="white" stroke="#CFD8DC" stroke-width="2"/>
+          <circle cx="-5" cy="2" r="2" fill="#3E2723"/>
+          <circle cx="5" cy="2" r="2" fill="#3E2723"/>
+          <polygon points="0,6 -3,10 8,8" fill="#FF9800"/>
+          <path d="M -5 12 Q 0 16 5 12" stroke="#3E2723" stroke-width="1.5" fill="none"/>
+          <rect x="-12" y="-15" width="24" height="5" fill="#3E2723" rx="1"/>
+          <rect x="-8" y="-23" width="16" height="10" fill="#3E2723" rx="2"/>
+        </g>
+        <g transform="translate(85,195)" class="bear-idle">
+          <ellipse cx="0" cy="32" rx="23" ry="27" fill="#BCAAA4"/>
+          <rect x="-20" y="18" width="40" height="10" fill="#F44336" rx="3"/>
+          <rect x="10" y="22" width="12" height="20" fill="#D32F2F" rx="2"/>
+          <circle cx="-9" cy="0" r="9" fill="#A1887F"/>
+          <circle cx="9" cy="0" r="9" fill="#A1887F"/>
+          <ellipse cx="0" cy="12" rx="17" ry="14" fill="#D7CCC8"/>
+          <circle cx="-6" cy="10" r="3" fill="#3E2723"/>
+          <circle cx="6" cy="10" r="3" fill="#3E2723"/>
+          <ellipse cx="0" cy="17" rx="4" ry="3" fill="#3E2723"/>
+          <path d="M -4 21 Q 0 19 4 21" stroke="#3E2723" stroke-width="1.5" fill="none"/>
+          <line x1="-20" y1="26" x2="-45" y2="-40" stroke="#BCAAA4" stroke-width="7" stroke-linecap="round"/>
+        </g>
+        <g id="winterDialog" opacity="0">
+          <rect x="20" y="145" width="150" height="45" rx="14" fill="white" stroke="#90CAF9" stroke-width="2"/>
+          <text x="95" y="165" text-anchor="middle" font-size="16" fill="#5D4037" font-weight="bold">樹上住著許多鳥兒，</text>
+          <text x="95" y="185" text-anchor="middle" font-size="16" fill="#5D4037" font-weight="bold">我捨不得砍！</text>
+        </g>
+      </svg>
+      <div id="winterHint" class="absolute top-3 right-3 bg-white/90 rounded-full px-3 py-1 text-small text-[#1976D2] font-bold animate-pulse">👆 點點大樹</div>
+    </div>
+
+    <div class="bg-white/80 backdrop-blur rounded-2xl p-5 max-w-lg mb-4 shadow-md">
+      <p class="text-big text-[#5D4037] text-center leading-relaxed font-bold">
+        冬天，他們走進森林。<br>
+        樹上住著許多<span class="text-[#1976D2] text-[1.2em]">鳥兒</span>，<br>
+        小熊<span class="text-[#E91E63]">捨不得砍</span>。
+      </p>
+    </div>
+
+    <button class="btn-primary" id="winterNext" onclick="goToPage('page-wait')" disabled style="opacity:0.5;filter:grayscale(0.5)">
+      ➎ 一年又一年 →
+    </button>
+
+    <div class="flex gap-2 mt-5 mb-3">
+      <div class="progress-dot done"></div>
+      <div class="progress-dot done"></div>
+      <div class="progress-dot done"></div>
+      <div class="progress-dot done"></div>
+      <div class="progress-dot active"></div>
+      <div class="progress-dot"></div>
+      <div class="progress-dot"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ========== 一年又一年 ========== -->
+<div id="page-wait" class="page">
+  <div class="flex-1 flex flex-col items-center justify-center px-6 py-8 min-h-screen">
+    <div class="text-center mb-4">
+      <span class="inline-block bg-[#795548] text-white px-5 py-2 rounded-full text-big font-bold">⏳ 一年又一年</span>
+    </div>
+
+    <div class="scene-card scene-cave w-full max-w-lg p-6 mb-6">
+      <svg viewBox="0 0 400 260" class="w-full" id="waitSvg">
+        <path d="M 60 250 Q 60 60 200 30 Q 340 60 340 250 Z" fill="#6D4C41" stroke="#5D4037" stroke-width="4"/>
+        <path d="M 80 250 Q 80 90 200 60 Q 320 90 320 250 Z" fill="#4E342E"/>
+        <rect x="20" y="140" width="10" height="70" fill="#5D4037" rx="3"/>
+        <circle cx="25" cy="130" r="25" fill="#4CAF50"/>
+        <rect x="30" y="150" width="8" height="60" fill="#5D4037" rx="2"/>
+        <circle cx="34" cy="142" r="20" fill="#66BB6A"/>
+        <rect x="355" y="135" width="10" height="75" fill="#5D4037" rx="3"/>
+        <circle cx="360" cy="125" r="28" fill="#4CAF50"/>
+        <rect x="370" y="148" width="9" height="62" fill="#5D4037" rx="2"/>
+        <circle cx="375" cy="138" r="22" fill="#66BB6A"/>
+        <ellipse cx="200" cy="255" rx="200" ry="25" fill="#66BB6A"/>
+        <g transform="translate(200,170)">
+          <g transform="translate(-35,10)">
+            <ellipse cx="0" cy="35" rx="26" ry="30" fill="#8D6E63"/>
+            <circle cx="-10" cy="5" r="10" fill="#795548"/>
+            <circle cx="10" cy="5" r="10" fill="#795548"/>
+            <ellipse cx="0" cy="20" rx="20" ry="19" fill="#A1887F"/>
+            <circle cx="-7" cy="17" r="3" fill="#3E2723"/>
+            <circle cx="7" cy="17" r="3" fill="#3E2723"/>
+            <ellipse cx="0" cy="25" rx="4" ry="3" fill="#3E2723"/>
+            <path d="M -5 29 Q 0 33 5 29" stroke="#3E2723" stroke-width="1.5" fill="none"/>
+          </g>
+          <g transform="translate(30,15)" class="bear-idle">
+            <ellipse cx="0" cy="28" rx="20" ry="24" fill="#BCAAA4"/>
+            <circle cx="-8" cy="0" r="8" fill="#A1887F"/>
+            <circle cx="8" cy="0" r="8" fill="#A1887F"/>
+            <ellipse cx="0" cy="12" rx="15" ry="14" fill="#D7CCC8"/>
+            <circle cx="-5" cy="10" r="2.5" fill="#3E2723"/>
+            <circle cx="5" cy="10" r="2.5" fill="#3E2723"/>
+            <ellipse cx="0" cy="16" rx="3.5" ry="2.5" fill="#3E2723"/>
+            <path d="M -3 19 Q 0 22 3 19" stroke="#3E2723" stroke-width="1.5" fill="none"/>
+          </g>
+        </g>
+        <g opacity="0.15" transform="translate(140,180)">
+          <rect x="0" y="0" width="50" height="40" fill="#8D6E63"/>
+          <polygon points="25,-20 -5,0 55,0" fill="#5D4037"/>
+          <rect x="18" y="18" width="14" height="22" fill="#3E2723"/>
+        </g>
+      </svg>
+    </div>
+
+    <div class="bg-white/90 backdrop-blur rounded-3xl p-6 max-w-lg mx-4 mb-6 shadow-lg text-center">
+      <p class="text-big text-[#5D4037] font-bold leading-relaxed">
+        一年又一年，<br>
+        他們都<span class="text-[#4CAF50] text-[1.3em]">沒有砍樹</span>造房子，<br>
+        一直住在山洞裏。
+      </p>
+    </div>
+
+    <div class="bg-[#FFF9C4] rounded-2xl p-5 max-w-md mx-4 mb-6 border-4 border-dashed border-[#FFD54F]">
+      <p class="text-normal text-[#F57F17] font-bold text-center">🤔 想一想：<br>為什麼小熊一直不砍樹呢？</p>
+    </div>
+
+    <button class="btn-primary" onclick="playSfx('click');goToPage('page-end')">
+      🌸 看看發生了什麼 →
+    </button>
+
+    <div class="flex gap-2 mt-5 mb-3">
+      <div class="progress-dot done"></div>
+      <div class="progress-dot done"></div>
+      <div class="progress-dot done"></div>
+      <div class="progress-dot done"></div>
+      <div class="progress-dot done"></div>
+      <div class="progress-dot active"></div>
+      <div class="progress-dot"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ========== 結局：動物們送花 ========== -->
+<div id="page-end" class="page">
+  <div class="flex-1 flex flex-col items-center px-6 py-6 min-h-screen">
+    <div class="text-center mb-4">
+      <span class="inline-block bg-[#E91E63] text-white px-5 py-2 rounded-full text-big font-bold">💝 美麗的結局</span>
+    </div>
+
+    <div class="scene-card scene-end w-full max-w-lg p-4 mb-4 relative" id="endScene">
+      <svg viewBox="0 0 400 320" class="w-full" id="endSvg">
+        <ellipse cx="200" cy="315" rx="210" ry="40" fill="#81C784"/>
+        <path d="M 50 300 Q 50 120 200 90 Q 350 120 350 300 Z" fill="#6D4C41" stroke="#5D4037" stroke-width="4"/>
+        <path d="M 70 300 Q 70 145 200 115 Q 330 145 330 300 Z" fill="#4E342E"/>
+        <rect x="5" y="190" width="10" height="80" fill="#5D4037" rx="3"/>
+        <circle cx="10" cy="180" r="28" fill="#4CAF50"/>
+        <rect x="20" y="200" width="8" height="70" fill="#5D4037" rx="2"/>
+        <circle cx="24" cy="190" r="22" fill="#66BB6A"/>
+        <rect x="375" y="185" width="10" height="85" fill="#5D4037" rx="3"/>
+        <circle cx="380" cy="175" r="30" fill="#4CAF50"/>
+        <rect x="385" y="200" width="8" height="70" fill="#5D4037" rx="2"/>
+        <circle cx="389" cy="190" r="22" fill="#66BB6A"/>
+        <g transform="translate(200,210)" id="bearFamily">
+          <g transform="translate(-45,15)">
+            <ellipse cx="0" cy="35" rx="25" ry="28" fill="#8D6E63"/>
+            <circle cx="-10" cy="8" r="10" fill="#795548"/>
+            <circle cx="10" cy="8" r="10" fill="#795548"/>
+            <ellipse cx="0" cy="22" rx="19" ry="18" fill="#A1887F"/>
+            <circle cx="-7" cy="19" r="3" fill="#3E2723"/>
+            <circle cx="7" cy="19" r="3" fill="#3E2723"/>
+            <path d="M -5 28 Q 0 32 5 28" stroke="#3E2723" stroke-width="2" fill="none"/>
+          </g>
+          <g transform="translate(0,12)">
+            <ellipse cx="0" cy="35" rx="25" ry="28" fill="#A1887F"/>
+            <circle cx="-10" cy="8" r="10" fill="#8D6E63"/>
+            <circle cx="10" cy="8" r="10" fill="#8D6E63"/>
+            <path d="M -5 -5 Q -15 -15 -10 -3 Q -5 5 0 0" fill="#E91E63"/>
+            <path d="M 5 -5 Q 15 -15 10 -3 Q 5 5 0 0" fill="#E91E63"/>
+            <circle cx="0" cy="0" r="3" fill="#C2185B"/>
+            <ellipse cx="0" cy="22" rx="19" ry="18" fill="#BCAAA4"/>
+            <circle cx="-7" cy="19" r="3" fill="#3E2723"/>
+            <circle cx="7" cy="19" r="3" fill="#3E2723"/>
+            <path d="M -5 28 Q 0 33 5 28" stroke="#3E2723" stroke-width="2" fill="none"/>
+          </g>
+          <g transform="translate(45,20)" class="bear-idle">
+            <ellipse cx="0" cy="28" rx="20" ry="24" fill="#BCAAA4"/>
+            <circle cx="-8" cy="0" r="8" fill="#A1887F"/>
+            <circle cx="8" cy="0" r="8" fill="#A1887F"/>
+            <ellipse cx="0" cy="12" rx="15" ry="14" fill="#D7CCC8"/>
+            <circle cx="-5" cy="10" r="2.5" fill="#3E2723"/>
+            <circle cx="5" cy="10" r="2.5" fill="#3E2723"/>
+            <path d="M -4 16 Q 0 20 4 16" stroke="#3E2723" stroke-width="1.5" fill="none"/>
+          </g>
+        </g>
+        <g id="animals" opacity="0">
+          <g transform="translate(80,270)">
+            <ellipse cx="0" cy="10" rx="14" ry="12" fill="white" stroke="#E0E0E0" stroke-width="1"/>
+            <ellipse cx="-6" cy="-15" rx="4" ry="14" fill="white" stroke="#E0E0E0" stroke-width="1"/>
+            <ellipse cx="6" cy="-15" rx="4" ry="14" fill="white" stroke="#E0E0E0" stroke-width="1"/>
+            <ellipse cx="-6" cy="-12" rx="2" ry="9" fill="#F48FB1"/>
+            <ellipse cx="6" cy="-12" rx="2" ry="9" fill="#F48FB1"/>
+            <circle cx="-4" cy="8" r="2" fill="#3E2723"/>
+            <circle cx="4" cy="8" r="2" fill="#3E2723"/>
+            <circle cx="0" cy="12" r="2" fill="#F48FB1"/>
+          </g>
+          <g transform="translate(320,265)">
+            <ellipse cx="0" cy="8" rx="12" ry="14" fill="#FF8F00"/>
+            <path d="M -5 5 Q -25 -15 -15 -5 Q -10 8 -5 15" fill="#FFA726"/>
+            <circle cx="-4" cy="3" r="2" fill="#3E2723"/>
+            <circle cx="4" cy="3" r="2" fill="#3E2723"/>
+            <ellipse cx="0" cy="8" rx="2" ry="1.5" fill="#3E2723"/>
+            <path d="M 8 0 Q 25 -20 20 -5 Q 15 5 10 10" fill="#FF8F00"/>
+          </g>
+          <g transform="translate(130,280)">
+            <ellipse cx="0" cy="5" rx="16" ry="12" fill="#D7CCC8"/>
+            <ellipse cx="0" cy="-8" rx="8" ry="10" fill="#BCAAA4"/>
+            <path d="M -4 -15 L -6 -22 M -2 -16 L -1 -23 M 3 -16 L 4 -23 M 5 -15 L 7 -22" stroke="#8D6E63" stroke-width="1.5" stroke-linecap="round"/>
+            <circle cx="-3" cy="-9" r="1.5" fill="#3E2723"/>
+            <circle cx="3" cy="-9" r="1.5" fill="#3E2723"/>
+            <ellipse cx="0" cy="-5" rx="2" ry="1.5" fill="#3E2723"/>
+            <circle cx="-5" cy="3" r="2" fill="white" opacity="0.6"/>
+            <circle cx="6" cy="5" r="2" fill="white" opacity="0.6"/>
+          </g>
+          <g transform="translate(280,260)">
+            <ellipse cx="0" cy="5" rx="10" ry="9" fill="#F44336"/>
+            <circle cx="-5" cy="0" r="7" fill="#E53935"/>
+            <circle cx="-6" cy="-1" r="1.5" fill="#3E2723"/>
+            <path d="M -10 -1 L -14 0 L -10 2" fill="#FF9800"/>
+            <path d="M 2 5 Q 15 -10 10 0" fill="#E53935"/>
+          </g>
+          <g transform="translate(350,280)">
+            <ellipse cx="0" cy="5" rx="14" ry="10" fill="#8D6E63"/>
+            <g stroke="#5D4037" stroke-width="1.5">
+              <line x1="-10" y1="0" x2="-13" y2="-8"/>
+              <line x1="-5" y1="-2" x2="-6" y2="-12"/>
+              <line x1="0" y1="-3" x2="0" y2="-14"/>
+              <line x1="5" y1="-2" x2="6" y2="-12"/>
+              <line x1="10" y1="0" x2="13" y2="-8"/>
+            </g>
+            <circle cx="-5" cy="5" r="1.5" fill="#3E2723"/>
+            <circle cx="0" cy="7" r="1.5" fill="#3E2723"/>
+          </g>
+        </g>
+        <g id="flowersGroup">
+          <g transform="translate(60,250)">
+            <circle cx="0" cy="0" r="10" fill="#E91E63"/><circle cx="0" cy="0" r="4" fill="#FFEB3B"/>
+          </g>
+          <g transform="translate(340,245)">
+            <circle cx="0" cy="0" r="9" fill="#9C27B0"/><circle cx="0" cy="0" r="3.5" fill="#FFEB3B"/>
+          </g>
+          <g transform="translate(100,260)">
+            <circle cx="0" cy="0" r="8" fill="#FF9800"/><circle cx="0" cy="0" r="3" fill="#FFF"/>
+          </g>
+          <g transform="translate(300,250)">
+            <circle cx="0" cy="0" r="10" fill="#F44336"/><circle cx="0" cy="0" r="4" fill="#FFEB3B"/>
+          </g>
+        </g>
+        <g id="endDialog" opacity="0">
+          <rect x="40" y="25" width="320" height="55" rx="16" fill="white" stroke="#F8BBD9" stroke-width="2"/>
+          <text x="200" y="48" text-anchor="middle" font-size="17" fill="#E91E63" font-weight="bold">🌸 森林裏的動物都很感激小熊一家，</text>
+          <text x="200" y="70" text-anchor="middle" font-size="17" fill="#E91E63" font-weight="bold">給他們送來美麗的鮮花！</text>
+        </g>
+      </svg>
+      <div id="endHint" class="absolute top-3 right-3 bg-white/90 rounded-full px-3 py-1 text-small text-[#E91E63] font-bold animate-pulse">👆 點擊看動物朋友</div>
+    </div>
+
+    <div class="bg-white/80 backdrop-blur rounded-2xl p-5 max-w-lg mb-4 shadow-md">
+      <p class="text-big text-[#5D4037] text-center leading-relaxed font-bold">
+        森林裏的動物都很<span class="text-[#E91E63]">感激</span>小熊一家，<br>
+        給他們送來<span class="text-[#E91E63] text-[1.2em]">美麗的鮮花</span>！💐
+      </p>
+    </div>
+
+    <div class="flex gap-3 flex-wrap justify-center mb-4">
+      <button class="btn-primary" onclick="showEnding();">🎉 我學會了</button>
+      <button class="btn-sound text-[32px]" onclick="startReading()" id="readBtn" title="普通話朗讀">📖</button>
+    </div>
+
+    <div class="flex gap-2 mt-2 mb-3">
+      <div class="progress-dot done"></div>
+      <div class="progress-dot done"></div>
+      <div class="progress-dot done"></div>
+      <div class="progress-dot done"></div>
+      <div class="progress-dot done"></div>
+      <div class="progress-dot done"></div>
+      <div class="progress-dot active"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ========== 全文朗讀頁 ========== -->
+<div id="page-reading" class="page">
+  <div class="flex-1 flex flex-col items-center px-5 py-6 min-h-screen">
+    <div class="text-center mb-4">
+      <span class="inline-block bg-[#4CAF50] text-white px-5 py-2 rounded-full text-big font-bold">📖 課文朗讀</span>
+    </div>
+
+    <div class="bg-white/90 backdrop-blur rounded-3xl p-6 md:p-8 max-w-2xl w-full shadow-lg mb-5">
+      <h2 class="text-huge font-black text-[#5D4037] text-center mb-2">小熊住山洞</h2>
+      <p class="text-normal text-[#8D6E63] text-center mb-6">胡木仁</p>
+
+      <div id="fullText" class="space-y-4 text-big leading-loose text-[#4E342E] font-bold">
+        <p data-line="0" class="read-line">小熊一家住在山洞裏。</p>
+        <p data-line="1" class="read-line">熊爸爸對小熊說：「我們去砍些樹，造一間木頭房子來住。」</p>
+        <p data-line="2" class="read-line">春天，他們走進森林。樹上長滿了綠葉，小熊捨不得砍。</p>
+        <p data-line="3" class="read-line">夏天，他們走進森林。樹上開滿了花兒，小熊捨不得砍。</p>
+        <p data-line="4" class="read-line">秋天，他們走進森林。樹上結滿了果子，小熊捨不得砍。</p>
+        <p data-line="5" class="read-line">冬天，他們走進森林。樹上住著許多鳥兒，小熊捨不得砍。</p>
+        <p data-line="6" class="read-line">一年又一年，他們都沒有砍樹造房子，一直住在山洞裏。</p>
+        <p data-line="7" class="read-line">森林裏的動物都很感激小熊一家，給他們送來美麗的鮮花。</p>
+      </div>
+    </div>
+
+    <div class="flex gap-3 flex-wrap justify-center mb-4">
+      <button class="btn-primary" id="playReadBtn" onclick="toggleRead()">
+        ▶️ 播放朗讀
+      </button>
+      <button class="btn-sound text-[28px]" onclick="stopReading()" title="停止">⏹️</button>
+      <button class="btn-sound text-[28px]" onclick="goToPage('page-end')" title="返回">🔙</button>
+      <button class="btn-sound text-[28px]" onclick="goToPage('page-start')" title="重新開始">🔄</button>
+    </div>
+
+    <div class="bg-gradient-to-r from-green-100 to-blue-100 rounded-2xl p-5 max-w-md w-full mt-2 border-2 border-green-300">
+      <p class="text-big text-[#2E7D32] font-bold text-center">
+        🌳 愛護樹木，保護大自然<br>
+        <span class="text-normal font-normal">我們的地球才會更美麗！</span>
+      </p>
+    </div>
+  </div>
+</div>
+
+<!-- ========== 結業獎狀彈窗 ========== -->
+<div id="celebration" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4" style="display:none;">
+  <div class="bg-gradient-to-br from-[#FFF9C4] via-[#FFECB3] to-[#FFE0B2] rounded-[32px] p-8 max-w-md w-full text-center shadow-2xl relative overflow-hidden">
+    <div class="absolute top-2 left-4 text-4xl">⭐</div>
+    <div class="absolute top-4 right-6 text-3xl">🌟</div>
+    <div class="absolute bottom-4 left-6 text-3xl">✨</div>
+    <div class="absolute bottom-2 right-4 text-4xl">⭐</div>
+
+    <div class="text-6xl mb-3">🏆</div>
+    <h2 class="text-huge font-black text-[#E65100] mb-3">太棒了！</h2>
+    <p class="text-big text-[#5D4037] font-bold leading-relaxed mb-4">
+      你已經讀完《小熊住山洞》<br>
+      學會了愛護樹木和大自然！
+    </p>
+
+    <div class="flex justify-center gap-2 mb-5" id="starRating">
+      <span class="text-4xl star-reward" style="animation-delay:0.1s">⭐</span>
+      <span class="text-4xl star-reward" style="animation-delay:0.3s">⭐</span>
+      <span class="text-4xl star-reward" style="animation-delay:0.5s">⭐</span>
+    </div>
+
+    <div class="flex flex-col gap-3">
+      <button class="btn-primary w-full" onclick="document.getElementById('celebration').style.display='none';startReading();">📖 聽全文朗讀</button>
+      <button class="bg-white text-[#FF5722] border-3 border-[#FF5722] rounded-full py-3 px-6 text-lg font-bold hover:bg-[#FFF3E0] transition" onclick="document.getElementById('celebration').style.display='none';goToPage('page-start');">🔄 再玩一次</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ====== 全局狀態 ======
+let soundOn = true;
+let audioCtx = null;
+let currentPage = 'page-start';
+let treeClicks = { spring: false, summer: false, autumn: false, winter: false };
+let reading = false;
+let readTimer = null;
+let currentReadLine = 0;
+let axeClicked = false;
+
+// ====== 音效系統 (Web Audio API) ======
+function getAudioCtx() {
+  if (!audioCtx) {
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  }
+  return audioCtx;
+}
+
+function playTone(freq, duration, type='sine', vol=0.2) {
+  if (!soundOn) return;
+  try {
+    const ctx = getAudioCtx();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = type;
+    osc.frequency.value = freq;
+    gain.gain.setValueAtTime(vol, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration);
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start();
+    osc.stop(ctx.currentTime + duration);
+  } catch(e) {}
+}
+
+function playSfx(type) {
+  if (!soundOn) return;
+  switch(type) {
+    case 'click':
+      playTone(600, 0.1, 'sine', 0.15);
+      setTimeout(()=>playTone(800, 0.1, 'sine', 0.12), 80);
+      break;
+    case 'axe':
+      // 砍木頭聲：低頻撞擊
+      playTone(200, 0.15, 'square', 0.15);
+      playTone(150, 0.2, 'sawtooth', 0.1);
+      setTimeout(()=>playTone(300, 0.1, 'triangle', 0.08), 80);
+      setTimeout(()=>playTone(500, 0.15, 'sine', 0.08), 180);
+      break;
+    case 'leaf':
+      playTone(800, 0.15, 'sine', 0.1);
+      setTimeout(()=>playTone(1000, 0.2, 'sine', 0.08), 100);
+      setTimeout(()=>playTone(1200, 0.2, 'triangle', 0.06), 200);
+      break;
+    case 'flower':
+      playTone(700, 0.1, 'sine', 0.1);
+      setTimeout(()=>playTone(900, 0.1, 'sine', 0.08), 80);
+      setTimeout(()=>playTone(1100, 0.15, 'triangle', 0.06), 160);
+      setTimeout(()=>playTone(1300, 0.2, 'sine', 0.05), 240);
+      break;
+    case 'fruit':
+      playTone(500, 0.1, 'sine', 0.12);
+      setTimeout(()=>playTone(400, 0.15, 'triangle', 0.1), 100);
+      break;
+    case 'bird':
+      playTone(1200, 0.1, 'sine', 0.1);
+      setTimeout(()=>playTone(1500, 0.1, 'sine', 0.08), 100);
+      setTimeout(()=>playTone(1300, 0.1, 'sine', 0.08), 200);
+      setTimeout(()=>playTone(1700, 0.15, 'sine', 0.06), 300);
+      break;
+    case 'success':
+      const notes = [523, 659, 784, 1047];
+      notes.forEach((n,i)=>setTimeout(()=>playTone(n, 0.3, 'sine', 0.1), i*120));
+      break;
+    case 'star':
+      playTone(880, 0.1, 'sine', 0.1);
+      setTimeout(()=>playTone(1108, 0.1, 'sine', 0.08), 80);
+      setTimeout(()=>playTone(1318, 0.2, 'sine', 0.06), 160);
+      break;
+  }
+}
+
+function toggleSound() {
+  soundOn = !soundOn;
+  document.getElementById('soundToggle').textContent = soundOn ? '🔊' : '🔇';
+  if (soundOn) playSfx('click');
+}
+
+// ====== 頁面導航 ======
+function goToPage(pageId) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  const target = document.getElementById(pageId);
+  target.classList.add('active');
+  currentPage = pageId;
+  target.scrollTop = 0;
+
+  const animTarget = target.querySelector('.scene-card, .bg-white\\/80, .bg-white\\/90, .bg-white');
+  if (animTarget) {
+    gsap.fromTo(animTarget,
+      { scale: 0.95, opacity: 0.5 },
+      { scale: 1, opacity: 1, duration: 0.5, ease: 'power2.out' }
+    );
+  }
+}
+
+// ====== 互動：點擊斧頭（核心修復） ======
+function clickAxe() {
+  if (axeClicked) return;
+  axeClicked = true;
+  playSfx('axe');
+
+  // 斧頭揮動動畫
+  const graphic = document.getElementById('axeGraphic');
+  graphic.classList.remove('axe-pulse');
+  graphic.classList.add('axe-swing');
+
+  // 震動一下整個場景
+  const svg = document.getElementById('introSvg');
+  gsap.fromTo(svg, { x: -5 }, { x: 0, duration: 0.3, ease: 'elastic.out(1,0.3)' });
+
+  // 飄出木屑
+  const scene = document.querySelector('#page-intro .scene-card');
+  const chipEmojis = ['🪵', '✦', '·'];
+  for (let i = 0; i < 8; i++) {
+    const el = document.createElement('div');
+    el.className = 'floater';
+    el.textContent = chipEmojis[Math.floor(Math.random()*chipEmojis.length)];
+    el.style.position = 'absolute';
+    el.style.left = (40 + Math.random()*20) + '%';
+    el.style.top = (55 + Math.random()*15) + '%';
+    el.style.fontSize = (18+Math.random()*14) + 'px';
+    el.style.color = '#8D6E63';
+    el.style.animation = 'floatDown 2s ease-in forwards';
+    scene.appendChild(el);
+    setTimeout(()=>el.remove(), 2500);
+  }
+
+  // 切換對話框：小熊回答
+  setTimeout(() => {
+    playSfx('success');
+    const g = document.createElementNS('http://www.w3.org/2000/svg','g');
+    g.setAttribute('id','bearAnswer');
+    g.innerHTML = `
+      <rect x="210" y="150" width="160" height="45" rx="14" fill="white" stroke="#A5D6A7" stroke-width="2"/>
+      <text x="290" y="170" text-anchor="middle" font-size="16" fill="#4CAF50" font-weight="bold">小熊：好呀爸爸！</text>
+      <text x="290" y="190" text-anchor="middle" font-size="16" fill="#4CAF50" font-weight="bold">我們出發吧！🌲</text>
+    `;
+    svg.appendChild(g);
+    gsap.fromTo(g, { opacity: 0, y: 10 }, { opacity: 1, y: 0, duration: 0.5, ease: 'power2.out' });
+  }, 500);
+
+  // 隱藏提示和「點我」文字
+  const hint = document.getElementById('axeHint');
+  if (hint) hint.style.display = 'none';
+  const axeText = document.getElementById('axeText');
+  if (axeText) axeText.style.display = 'none';
+
+  // 顯示「走進森林」按鈕
+  setTimeout(() => {
+    const nextBtn = document.getElementById('introNext');
+    nextBtn.classList.remove('hidden');
+    gsap.fromTo(nextBtn, { scale: 0.5, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.5, ease: 'back.out(2)' });
+  }, 900);
+}
+
+// ====== 互動：點擊樹 ======
+function spawnFloater(container, emoji, count=8, color='#4CAF50') {
+  for (let i = 0; i < count; i++) {
+    const el = document.createElement('div');
+    el.className = 'floater';
+    el.textContent = emoji;
+    el.style.left = (Math.random()*80+10) + '%';
+    el.style.top = (Math.random()*30+10) + '%';
+    el.style.color = color;
+    el.style.animationDelay = (Math.random()*0.3) + 's';
+    el.style.fontSize = (20+Math.random()*16) + 'px';
+    container.appendChild(el);
+    setTimeout(()=>el.remove(), 3500);
+  }
+}
+
+function onTreeClick(season, thing) {
+  if (treeClicks[season]) return;
+  treeClicks[season] = true;
+  playSfx(season);
+
+  const tree = document.getElementById(season+'Tree');
+  tree.classList.add('shake');
+
+  const scene = document.getElementById(season+'Scene');
+  if (season === 'spring') {
+    spawnFloater(scene, '🍃', 10, '#4CAF50');
+    setTimeout(()=>spawnFloater(scene, '🌿', 6, '#66BB6A'), 200);
+  } else if (season === 'summer') {
+    spawnFloater(scene, '🌸', 12, '#E91E63');
+    setTimeout(()=>spawnFloater(scene, '🌺', 6, '#FF5722'), 200);
+  } else if (season === 'autumn') {
+    spawnFloater(scene, '🍎', 8, '#D32F2F');
+    setTimeout(()=>spawnFloater(scene, '🍊', 6, '#F57C00'), 200);
+    setTimeout(()=>spawnFloater(scene, '🍂', 5, '#FF8F00'), 300);
+  } else if (season === 'winter') {
+    spawnFloater(scene, '❄', 10, '#90CAF9');
+    spawnFloater(scene, '🐦', 4, '#F44336');
+  }
+
+  setTimeout(() => {
+    const dialog = document.getElementById(season+'Dialog');
+    gsap.to(dialog, { opacity: 1, duration: 0.5, ease: 'power2.out' });
+    playSfx('success');
+  }, 500);
+
+  const hint = document.getElementById(season+'Hint');
+  if (hint) hint.style.display = 'none';
+
+  setTimeout(() => {
+    const btn = document.getElementById(season+'Next');
+    if (btn) {
+      btn.disabled = false;
+      btn.style.opacity = '1';
+      btn.style.filter = 'none';
+      gsap.fromTo(btn, { scale: 0.8 }, { scale: 1, duration: 0.4, ease: 'back.out(2)' });
+    }
+  }, 1200);
+}
+
+// ====== 結局動畫 ======
+function showEnding() {
+  playSfx('success');
+  document.getElementById('celebration').style.display = 'flex';
+  const scene = document.getElementById('endScene');
+  spawnFloater(scene, '🌸', 15, '#E91E63');
+  spawnFloater(scene, '⭐', 10, '#FFD54F');
+  setTimeout(()=>spawnFloater(scene, '🎉', 8, '#FF5722'), 300);
+
+  if (!document.getElementById('animals').dataset.shown) {
+    document.getElementById('animals').dataset.shown = 'true';
+    gsap.to('#animals', { opacity: 1, duration: 0.8, ease: 'power2.out' });
+    document.querySelectorAll('#animals > g').forEach((g,i)=>{
+      g.classList.add('animal-enter');
+      g.style.animationDelay = (i*0.2) + 's';
+      g.style.opacity = '0';
+      setTimeout(()=>{ g.style.opacity = '1'; }, 300+i*200);
+    });
+    setTimeout(()=>{
+      gsap.to('#endDialog', { opacity: 1, duration: 0.6, ease: 'power2.out' });
+      const hint = document.getElementById('endHint');
+      if (hint) hint.style.display = 'none';
+    }, 1200);
+  }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  const endScene = document.getElementById('endScene');
+  if (endScene) {
+    endScene.addEventListener('click', (e) => {
+      if (!document.getElementById('animals').dataset.shown) {
+        showEnding();
+      }
+    });
+  }
+});
+
+// ====== 普通話朗讀 (使用 Web Speech API) ======
+function startReading() {
+  goToPage('page-reading');
+  setTimeout(()=>{
+    if (!reading) toggleRead();
+  }, 400);
+}
+
+function toggleRead() {
+  const btn = document.getElementById('playReadBtn');
+  if (reading) {
+    pauseRead();
+    btn.innerHTML = '▶️ 繼續朗讀';
+  } else {
+    startRead();
+    btn.innerHTML = '⏸️ 暫停朗讀';
+  }
+}
+
+let utterance = null;
+let speechSupported = 'speechSynthesis' in window;
+
+function startRead() {
+  if (!speechSupported) {
+    alert('您的瀏覽器不支持語音朗讀，請使用Chrome或Safari瀏覽器');
+    return;
+  }
+  reading = true;
+  readLine(currentReadLine);
+}
+
+function readLine(idx) {
+  if (!reading) return;
+  const lines = document.querySelectorAll('.read-line');
+  if (idx >= lines.length) {
+    reading = false;
+    document.getElementById('playReadBtn').innerHTML = '🔁 再朗讀一次';
+    currentReadLine = 0;
+    document.querySelectorAll('.read-line').forEach(l=>l.classList.remove('read-highlight'));
+    playSfx('success');
+    setTimeout(()=>{
+      document.getElementById('celebration').style.display='flex';
+    }, 500);
+    return;
+  }
+
+  lines.forEach(l=>l.classList.remove('read-highlight'));
+  lines[idx].classList.add('read-highlight');
+  lines[idx].scrollIntoView({ behavior:'smooth', block:'center' });
+
+  const text = lines[idx].textContent;
+  utterance = new SpeechSynthesisUtterance(text);
+  utterance.lang = 'zh-CN';
+  utterance.rate = 0.8;
+  utterance.pitch = 1.1;
+  utterance.volume = soundOn ? 1 : 0;
+
+  const voices = speechSynthesis.getVoices();
+  const zhVoice = voices.find(v => v.lang.includes('zh') && v.name.includes('Chinese')) ||
+                  voices.find(v => v.lang.includes('zh'));
+  if (zhVoice) utterance.voice = zhVoice;
+
+  utterance.onend = () => {
+    currentReadLine = idx + 1;
+    setTimeout(()=>readLine(currentReadLine), 300);
+  };
+  speechSynthesis.speak(utterance);
+}
+
+function pauseRead() {
+  reading = false;
+  if (speechSynthesis) speechSynthesis.cancel();
+}
+
+function stopReading() {
+  reading = false;
+  currentReadLine = 0;
+  if (speechSynthesis) speechSynthesis.cancel();
+  document.querySelectorAll('.read-line').forEach(l=>l.classList.remove('read-highlight'));
+  document.getElementById('playReadBtn').innerHTML = '▶️ 播放朗讀';
+}
+
+if (speechSupported) {
+  speechSynthesis.getVoices();
+  speechSynthesis.onvoiceschanged = () => speechSynthesis.getVoices();
+}
+
+// ====== 防止雙擊縮放 ======
+let lastTouch = 0;
+document.addEventListener('touchend', (e)=>{
+  const now = Date.now();
+  if (now - lastTouch <= 300) e.preventDefault();
+  lastTouch = now;
+}, { passive: false });
+
+// ====== 首次用戶互動時啟動音頻上下文（瀏覽器策略） ======
+document.addEventListener('click', () => {
+  try { getAudioCtx().resume(); } catch(e) {}
+}, { once: true });
+
+// ====== 進入頁面時的初始動畫 ======
+window.addEventListener('load', () => {
+  gsap.from('#page-start h1', { y: -30, opacity: 0, duration: 0.8, ease: 'power2.out' });
+  gsap.from('#page-start .bear-idle', { scale: 0.5, opacity: 0, duration: 1, delay: 0.3, ease: 'back.out(1.5)' });
+});
+</script>
+</body>
+</html>

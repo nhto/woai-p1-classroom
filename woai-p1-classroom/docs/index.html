@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="zh-Hant" data-canvas-width="1440" data-canvas-height="1024">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>謝老師AI互動教室｜小一我愛學語文</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='32' r='28' fill='%23FFD25A' stroke='%235B4636' stroke-width='4'/%3E%3Ccircle cx='23' cy='28' r='3' fill='%235B4636'/%3E%3Ccircle cx='41' cy='28' r='3' fill='%235B4636'/%3E%3Cpath d='M20 36 Q32 46 44 36' stroke='%235B4636' stroke-width='4' fill='none' stroke-linecap='round'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://miaoda.feishu.cn">
+<link rel="stylesheet" href="https://miaoda.feishu.cn/fonts/css2?family=LXGW+WenKai+TC:wght@400;500;700&amp;display=swap">
+<style>
+  :root{--bg:#FFF6E1;--paper:#FFFDF6;--ink:#5B4636;--ink-soft:#8A7260;--sun:#FFD25A;--sky:#BFE3F7;--green:#9CD49A;--coral:#FF9AA2;--peach:#FFD9A8;--grape:#C7B7F0;--mint:#B7E6D4;}
+  *{box-sizing:border-box;margin:0;padding:0;}
+  html{-webkit-text-size-adjust:100%;}
+  body{font-family:'LXGW WenKai TC','Noto Sans TC','PingFang TC','Microsoft JhengHei',system-ui,sans-serif;background:var(--bg);color:var(--ink);min-height:100vh;overflow-x:hidden;position:relative;}
+  .deco{position:fixed;inset:0;pointer-events:none;z-index:0;overflow:hidden;}
+  .deco svg{position:absolute;}
+  .deco .c1{top:4%;left:4%;width:120px;animation:floaty 7s ease-in-out infinite;}
+  .deco .c2{top:12%;right:5%;width:96px;animation:floaty 8s ease-in-out infinite reverse;}
+  .deco .c3{bottom:8%;left:3%;width:110px;animation:floaty 9s ease-in-out infinite;}
+  .deco .c4{bottom:14%;right:4%;width:90px;animation:floaty 7.5s ease-in-out infinite reverse;}
+  .deco .s1{top:8%;left:48%;width:34px;}
+  .deco .s2{top:46%;left:2%;width:26px;}
+  .deco .s3{top:60%;right:3%;width:30px;}
+  .deco .s4{top:30%;right:12%;width:24px;}
+  @keyframes floaty{0%,100%{transform:translateY(0)}50%{transform:translateY(-12px)}}
+  .wrap{position:relative;z-index:1;max-width:1080px;margin:0 auto;padding:34px 18px 60px;}
+  header{text-align:center;margin-bottom:26px;}
+  .sunbadge{display:inline-block;margin-bottom:8px;animation:spin-soft 14s linear infinite;}
+  @keyframes spin-soft{to{transform:rotate(360deg)}}
+  .school{display:inline-block;font-size:clamp(20px,5.5vw,30px);font-weight:700;letter-spacing:.05em;color:var(--ink);margin-bottom:10px;}
+  h1{font-size:clamp(26px,7.5vw,48px);font-weight:700;letter-spacing:.04em;line-height:1.25;display:inline-block;position:relative;}
+  h1 .under{display:block;height:11px;background:linear-gradient(90deg,var(--coral),var(--sun),var(--green));border-radius:8px;transform:rotate(-1deg) skewX(-8deg);margin-top:3px;box-shadow:0 2px 0 rgba(91,70,54,.15);}
+  .sub{font-size:clamp(15px,4.5vw,19px);font-weight:500;color:var(--ink-soft);margin-top:13px;line-height:1.6;}
+  .hint{display:inline-block;margin-top:15px;padding:7px 16px;background:var(--paper);border:2.5px dashed var(--ink);border-radius:30px;font-size:14px;font-weight:700;box-shadow:2px 3px 0 rgba(91,70,54,.12);}
+  .grid{display:grid;grid-template-columns:repeat(2,1fr);gap:16px;margin-top:8px;}
+  @media(min-width:640px){.grid{grid-template-columns:repeat(3,1fr);gap:20px;}}
+  @media(min-width:960px){.grid{grid-template-columns:repeat(4,1fr);}}
+  .card{position:relative;display:flex;flex-direction:column;align-items:center;text-align:center;width:100%;background:var(--paper);border:3px solid var(--ink);border-radius:26px;padding:16px 10px 14px;text-decoration:none;color:var(--ink);box-shadow:4px 5px 0 rgba(91,70,54,.18);transition:transform .18s ease, box-shadow .18s ease;-webkit-tap-highlight-color:transparent;cursor:pointer;}
+  .tile:nth-child(odd) .card{transform:rotate(-1.2deg);}
+  .tile:nth-child(even) .card{transform:rotate(1deg);}
+  .card:hover,.card:focus-visible{transform:rotate(0deg) translateY(-6px) scale(1.03);box-shadow:7px 9px 0 rgba(91,70,54,.22);outline:none;}
+  .card:active{transform:translateY(1px) scale(.97);box-shadow:2px 3px 0 rgba(91,70,54,.2);}
+  .icon{width:clamp(74px,22vw,110px);height:clamp(74px,22vw,110px);border-radius:50%;background:#fff;border:3px dashed var(--ink);padding:7px;overflow:hidden;box-shadow:0 3px 0 rgba(91,70,54,.14);transition:transform .18s ease;}
+  .card:hover .icon{transform:scale(1.06) rotate(-3deg);}
+  .icon img{width:100%;height:100%;object-fit:cover;border-radius:50%;display:block;}
+  .title{margin-top:11px;font-size:clamp(14px,4.4vw,17px);font-weight:700;line-height:1.4;letter-spacing:.03em;}
+  .tip{margin-top:5px;font-size:clamp(11px,3.4vw,13px);color:var(--ink-soft);font-weight:500;}
+  .tag{position:absolute;top:-11px;right:8px;width:26px;height:26px;border-radius:50%;border:2px solid var(--ink);box-shadow:0 2px 0 rgba(91,70,54,.14);}
+  .c-sun{background:var(--sun);}.c-sky{background:var(--sky);}.c-green{background:var(--green);}.c-coral{background:var(--coral);}.c-peach{background:var(--peach);}.c-grape{background:var(--grape);}.c-mint{background:var(--mint);}
+  .card.congrats{background:#FFF3C9;border-style:double;border-width:4px;transform:rotate(.6deg);}
+  .congrats:hover,.congrats:focus-visible{transform:rotate(0deg) translateY(-6px) scale(1.03);}
+  .congrats .icon{background:linear-gradient(135deg,#FFF7D6,#FFE9A8);}
+  .congrats .icon svg{width:100%;height:100%;}
+  .tile{display:flex;flex-direction:column;align-items:center;gap:9px;min-width:0;}
+  .qrbtn{display:inline-flex;align-items:center;gap:6px;padding:7px 14px;border:2.5px solid var(--ink);border-radius:30px;background:var(--paper);color:var(--ink);font-family:inherit;font-weight:700;font-size:14px;cursor:pointer;min-height:44px;box-shadow:2px 3px 0 rgba(91,70,54,.15);transition:transform .16s ease, box-shadow .16s ease;-webkit-tap-highlight-color:transparent;}
+  .qrbtn:hover,.qrbtn:focus-visible{transform:translateY(-3px);box-shadow:3px 5px 0 rgba(91,70,54,.2);outline:none;}
+  .qrbtn:active{transform:translateY(1px) scale(.97);}
+  .modal{position:fixed;inset:0;z-index:60;display:none;align-items:center;justify-content:center;padding:20px;background:rgba(91,70,54,.4);}
+  .modal.show{display:flex;}
+  .modal-card{background:var(--paper);border:3px solid var(--ink);border-radius:28px;padding:24px 20px 22px;width:min(350px,92vw);text-align:center;position:relative;box-shadow:6px 8px 0 rgba(91,70,54,.25);}
+  .modal-close{position:absolute;top:-15px;right:-12px;width:40px;height:40px;border-radius:50%;border:2.5px solid var(--ink);background:#fff;color:var(--ink);font-size:24px;line-height:1;cursor:pointer;box-shadow:0 2px 0 rgba(91,70,54,.2);-webkit-tap-highlight-color:transparent;}
+  .modal-close:hover{transform:scale(1.08);}
+  .modal-title{font-size:22px;font-weight:700;margin-bottom:14px;letter-spacing:.03em;}
+  .qr-frame{display:inline-block;background:#fff;border:3px dashed var(--ink);border-radius:18px;padding:12px;}
+  .qr-frame #qrCanvas{display:inline-block;width:min(220px,60vw);min-height:160px;}
+  .qr-frame #qrCanvas img,.qr-frame #qrCanvas canvas{display:block;margin:0 auto;border-radius:10px;max-width:100%;height:auto;}
+  .modal-hint{margin-top:14px;font-size:14px;color:var(--ink-soft);line-height:1.6;}
+  .modal-link{display:inline-block;margin-top:13px;padding:9px 18px;border-radius:24px;background:var(--sun);border:2.5px solid var(--ink);color:var(--ink);font-weight:700;text-decoration:none;font-size:15px;box-shadow:2px 3px 0 rgba(91,70,54,.15);}
+  .modal-link:active{transform:translateY(1px);}
+  footer{text-align:center;margin-top:36px;color:var(--ink-soft);font-size:13px;line-height:1.8;position:relative;z-index:1;}
+  footer .starline{letter-spacing:.2em;color:var(--sun);font-size:16px;}
+  .burst{position:fixed;z-index:50;pointer-events:none;font-size:30px;animation:pop 1s ease-out forwards;}
+  @keyframes pop{0%{transform:translate(0,0) scale(.4);opacity:1}100%{transform:translate(var(--dx),var(--dy)) scale(1.3);opacity:0}}
+  @media (prefers-reduced-motion: reduce){.deco svg{animation:none;}.sunbadge{animation:none;}.card,.icon{transition:none;}}
+</style>
+</head>
+<body>
+
+<div class="deco" aria-hidden="true">
+  <svg class="c1" viewBox="0 0 120 70"><g stroke="#5B4636" stroke-width="3" fill="#FFFFFF"><path d="M22 48 Q16 30 32 30 Q38 16 54 24 Q70 12 80 30 Q98 28 98 46 Z"/></g></svg>
+  <svg class="c2" viewBox="0 0 120 70"><g stroke="#5B4636" stroke-width="3" fill="#FFFFFF"><path d="M20 46 Q14 28 30 28 Q38 14 54 22 Q68 12 80 28 Q98 26 100 44 Z"/></g></svg>
+  <svg class="c3" viewBox="0 0 120 70"><g stroke="#5B4636" stroke-width="3" fill="#FFFFFF"><path d="M24 48 Q16 30 34 30 Q42 16 58 24 Q72 14 82 32 Q100 28 98 48 Z"/></g></svg>
+  <svg class="c4" viewBox="0 0 120 70"><g stroke="#5B4636" stroke-width="3" fill="#FFFFFF"><path d="M18 44 Q12 26 28 26 Q36 12 52 20 Q66 10 76 26 Q94 24 96 42 Z"/></g></svg>
+  <svg class="s1" viewBox="0 0 40 40"><path d="M20 2 L24 15 L37 20 L24 25 L20 38 L16 25 L3 20 L16 15 Z" fill="#FFD25A" stroke="#5B4636" stroke-width="2.5" stroke-linejoin="round"/></svg>
+  <svg class="s2" viewBox="0 0 40 40"><path d="M20 2 L23.5 15 L37 20 L23.5 25 L20 38 L16.5 25 L3 20 L16.5 15 Z" fill="#FF9AA2" stroke="#5B4636" stroke-width="2.5" stroke-linejoin="round"/></svg>
+  <svg class="s3" viewBox="0 0 40 40"><path d="M20 2 L23.5 15 L37 20 L23.5 25 L20 38 L16.5 25 L3 20 L16.5 15 Z" fill="#9CD49A" stroke="#5B4636" stroke-width="2.5" stroke-linejoin="round"/></svg>
+  <svg class="s4" viewBox="0 0 40 40"><path d="M20 2 L24 15 L37 20 L24 25 L20 38 L16 25 L3 20 L16 15 Z" fill="#C7B7F0" stroke="#5B4636" stroke-width="2.5" stroke-linejoin="round"/></svg>
+</div>
+
+<div class="wrap">
+  <header>
+    <svg class="sunbadge" width="58" height="58" viewBox="0 0 64 64" aria-hidden="true">
+      <circle cx="32" cy="32" r="20" fill="#FFD25A" stroke="#5B4636" stroke-width="3"/>
+      <circle cx="26" cy="29" r="2.6" fill="#5B4636"/>
+      <circle cx="38" cy="29" r="2.6" fill="#5B4636"/>
+      <path d="M24 37 Q32 45 40 37" stroke="#5B4636" stroke-width="3.4" fill="none" stroke-linecap="round"/>
+      <circle cx="12" cy="16" r="4" fill="#FF9AA2"/>
+      <circle cx="52" cy="14" r="4" fill="#FF9AA2"/>
+      <circle cx="10" cy="34" r="3.2" fill="#9CD49A"/>
+      <circle cx="54" cy="34" r="3.2" fill="#9CD49A"/>
+    </svg>
+    <div class="school">謝老師人工智能（AI）互動教室</div>
+    <h1>小一《我愛學語文》課文互動遊戲<span class="under"></span></h1>
+    <p class="sub">點一點可愛圖示，一起進入課文裡的互動遊戲吧！</p>
+    <span class="hint">
+      <svg width="14" height="14" viewBox="0 0 40 40" aria-hidden="true"><path d="M20 2 L23.5 15 L37 20 L23.5 25 L20 38 L16.5 25 L3 20 L16.5 15 Z" fill="#FF9AA2" stroke="#5B4636" stroke-width="2.5" stroke-linejoin="round"/></svg>
+      點圖示玩遊戲 · 點「二維碼」掃碼進入
+      <svg width="14" height="14" viewBox="0 0 40 40" aria-hidden="true"><path d="M20 2 L23.5 15 L37 20 L23.5 25 L20 38 L16.5 25 L3 20 L16.5 15 Z" fill="#9CD49A" stroke="#5B4636" stroke-width="2.5" stroke-linejoin="round"/></svg>
+    </span>
+  </header>
+
+  <main class="grid">
+
+    <div class="tile">
+      <a class="card" href="我愛學語文課文互動遊戲/大雨傘_Q版手繪互動遊戲.html" rel="noopener">
+        <span class="tag c-sun"></span>
+        <span class="icon"><img src="https://media.doubao.com/space/api/box/stream/download/all_by_mount_point/CmyLb1ZhuobfIvxwlbVcOgBunjg" alt="大雨傘"></span>
+        <span class="title">大雨傘</span>
+        <span class="tip">點我玩遊戲</span>
+      </a>
+      <button class="qrbtn" type="button" data-index="0" data-title="大雨傘" aria-label="顯示大雨傘二維碼">
+        <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1.5" fill="none" stroke="#5B4636" stroke-width="2"/><rect x="14" y="3" width="7" height="7" rx="1.5" fill="none" stroke="#5B4636" stroke-width="2"/><rect x="3" y="14" width="7" height="7" rx="1.5" fill="none" stroke="#5B4636" stroke-width="2"/><path d="M14 14h3v3h-3zM19 14h2v2h-2zM14 19h2v2h-2zM19 18h2v3h-2z" fill="#5B4636"/></svg>
+        二維碼
+      </button>
+    </div>
+
+    <div class="tile">
+      <a class="card" href="我愛學語文課文互動遊戲/小熊住山洞_互動遊戲.html" rel="noopener">
+        <span class="tag c-sky"></span>
+        <span class="icon"><img src="https://media.doubao.com/space/api/box/stream/download/all_by_mount_point/QbiAb36zropB0lxGDawcZosanSn" alt="小熊住山洞"></span>
+        <span class="title">小熊住山洞</span>
+        <span class="tip">點我玩遊戲</span>
+      </a>
+      <button class="qrbtn" type="button" data-index="1" data-title="小熊住山洞" aria-label="顯示小熊住山洞二維碼">
+        <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1.5" fill="none" stroke="#5B4636" stroke-width="2"/><rect x="14" y="3" width="7" height="7" rx="1.5" fill="none" stroke="#5B4636" stroke-width="2"/><rect x="3" y="14" width="7" height="7" rx="1.5" fill="none" stroke="#5B4636" stroke-width="2"/><path d="M14 14h3v3h-3zM19 14h2v2h-2zM14 19h2v2h-2zM19 18h2v3h-2z" fill="#5B4636"/></svg>
+        二維碼
+      </button>
+    </div>
+
+    <div class="tile">
+      <a class="card" href="我愛學語文課文互動遊戲/百合花情景互動遊戲.html" rel="noopener">
+        <span class="tag c-green"></span>
+        <span class="icon"><img src="https://media.doubao.com/space/api/box/stream/download/all_by_mount_point/A44gbmcuvoyFJCxmBAYchZRfnFg" alt="百合花"></span>
+        <span class="title">百合花</span>
+        <span class="tip">點我玩遊戲</span>
+      </a>
+      <button class="qrbtn" type="button" data-index="2" data-title="百合花" aria-label="顯示百合花二維碼">
+        <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1.5" fill="none" stroke="#5B4636" stroke-width="2"/><rect x="14" y="3" width="7" height="7" rx="1.5" fill="none" stroke="#5B4636" stroke-width="2"/><rect x="3" y="14" width="7" height="7" rx="1.5" fill="none" stroke="#5B4636" stroke-width="2"/><path d="M14 14h3v3h-3zM19 14h2v2h-2zM14 19h2v2h-2zM19 18h2v3h-2z" fill="#5B4636"/></svg>
+        二維碼
+      </button>
+    </div>
+
+    <div class="tile">
+      <a class="card" href="我愛學語文課文互動遊戲/青字歌情景互動識字遊戲.html" rel="noopener">
+        <span class="tag c-coral"></span>
+        <span class="icon"><img src="https://media.doubao.com/space/api/box/stream/download/all_by_mount_point/T1tab8LIPovORnxD6jBcqSKPnwg" alt="青字歌"></span>
+        <span class="title">青字歌</span>
+        <span class="tip">點我玩遊戲</span>
+      </a>
+      <button class="qrbtn" type="button" data-index="3" data-title="青字歌" aria-label="顯示青字歌二維碼">
+        <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1.5" fill="none" stroke="#5B4636" stroke-width="2"/><rect x="14" y="3" width="7" height="7" rx="1.5" fill="none" stroke="#5B4636" stroke-width="2"/><rect x="3" y="14" width="7" height="7" rx="1.5" fill="none" stroke="#5B4636" stroke-width="2"/><path d="M14 14h3v3h-3zM19 14h2v2h-2zM14 19h2v2h-2zM19 18h2v3h-2z" fill="#5B4636"/></svg>
+        二維碼
+      </button>
+    </div>
+
+    <div class="tile">
+      <a class="card" href="我愛學語文課文互動遊戲/春天的圖畫_繪本互動遊戲.html" rel="noopener">
+        <span class="tag c-peach"></span>
+        <span class="icon"><img src="https://media.doubao.com/space/api/box/stream/download/all_by_mount_point/MOSrbCc4PoFj4txdgVLc8jBRnyh" alt="春天的圖畫"></span>
+        <span class="title">春天的圖畫</span>
+        <span class="tip">點我玩遊戲</span>
+      </a>
+      <button class="qrbtn" type="button" data-index="4" data-title="春天的圖畫" aria-label="顯示春天的圖畫二維碼">
+        <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1.5" fill="none" stroke="#5B4636" stroke-width="2"/><rect x="14" y="3" width="7" height="7" rx="1.5" fill="none" stroke="#5B4636" stroke-width="2"/><rect x="3" y="14" width="7" height="7" rx="1.5" fill="none" stroke="#5B4636" stroke-width="2"/><path d="M14 14h3v3h-3zM19 14h2v2h-2zM14 19h2v2h-2zM19 18h2v3h-2z" fill="#5B4636"/></svg>
+        二維碼
+      </button>
+    </div>
+
+    <div class="tile">
+      <a class="card" href="我愛學語文課文互動遊戲/馬字歌互動教學遊戲.html" rel="noopener">
+        <span class="tag c-grape"></span>
+        <span class="icon"><img src="https://media.doubao.com/space/api/box/stream/download/all_by_mount_point/YJgEbXwwjoBDswx4f5QcS6ginTe" alt="馬字歌"></span>
+        <span class="title">馬字歌</span>
+        <span class="tip">點我玩遊戲</span>
+      </a>
+      <button class="qrbtn" type="button" data-index="5" data-title="馬字歌" aria-label="顯示馬字歌二維碼">
+        <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1.5" fill="none" stroke="#5B4636" stroke-width="2"/><rect x="14" y="3" width="7" height="7" rx="1.5" fill="none" stroke="#5B4636" stroke-width="2"/><rect x="3" y="14" width="7" height="7" rx="1.5" fill="none" stroke="#5B4636" stroke-width="2"/><path d="M14 14h3v3h-3zM19 14h2v2h-2zM14 19h2v2h-2zM19 18h2v3h-2z" fill="#5B4636"/></svg>
+        二維碼
+      </button>
+    </div>
+
+    <div class="tile">
+      <a class="card" href="我愛學語文課文互動遊戲/超級市場裡學生字互動遊戲.html" rel="noopener">
+        <span class="tag c-mint"></span>
+        <span class="icon"><img src="https://media.doubao.com/space/api/box/stream/download/all_by_mount_point/G11xb9ZBEoa66JxO4k1cQhlwnJh" alt="超級市場裡學生字"></span>
+        <span class="title">超級市場裡學生字</span>
+        <span class="tip">點我玩遊戲</span>
+      </a>
+      <button class="qrbtn" type="button" data-index="6" data-title="超級市場裡學生字" aria-label="顯示超級市場裡學生字二維碼">
+        <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1.5" fill="none" stroke="#5B4636" stroke-width="2"/><rect x="14" y="3" width="7" height="7" rx="1.5" fill="none" stroke="#5B4636" stroke-width="2"/><rect x="3" y="14" width="7" height="7" rx="1.5" fill="none" stroke="#5B4636" stroke-width="2"/><path d="M14 14h3v3h-3zM19 14h2v2h-2zM14 19h2v2h-2zM19 18h2v3h-2z" fill="#5B4636"/></svg>
+        二維碼
+      </button>
+    </div>
+
+    <div class="tile">
+      <a class="card" href="我愛學語文課文互動遊戲/鞋_互動教學遊戲.html" rel="noopener">
+        <span class="tag c-sun"></span>
+        <span class="icon"><img src="https://media.doubao.com/space/api/box/stream/download/all_by_mount_point/Jw7Kbi7Wlopq4UxsTjgcD9M1nDh" alt="鞋"></span>
+        <span class="title">鞋</span>
+        <span class="tip">點我玩遊戲</span>
+      </a>
+      <button class="qrbtn" type="button" data-index="7" data-title="鞋" aria-label="顯示鞋二維碼">
+        <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1.5" fill="none" stroke="#5B4636" stroke-width="2"/><rect x="14" y="3" width="7" height="7" rx="1.5" fill="none" stroke="#5B4636" stroke-width="2"/><rect x="3" y="14" width="7" height="7" rx="1.5" fill="none" stroke="#5B4636" stroke-width="2"/><path d="M14 14h3v3h-3zM19 14h2v2h-2zM14 19h2v2h-2zM19 18h2v3h-2z" fill="#5B4636"/></svg>
+        二維碼
+      </button>
+    </div>
+
+    <div class="tile">
+      <a class="card" href="我愛學語文課文互動遊戲/燕子媽媽笑了-互動遊戲.html" rel="noopener">
+        <span class="tag c-sky"></span>
+        <span class="icon"><img src="https://media.doubao.com/space/api/box/stream/download/all_by_mount_point/IZzSblPD7oVQ8gx1ClqcROFyna8" alt="燕子媽媽笑了"></span>
+        <span class="title">燕子媽媽笑了</span>
+        <span class="tip">點我玩遊戲</span>
+      </a>
+      <button class="qrbtn" type="button" data-index="8" data-title="燕子媽媽笑了" aria-label="顯示燕子媽媽笑了二維碼">
+        <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1.5" fill="none" stroke="#5B4636" stroke-width="2"/><rect x="14" y="3" width="7" height="7" rx="1.5" fill="none" stroke="#5B4636" stroke-width="2"/><rect x="3" y="14" width="7" height="7" rx="1.5" fill="none" stroke="#5B4636" stroke-width="2"/><path d="M14 14h3v3h-3zM19 14h2v2h-2zM14 19h2v2h-2zM19 18h2v3h-2z" fill="#5B4636"/></svg>
+        二維碼
+      </button>
+    </div>
+
+    <button class="card congrats" type="button" id="congratsBtn" aria-label="全部課文玩完了，好棒！">
+      <span class="tag c-peach"></span>
+      <span class="icon">
+        <svg viewBox="0 0 64 64"><path d="M32 4 L39 26 L62 32 L39 38 L32 60 L25 38 L2 32 L25 26 Z" fill="#FFD25A" stroke="#5B4636" stroke-width="3" stroke-linejoin="round"/><path d="M32 14 L36 27 L50 32 L36 37 L32 50 L28 37 L14 32 L28 27 Z" fill="#FFF7D6"/></svg>
+      </span>
+      <span class="title">全部課文玩完啦！</span>
+      <span class="tip">你真棒，點我放煙火</span>
+    </button>
+
+  </main>
+
+  <footer>
+    <div class="starline">
+      <svg width="16" height="16" viewBox="0 0 40 40" aria-hidden="true"><path d="M20 2 L23.5 15 L37 20 L23.5 25 L20 38 L16.5 25 L3 20 L16.5 15 Z" fill="#FFD25A" stroke="#5B4636" stroke-width="2.5" stroke-linejoin="round"/></svg>
+      <svg width="16" height="16" viewBox="0 0 40 40" aria-hidden="true"><path d="M20 2 L23.5 15 L37 20 L23.5 25 L20 38 L16.5 25 L3 20 L16.5 15 Z" fill="#FF9AA2" stroke="#5B4636" stroke-width="2.5" stroke-linejoin="round"/></svg>
+      <svg width="16" height="16" viewBox="0 0 40 40" aria-hidden="true"><path d="M20 2 L23.5 15 L37 20 L23.5 25 L20 38 L16.5 25 L3 20 L16.5 15 Z" fill="#9CD49A" stroke="#5B4636" stroke-width="2.5" stroke-linejoin="round"/></svg>
+    </div>
+    <p>小一《我愛學語文》課文互動遊戲 · 謝老師AI互動教室</p>
+  </footer>
+</div>
+
+<div class="modal" id="qrModal" aria-hidden="true">
+  <div class="modal-card" role="dialog" aria-modal="true" aria-label="課文二維碼">
+    <button class="modal-close" id="qrClose" type="button" aria-label="關閉">×</button>
+    <div class="modal-title" id="qrTitle">大雨傘</div>
+    <div class="qr-frame">
+      <div id="qrCanvas"></div>
+    </div>
+    <p class="modal-hint">拿起手機掃描二維碼，就能進入課文遊戲</p>
+    <a class="modal-link" id="qrOpen" href="我愛學語文課文互動遊戲/大雨傘_Q版手繪互動遊戲.html" target="_blank" rel="noopener">或直接點我，打開遊戲</a>
+  </div>
+</div>
+
+<script src="https://fastly.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+<script>
+  (function(){
+    var btn = document.getElementById('congratsBtn');
+    var colors = ['#FF9AA2','#FFD25A','#9CD49A','#C7B7F0','#FF8A5C'];
+    var reduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    function makeStar(col,size){
+      var el = document.createElement('span');
+      el.className='burst';
+      el.style.width=el.style.height=size+'px';
+      el.innerHTML = '<svg width="'+size+'" height="'+size+'" viewBox="0 0 40 40" aria-hidden="true"><path d="M20 2 L23.5 15 L37 20 L23.5 25 L20 38 L16.5 25 L3 20 L16.5 15 Z" fill="'+col+'" stroke="#5B4636" stroke-width="2.5" stroke-linejoin="round"/></svg>';
+      return el;
+    }
+    function burst(e){
+      if(reduced) return;
+      var r = btn.getBoundingClientRect();
+      var cx = r.left + r.width/2, cy = r.top + r.height/2;
+      for(var i=0;i<18;i++){
+        var s = makeStar(colors[i%colors.length], 20+Math.random()*26);
+        s.style.left = cx+'px'; s.style.top = cy+'px';
+        var ang = Math.random()*Math.PI*2;
+        var dist = 70 + Math.random()*130;
+        s.style.setProperty('--dx', (Math.cos(ang)*dist)+'px');
+        s.style.setProperty('--dy', (Math.sin(ang)*dist - 30)+'px');
+        document.body.appendChild(s);
+        (function(el){setTimeout(function(){el.remove();},1000);})(s);
+      }
+    }
+    btn.addEventListener('click', burst);
+    var modal = document.getElementById('qrModal');
+    var modalTitle = document.getElementById('qrTitle');
+    var qrOpen = document.getElementById('qrOpen');
+    var qrClose = document.getElementById('qrClose');
+    var qrBtns = document.querySelectorAll('.qrbtn');
+    var GAMES = [
+      "我愛學語文課文互動遊戲/大雨傘_Q版手繪互動遊戲.html",
+      "我愛學語文課文互動遊戲/小熊住山洞_互動遊戲.html",
+      "我愛學語文課文互動遊戲/百合花情景互動遊戲.html",
+      "我愛學語文課文互動遊戲/青字歌情景互動識字遊戲.html",
+      "我愛學語文課文互動遊戲/春天的圖畫_繪本互動遊戲.html",
+      "我愛學語文課文互動遊戲/馬字歌互動教學遊戲.html",
+      "我愛學語文課文互動遊戲/超級市場裡學生字互動遊戲.html",
+      "我愛學語文課文互動遊戲/鞋_互動教學遊戲.html",
+      "我愛學語文課文互動遊戲/燕子媽媽笑了-互動遊戲.html"
+    ];
+    var qrCanvas = document.getElementById('qrCanvas');
+    function openQr(idx, title){
+      modalTitle.textContent = title;
+      var rel = GAMES[idx];
+      qrOpen.href = rel;
+      qrCanvas.innerHTML = '';
+      if(window.QRCode && rel){
+        var absUrl = new URL(rel, location.href).href;
+        new QRCode(qrCanvas, {
+          text: absUrl,
+          width: 200,
+          height: 200,
+          colorDark: "#5B4636",
+          colorLight: "#ffffff",
+          correctLevel: QRCode.CorrectLevel.M
+        });
+      }
+      modal.classList.add('show');
+      modal.setAttribute('aria-hidden','false');
+      qrClose.focus();
+    }
+    function closeQr(){ modal.classList.remove('show'); modal.setAttribute('aria-hidden','true'); }
+    qrBtns.forEach(function(b){ b.addEventListener('click', function(){ openQr(parseInt(b.getAttribute('data-index'),10), b.getAttribute('data-title')); }); });
+    qrClose.addEventListener('click', closeQr);
+    modal.addEventListener('click', function(e){ if(e.target === modal){ closeQr(); } });
+    document.addEventListener('keydown', function(e){ if(e.key === 'Escape' && modal.classList.contains('show')){ closeQr(); } });
+  })();
+</script>
+</body>
+</html>

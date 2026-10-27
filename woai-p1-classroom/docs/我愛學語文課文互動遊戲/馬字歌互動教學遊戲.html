@@ -1,0 +1,1159 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>馬字歌 - 情景互動識字遊戲</title>
+<script src="https://aisearch-task.bj.bcebos.com/static/tailwindcss-3.4.17.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=ZCOOL+KuaiLe&family=Ma+Shan+Zheng&display=swap');
+
+:root {
+  --watercolor-pink: #f8b4c4;
+  --watercolor-blue: #a8d8ea;
+  --watercolor-yellow: #ffeaa7;
+  --watercolor-green: #b8e0c8;
+  --watercolor-orange: #fdd5b5;
+  --watercolor-purple: #d5b8e0;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+}
+
+body {
+  font-family: 'ZCOOL KuaiLe', 'PingFang TC', 'Microsoft JhengHei', sans-serif;
+  background: linear-gradient(135deg, #fef9f3 0%, #fff5e6 50%, #f0f9ff 100%);
+  min-height: 100vh;
+  overflow-x: hidden;
+  position: relative;
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+  pointer-events: none;
+  z-index: 0;
+}
+
+.handwrite {
+  font-family: 'Ma Shan Zheng', 'KaiTi', 'STKaiti', serif;
+}
+
+.watercolor-blob {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(40px);
+  opacity: 0.4;
+  animation: float 8s ease-in-out infinite;
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0) scale(1); }
+  50% { transform: translateY(-20px) scale(1.05); }
+}
+
+@keyframes bounce-gentle {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+
+@keyframes wiggle {
+  0%, 100% { transform: rotate(-3deg); }
+  50% { transform: rotate(3deg); }
+}
+
+@keyframes sparkle {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.5; transform: scale(1.2); }
+}
+
+.animate-bounce-gentle {
+  animation: bounce-gentle 2s ease-in-out infinite;
+}
+
+.animate-wiggle {
+  animation: wiggle 1s ease-in-out infinite;
+}
+
+.animate-sparkle {
+  animation: sparkle 1.5s ease-in-out infinite;
+}
+
+.hand-drawn-border {
+  border: 4px solid #5d4e37;
+  border-radius: 25px 20px 30px 22px / 22px 28px 20px 25px;
+  box-shadow: 
+    3px 3px 0 rgba(93, 78, 55, 0.1),
+    inset 0 0 20px rgba(255, 255, 255, 0.5);
+}
+
+.hand-drawn-btn {
+  border: 3px solid #5d4e37;
+  border-radius: 20px 18px 25px 16px / 18px 22px 16px 20px;
+  box-shadow: 4px 4px 0 rgba(93, 78, 55, 0.2);
+  transition: all 0.2s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.hand-drawn-btn:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: 6px 6px 0 rgba(93, 78, 55, 0.25);
+}
+
+.hand-drawn-btn:active {
+  transform: translate(2px, 2px);
+  box-shadow: 2px 2px 0 rgba(93, 78, 55, 0.2);
+}
+
+.scene-card {
+  background: linear-gradient(145deg, rgba(255,255,255,0.9), rgba(255,250,240,0.85));
+  backdrop-filter: blur(10px);
+}
+
+.character-highlight {
+  display: inline-block;
+  position: relative;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.character-highlight::after {
+  content: '';
+  position: absolute;
+  bottom: -5px;
+  left: 0;
+  right: 0;
+  height: 8px;
+  background: linear-gradient(90deg, var(--watercolor-yellow), var(--watercolor-orange));
+  border-radius: 4px;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  z-index: -1;
+}
+
+.character-highlight:hover::after,
+.character-highlight.active::after {
+  opacity: 0.8;
+}
+
+.character-highlight.active {
+  transform: scale(1.1);
+  color: #c0392b;
+}
+
+.pulse-ring {
+  animation: pulse-ring 1.5s cubic-bezier(0.215, 0.61, 0.355, 1) infinite;
+}
+
+@keyframes pulse-ring {
+  0% { transform: scale(0.8); opacity: 1; }
+  80%, 100% { transform: scale(1.3); opacity: 0; }
+}
+
+.page {
+  display: none;
+  animation: pageIn 0.5s ease;
+}
+
+.page.active {
+  display: block;
+}
+
+@keyframes pageIn {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.touch-feedback {
+  position: relative;
+}
+
+.big-char {
+  font-size: clamp(80px, 20vw, 150px);
+  line-height: 1;
+  text-shadow: 
+    3px 3px 0 rgba(93, 78, 55, 0.1),
+    -1px -1px 0 rgba(255,255,255,0.5);
+}
+
+.poem-line {
+  font-size: clamp(28px, 6vw, 52px);
+}
+
+.char-card {
+  background: white;
+  border: 3px dashed #e67e22;
+  border-radius: 20px;
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.char-card:hover {
+  transform: translateY(-5px) rotate(2deg);
+  box-shadow: 0 10px 30px rgba(230, 126, 34, 0.2);
+}
+
+.char-card.correct {
+  border-color: #27ae60;
+  background: #d5f5e3;
+}
+
+.char-card.wrong {
+  border-color: #e74c3c;
+  background: #fadbd8;
+  animation: shake 0.5s ease;
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-10px); }
+  75% { transform: translateX(10px); }
+}
+
+.heart-float {
+  position: fixed;
+  pointer-events: none;
+  animation: heartFloat 2s ease-out forwards;
+  z-index: 100;
+}
+
+@keyframes heartFloat {
+  0% { opacity: 1; transform: translateY(0) scale(1); }
+  100% { opacity: 0; transform: translateY(-100px) scale(1.5); }
+}
+
+.reading-highlight {
+  background: linear-gradient(120deg, #ffeaa7 0%, #fdcb6e 100%);
+  border-radius: 10px;
+  padding: 2px 8px;
+}
+</style>
+</head>
+<body class="min-h-screen relative">
+
+<div class="fixed inset-0 pointer-events-none overflow-hidden z-0">
+  <div class="watercolor-blob w-64 h-64 md:w-96 md:h-96" style="background: var(--watercolor-pink); top: -50px; left: -50px;"></div>
+  <div class="watercolor-blob w-48 h-48 md:w-72 md:h-72" style="background: var(--watercolor-blue); top: 30%; right: -30px; animation-delay: -2s;"></div>
+  <div class="watercolor-blob w-56 h-56 md:w-80 md:h-80" style="background: var(--watercolor-yellow); bottom: -30px; left: 20%; animation-delay: -4s;"></div>
+  <div class="watercolor-blob w-40 h-40 md:w-64 md:h-64" style="background: var(--watercolor-green); bottom: 20%; right: 10%; animation-delay: -6s;"></div>
+</div>
+
+<div class="relative z-10 min-h-screen flex flex-col">
+
+  <header class="px-4 py-3 md:px-8 md:py-4">
+    <div class="max-w-6xl mx-auto flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div class="text-4xl md:text-5xl animate-bounce-gentle">🐴</div>
+        <h1 class="handwrite text-3xl md:text-5xl text-amber-800">馬字歌</h1>
+      </div>
+      <div class="flex items-center gap-2 md:gap-4">
+        <button id="soundToggle" class="hand-drawn-btn bg-yellow-100 w-12 h-12 md:w-14 md:h-14 flex items-center justify-center text-2xl md:text-3xl touch-feedback" title="音效開關">
+          🔊
+        </button>
+        <button id="homeBtn" class="hand-drawn-btn bg-pink-100 w-12 h-12 md:w-14 md:h-14 flex items-center justify-center text-2xl md:text-3xl touch-feedback hidden" title="回首頁">
+          🏠
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <div id="homePage" class="page active flex-1 flex flex-col items-center justify-center px-4">
+    <div class="text-center max-w-3xl mx-auto">
+      <div class="relative mb-6 md:mb-10">
+        <div class="absolute -top-10 left-10 text-5xl md:text-7xl opacity-60">☁️</div>
+        <div class="absolute -top-5 right-20 text-4xl md:text-6xl opacity-50">☁️</div>
+        
+        <div class="hand-drawn-border bg-white/80 p-6 md:p-10 mb-8">
+          <div class="text-6xl md:text-9xl mb-4 animate-bounce-gentle" style="display:inline-block;">🦄</div>
+          <h2 class="handwrite text-4xl md:text-7xl text-amber-700 mb-2">馬字歌</h2>
+          <p class="text-lg md:text-2xl text-amber-600">一起來認識「馬」字旁的漢字吧！</p>
+        </div>
+
+        <div class="flex justify-center gap-4 text-3xl md:text-5xl mb-6">
+          <span class="animate-wiggle" style="animation-delay: 0s;">🐜</span>
+          <span class="animate-wiggle" style="animation-delay: 0.2s;">🐜</span>
+          <span class="animate-wiggle" style="animation-delay: 0.4s;">🐜</span>
+          <span class="text-4xl md:text-6xl">👩‍👧</span>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
+        <button onclick="startGame()" class="hand-drawn-btn bg-gradient-to-br from-pink-200 to-pink-300 p-6 md:p-8 touch-feedback">
+          <div class="text-4xl md:text-6xl mb-2">📖</div>
+          <div class="handwrite text-2xl md:text-3xl text-pink-800">開始故事</div>
+          <div class="text-sm md:text-base text-pink-600 mt-1">情景互動學習</div>
+        </button>
+        
+        <button onclick="startReading()" class="hand-drawn-btn bg-gradient-to-br from-blue-200 to-blue-300 p-6 md:p-8 touch-feedback">
+          <div class="text-4xl md:text-6xl mb-2 relative">
+            🔊
+            <span class="absolute inset-0 rounded-full bg-blue-400 pulse-ring"></span>
+          </div>
+          <div class="handwrite text-2xl md:text-3xl text-blue-800">課文朗讀</div>
+          <div class="text-sm md:text-base text-blue-600 mt-1">普通話全文朗讀</div>
+        </button>
+        
+        <button onclick="startPractice()" class="hand-drawn-btn bg-gradient-to-br from-green-200 to-green-300 p-6 md:p-8 touch-feedback">
+          <div class="text-4xl md:text-6xl mb-2">🎮</div>
+          <div class="handwrite text-2xl md:text-3xl text-green-800">識字遊戲</div>
+          <div class="text-sm md:text-base text-green-600 mt-1">馬部漢字練習</div>
+        </button>
+      </div>
+
+      <p class="mt-8 text-amber-600 text-base md:text-lg">
+        💡 點擊畫面上的文字和圖案，會有驚喜哦！
+      </p>
+    </div>
+  </div>
+
+  <div id="storyPage" class="page flex-1 flex flex-col px-4 pb-4">
+    <div class="max-w-4xl mx-auto w-full mb-4">
+      <div class="flex items-center justify-center gap-2 md:gap-4 mb-2">
+        <div id="sceneDot1" class="w-4 h-4 md:w-5 md:h-5 rounded-full bg-pink-400 border-2 border-pink-600 transition-all"></div>
+        <div class="w-8 md:w-16 h-1 bg-amber-200 rounded"></div>
+        <div id="sceneDot2" class="w-4 h-4 md:w-5 md:h-5 rounded-full bg-gray-300 border-2 border-gray-400 transition-all"></div>
+        <div class="w-8 md:w-16 h-1 bg-amber-200 rounded"></div>
+        <div id="sceneDot3" class="w-4 h-4 md:w-5 md:h-5 rounded-full bg-gray-300 border-2 border-gray-400 transition-all"></div>
+      </div>
+    </div>
+
+    <div class="flex-1 max-w-4xl mx-auto w-full">
+      <div id="sceneContainer" class="hand-drawn-border scene-card p-4 md:p-8 min-h-[500px] md:min-h-[600px] relative overflow-hidden">
+      </div>
+    </div>
+
+    <div class="max-w-4xl mx-auto w-full mt-4 flex justify-between items-center">
+      <button id="prevScene" onclick="prevScene()" class="hand-drawn-btn bg-gray-100 px-6 py-3 md:px-8 md:py-4 text-lg md:text-xl touch-feedback disabled:opacity-50" disabled>
+        ⬅️ 上一頁
+      </button>
+      <button id="sceneSpeak" onclick="speakCurrentScene()" class="hand-drawn-btn bg-yellow-200 px-6 py-3 md:px-8 md:py-4 text-lg md:text-xl touch-feedback">
+        🔊 讀一讀
+      </button>
+      <button id="nextScene" onclick="nextScene()" class="hand-drawn-btn bg-amber-200 px-6 py-3 md:px-8 md:py-4 text-lg md:text-xl touch-feedback">
+        下一頁 ➡️
+      </button>
+    </div>
+  </div>
+
+  <div id="readingPage" class="page flex-1 flex flex-col items-center justify-center px-4">
+    <div class="max-w-3xl w-full">
+      <div class="hand-drawn-border bg-white/90 p-6 md:p-10 text-center">
+        <h2 class="handwrite text-3xl md:text-5xl text-amber-700 mb-6">📢 課文朗讀</h2>
+        
+        <div id="poemContent" class="space-y-4 md:space-y-6 mb-8">
+          <div class="poem-line handwrite text-amber-900 py-2 px-4 rounded-xl transition-all" data-line="0">
+            我愛畫<span class="character-highlight" data-char="馬">馬</span>，
+          </div>
+          <div class="poem-line handwrite text-amber-900 py-2 px-4 rounded-xl transition-all" data-line="1">
+            騎着白<span class="character-highlight" data-char="馬">馬</span>走天下。
+          </div>
+          <div class="poem-line handwrite text-amber-900 py-2 px-4 rounded-xl transition-all" data-line="2">
+            我愛畫<span class="character-highlight" data-char="螞">螞</span>蟻，
+          </div>
+          <div class="poem-line handwrite text-amber-900 py-2 px-4 rounded-xl transition-all" data-line="3">
+            小小<span class="character-highlight" data-char="螞">螞</span>蟻忙搬家。
+          </div>
+          <div class="poem-line handwrite text-amber-900 py-2 px-4 rounded-xl transition-all" data-line="4">
+            我愛畫<span class="character-highlight" data-char="媽">媽</span>媽，
+          </div>
+          <div class="poem-line handwrite text-amber-900 py-2 px-4 rounded-xl transition-all" data-line="5">
+            <span class="character-highlight" data-char="媽">媽</span>媽愛我我愛她。
+          </div>
+        </div>
+
+        <div class="flex flex-wrap justify-center gap-4">
+          <button id="playAllBtn" onclick="playAllReading()" class="hand-drawn-btn bg-gradient-to-r from-blue-300 to-blue-400 px-6 py-4 text-xl md:text-2xl touch-feedback">
+            ▶️ 播放全文
+          </button>
+          <button id="stopBtn" onclick="stopReading()" class="hand-drawn-btn bg-red-200 px-6 py-4 text-xl md:text-2xl touch-feedback">
+            ⏹️ 停止
+          </button>
+        </div>
+
+        <p class="mt-6 text-amber-600 text-base md:text-lg">
+          💡 點擊個別字詞可以聽讀音哦！
+        </p>
+      </div>
+
+      <div class="text-center mt-6">
+        <button onclick="goHome()" class="hand-drawn-btn bg-gray-100 px-6 py-3 text-lg touch-feedback">
+          🏠 返回首頁
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div id="gamePage" class="page flex-1 flex flex-col px-4 pb-4">
+    <div class="max-w-4xl mx-auto w-full mb-4">
+      <div class="flex justify-between items-center hand-drawn-border bg-white/80 px-4 py-3 md:px-6 md:py-4">
+        <div class="flex items-center gap-2">
+          <span class="text-2xl md:text-3xl">⭐</span>
+          <span id="gameScore" class="handwrite text-2xl md:text-3xl text-amber-700">0</span>
+        </div>
+        <div id="gameLevel" class="handwrite text-xl md:text-2xl text-green-700">第一關：認識部首</div>
+        <div class="flex items-center gap-2">
+          <span class="text-2xl md:text-3xl">❓</span>
+          <span id="gameProgress" class="handwrite text-xl md:text-2xl text-blue-700">1/5</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="flex-1 max-w-4xl mx-auto w-full">
+      <div id="gameContainer" class="hand-drawn-border scene-card p-4 md:p-8 min-h-[450px] md:min-h-[550px] flex flex-col items-center justify-center">
+      </div>
+    </div>
+
+    <div class="max-w-4xl mx-auto w-full mt-4">
+      <div id="gameFeedback" class="text-center handwrite text-xl md:text-2xl text-amber-700 min-h-[40px]">
+        選出正確的答案吧！
+      </div>
+      <div class="flex justify-center mt-4">
+        <button onclick="restartGame()" class="hand-drawn-btn bg-yellow-200 px-6 py-3 text-lg md:text-xl touch-feedback mr-4">
+          🔄 重新開始
+        </button>
+        <button onclick="goHome()" class="hand-drawn-btn bg-gray-100 px-6 py-3 text-lg md:text-xl touch-feedback">
+          🏠 返回首頁
+        </button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div id="soundOverlay" class="fixed inset-0 bg-black/50 flex items-center justify-center z-[9999] hidden" onclick="initAudio()">
+  <div class="bg-white rounded-3xl p-8 text-center max-w-sm mx-4 hand-drawn-border">
+    <div class="text-6xl mb-4">🔊</div>
+    <h3 class="handwrite text-2xl text-amber-700 mb-2">開啟音效</h3>
+    <p class="text-amber-600 mb-4">點擊任意地方開始遊戲<br>體驗完整音效與朗讀功能</p>
+    <button class="hand-drawn-btn bg-yellow-300 px-8 py-4 text-xl mt-2" onclick="event.stopPropagation(); initAudio()">開始遊戲 🎮</button>
+  </div>
+</div>
+
+<script>
+let audioContext = null;
+let soundEnabled = true;
+let currentScene = 0;
+let isReading = false;
+let readingUtterance = null;
+let gameScore = 0;
+let currentGameLevel = 0;
+let currentQuestionIndex = 0;
+
+function initAudio() {
+  if (!audioContext) {
+    audioContext = new (window.AudioContext || window.webkitAudioContext)();
+  }
+  document.getElementById('soundOverlay').style.display = 'none';
+  playSound('welcome');
+}
+
+function playSound(type) {
+  if (!soundEnabled || !audioContext) return;
+  
+  const now = audioContext.currentTime;
+  
+  switch(type) {
+    case 'click':
+      var osc = audioContext.createOscillator();
+      var gain = audioContext.createGain();
+      osc.connect(gain);
+      gain.connect(audioContext.destination);
+      osc.frequency.setValueAtTime(800, now);
+      osc.frequency.exponentialRampToValueAtTime(600, now + 0.1);
+      gain.gain.setValueAtTime(0.1, now);
+      gain.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
+      osc.start(now);
+      osc.stop(now + 0.1);
+      break;
+    case 'correct':
+      [523, 659, 784].forEach(function(freq, i) {
+        var o = audioContext.createOscillator();
+        var g = audioContext.createGain();
+        o.connect(g);
+        g.connect(audioContext.destination);
+        o.frequency.setValueAtTime(freq, now + i * 0.1);
+        g.gain.setValueAtTime(0.15, now + i * 0.1);
+        g.gain.exponentialRampToValueAtTime(0.01, now + i * 0.1 + 0.2);
+        o.start(now + i * 0.1);
+        o.stop(now + i * 0.1 + 0.2);
+      });
+      break;
+    case 'wrong':
+      var o1 = audioContext.createOscillator();
+      var g1 = audioContext.createGain();
+      o1.connect(g1);
+      g1.connect(audioContext.destination);
+      o1.frequency.setValueAtTime(200, now);
+      o1.frequency.setValueAtTime(150, now + 0.1);
+      g1.gain.setValueAtTime(0.1, now);
+      g1.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
+      o1.start(now);
+      o1.stop(now + 0.2);
+      break;
+    case 'welcome':
+      [523, 659, 784, 1047].forEach(function(freq, i) {
+        var o = audioContext.createOscillator();
+        var g = audioContext.createGain();
+        o.connect(g);
+        g.connect(audioContext.destination);
+        o.frequency.setValueAtTime(freq, now + i * 0.15);
+        g.gain.setValueAtTime(0.1, now + i * 0.15);
+        g.gain.exponentialRampToValueAtTime(0.01, now + i * 0.15 + 0.2);
+        o.start(now + i * 0.15);
+        o.stop(now + i * 0.15 + 0.2);
+      });
+      break;
+    case 'horse':
+      for(var i = 0; i < 4; i++) {
+        var o = audioContext.createOscillator();
+        var g = audioContext.createGain();
+        o.type = 'triangle';
+        o.connect(g);
+        g.connect(audioContext.destination);
+        o.frequency.setValueAtTime(150 + i * 20, now + i * 0.1);
+        g.gain.setValueAtTime(0.08, now + i * 0.1);
+        g.gain.exponentialRampToValueAtTime(0.01, now + i * 0.1 + 0.08);
+        o.start(now + i * 0.1);
+        o.stop(now + i * 0.1 + 0.08);
+      }
+      break;
+    case 'ant':
+      for(var i = 0; i < 6; i++) {
+        var o = audioContext.createOscillator();
+        var g = audioContext.createGain();
+        o.type = 'sine';
+        o.connect(g);
+        g.connect(audioContext.destination);
+        o.frequency.setValueAtTime(800 + Math.random() * 400, now + i * 0.05);
+        g.gain.setValueAtTime(0.05, now + i * 0.05);
+        g.gain.exponentialRampToValueAtTime(0.01, now + i * 0.05 + 0.04);
+        o.start(now + i * 0.05);
+        o.stop(now + i * 0.05 + 0.04);
+      }
+      break;
+    case 'heart':
+      var o = audioContext.createOscillator();
+      var g = audioContext.createGain();
+      o.type = 'sine';
+      o.connect(g);
+      g.connect(audioContext.destination);
+      o.frequency.setValueAtTime(600, now);
+      o.frequency.exponentialRampToValueAtTime(900, now + 0.2);
+      g.gain.setValueAtTime(0.1, now);
+      g.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+      o.start(now);
+      o.stop(now + 0.3);
+      break;
+    case 'win':
+      [523, 659, 784, 1047, 784, 1047].forEach(function(freq, i) {
+        var o = audioContext.createOscillator();
+        var g = audioContext.createGain();
+        o.connect(g);
+        g.connect(audioContext.destination);
+        o.frequency.setValueAtTime(freq, now + i * 0.1);
+        g.gain.setValueAtTime(0.12, now + i * 0.1);
+        g.gain.exponentialRampToValueAtTime(0.01, now + i * 0.1 + 0.15);
+        o.start(now + i * 0.1);
+        o.stop(now + i * 0.1 + 0.15);
+      });
+      break;
+  }
+}
+
+function speak(text, callback) {
+  if ('speechSynthesis' in window) {
+    window.speechSynthesis.cancel();
+    var utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = 'zh-CN';
+    utterance.rate = 0.8;
+    utterance.pitch = 1.1;
+    utterance.volume = 1;
+    
+    var voices = window.speechSynthesis.getVoices();
+    var chineseVoice = voices.find(function(v) { return v.lang.includes('zh') || v.lang.includes('CMN'); });
+    if (chineseVoice) utterance.voice = chineseVoice;
+    
+    if (callback) {
+      utterance.onend = callback;
+    }
+    
+    readingUtterance = utterance;
+    window.speechSynthesis.speak(utterance);
+  }
+}
+
+function stopSpeaking() {
+  if ('speechSynthesis' in window) {
+    window.speechSynthesis.cancel();
+  }
+  isReading = false;
+}
+
+function showPage(pageId) {
+  document.querySelectorAll('.page').forEach(function(p) { p.classList.remove('active'); });
+  document.getElementById(pageId).classList.add('active');
+  playSound('click');
+  
+  var homeBtn = document.getElementById('homeBtn');
+  if (pageId === 'homePage') {
+    homeBtn.classList.add('hidden');
+  } else {
+    homeBtn.classList.remove('hidden');
+  }
+}
+
+function goHome() {
+  stopSpeaking();
+  showPage('homePage');
+}
+
+var scenes = [
+  {
+    title: '我愛畫白馬',
+    text: '我愛畫白馬，',
+    text2: '騎着白馬走天下。',
+    character: '馬',
+    sound: 'horse',
+    emoji: '🐴',
+    bgColor: 'from-blue-100 to-sky-50',
+    description: '「馬」是一個象形字，就像一匹馬的樣子！',
+    interaction: '點擊白馬，讓它奔馳吧！'
+  },
+  {
+    title: '我愛畫螞蟻',
+    text: '我愛畫螞蟻，',
+    text2: '小小螞蟻忙搬家。',
+    character: '螞',
+    sound: 'ant',
+    emoji: '🐜',
+    bgColor: 'from-green-100 to-emerald-50',
+    description: '「螞」字有「蟲」字旁，因為螞蟻是昆蟲呀！',
+    interaction: '點擊螞蟻，看牠們搬家！'
+  },
+  {
+    title: '我愛畫媽媽',
+    text: '我愛畫媽媽，',
+    text2: '媽媽愛我我愛她。',
+    character: '媽',
+    sound: 'heart',
+    emoji: '👩',
+    bgColor: 'from-pink-100 to-rose-50',
+    description: '「媽」字有「女」字旁，媽媽是女性喔！',
+    interaction: '點擊愛心，送給媽媽！'
+  }
+];
+
+function renderScene(index) {
+  var scene = scenes[index];
+  var container = document.getElementById('sceneContainer');
+  container.className = 'hand-drawn-border scene-card p-4 md:p-8 min-h-[500px] md:min-h-[600px] relative overflow-hidden bg-gradient-to-br ' + scene.bgColor;
+  
+  for(var i = 1; i <= 3; i++) {
+    var dot = document.getElementById('sceneDot' + i);
+    if (i <= index + 1) {
+      dot.className = 'w-4 h-4 md:w-5 md:h-5 rounded-full bg-pink-400 border-2 border-pink-600 transition-all';
+    } else {
+      dot.className = 'w-4 h-4 md:w-5 md:h-5 rounded-full bg-gray-300 border-2 border-gray-400 transition-all';
+    }
+  }
+  
+  document.getElementById('prevScene').disabled = index === 0;
+  document.getElementById('nextScene').textContent = index === 2 ? '完成 ✨' : '下一頁 ➡️';
+  
+  var sceneHTML = '';
+  
+  if (index === 0) {
+    sceneHTML = '<div class="text-center">' +
+      '<h3 class="handwrite text-2xl md:text-4xl text-blue-800 mb-4">' + scene.title + '</h3>' +
+      '<div class="relative h-48 md:h-64 mb-6 overflow-hidden rounded-2xl bg-gradient-to-b from-sky-200 to-green-200 cursor-pointer" onclick="animateHorse()">' +
+        '<div class="absolute top-4 right-8 text-5xl md:text-7xl">☀️</div>' +
+        '<div class="absolute top-6 left-10 text-4xl opacity-80">☁️</div>' +
+        '<div class="absolute top-12 left-1/3 text-3xl opacity-70">☁️</div>' +
+        '<div class="absolute bottom-0 left-0 right-0 h-16 md:h-20 bg-gradient-to-t from-green-500 to-green-400 rounded-b-2xl"></div>' +
+        '<div id="whiteHorse" class="absolute bottom-12 md:bottom-16 text-7xl md:text-9xl transition-all duration-500" style="left: 20%;">🦄</div>' +
+        '<div class="absolute bottom-2 left-0 right-0 text-center text-green-800 text-sm md:text-base">' + scene.interaction + '</div>' +
+      '</div>' +
+      '<div class="space-y-3 md:space-y-4 mb-6">' +
+        '<p class="poem-line handwrite text-blue-900" onclick="speakText(\'' + scene.text + '\')">' + scene.text + '</p>' +
+        '<p class="poem-line handwrite text-blue-900" onclick="speakText(\'' + scene.text2 + '\')">' + scene.text2 + '</p>' +
+      '</div>' +
+      '<div class="hand-drawn-border bg-white/80 p-4 md:p-6 inline-block">' +
+        '<div class="flex items-center justify-center gap-4 md:gap-6">' +
+          '<div class="text-center"><div class="big-char handwrite text-red-600">' + scene.character + '</div><div class="text-lg md:text-xl text-amber-700">這個字讀作「mǎ」</div></div>' +
+          '<div class="text-3xl md:text-5xl">➡️</div>' +
+          '<div class="text-center"><div class="text-6xl md:text-8xl">' + scene.emoji + '</div><div class="text-lg md:text-xl text-amber-700">就是白馬的馬！</div></div>' +
+        '</div>' +
+        '<p class="mt-4 text-amber-700 text-base md:text-lg">' + scene.description + '</p>' +
+      '</div>' +
+    '</div>';
+  } else if (index === 1) {
+    sceneHTML = '<div class="text-center">' +
+      '<h3 class="handwrite text-2xl md:text-4xl text-green-800 mb-4">' + scene.title + '</h3>' +
+      '<div class="relative h-48 md:h-64 mb-6 overflow-hidden rounded-2xl bg-gradient-to-b from-amber-100 to-amber-200 cursor-pointer" onclick="animateAnts()">' +
+        '<div class="absolute bottom-0 left-0 right-0 h-20 md:h-24 bg-gradient-to-t from-amber-700 to-amber-600 rounded-b-2xl"></div>' +
+        '<div class="absolute bottom-16 md:bottom-20 left-10 text-3xl">🌿</div>' +
+        '<div class="absolute bottom-18 md:bottom-24 right-20 text-2xl">🌱</div>' +
+        '<div id="ant1" class="absolute bottom-8 text-3xl md:text-5xl transition-all duration-300" style="left: 10%;">🐜</div>' +
+        '<div id="ant2" class="absolute bottom-12 text-2xl md:text-4xl transition-all duration-300" style="left: 25%;">🐜</div>' +
+        '<div id="ant3" class="absolute bottom-6 text-3xl md:text-5xl transition-all duration-300" style="left: 40%;">🐜</div>' +
+        '<div id="ant4" class="absolute bottom-14 text-2xl md:text-4xl transition-all duration-300" style="left: 55%;">🐜</div>' +
+        '<div class="absolute bottom-8 right-16 text-3xl md:text-4xl">🍎</div>' +
+        '<div class="absolute bottom-2 left-0 right-0 text-center text-amber-900 text-sm md:text-base">' + scene.interaction + '</div>' +
+      '</div>' +
+      '<div class="space-y-3 md:space-y-4 mb-6">' +
+        '<p class="poem-line handwrite text-green-900" onclick="speakText(\'' + scene.text + '\')">' + scene.text + '</p>' +
+        '<p class="poem-line handwrite text-green-900" onclick="speakText(\'' + scene.text2 + '\')">' + scene.text2 + '</p>' +
+      '</div>' +
+      '<div class="hand-drawn-border bg-white/80 p-4 md:p-6 inline-block">' +
+        '<div class="flex items-center justify-center gap-4 md:gap-6 flex-wrap">' +
+          '<div class="text-center"><div class="big-char handwrite"><span class="text-red-600">蟲</span><span class="text-4xl md:text-6xl text-amber-700 mx-1">➕</span><span class="text-amber-800">馬</span></div><div class="text-lg md:text-xl text-amber-700">左邊是「蟲」字旁</div></div>' +
+          '<div class="text-3xl md:text-5xl">➡️</div>' +
+          '<div class="text-center"><div class="text-6xl md:text-8xl">' + scene.emoji + '</div><div class="text-lg md:text-xl text-amber-700">昆蟲類動物！</div></div>' +
+        '</div>' +
+        '<p class="mt-4 text-amber-700 text-base md:text-lg">' + scene.description + '</p>' +
+        '<p class="mt-2 text-red-600 text-base md:text-lg font-bold">「馬」➕「蟲」字旁，就變成「螞」蟻的「螞」！</p>' +
+      '</div>' +
+    '</div>';
+  } else {
+    sceneHTML = '<div class="text-center">' +
+      '<h3 class="handwrite text-2xl md:text-4xl text-pink-800 mb-4">' + scene.title + '</h3>' +
+      '<div class="relative h-48 md:h-64 mb-6 overflow-hidden rounded-2xl bg-gradient-to-b from-pink-100 to-rose-100 cursor-pointer" onclick="animateHearts()">' +
+        '<div class="absolute top-8 left-1/4 text-3xl animate-sparkle">💗</div>' +
+        '<div class="absolute top-12 right-1/4 text-2xl animate-sparkle" style="animation-delay: 0.5s;">💕</div>' +
+        '<div id="momAndChild" class="absolute bottom-8 left-1/2 transform -translate-x-1/2 text-7xl md:text-9xl">👩‍👧</div>' +
+        '<div id="heartsContainer" class="absolute inset-0 pointer-events-none"></div>' +
+        '<div class="absolute bottom-8 right-8 text-4xl md:text-6xl">🏠</div>' +
+        '<div class="absolute bottom-8 left-8 text-3xl md:text-4xl">🌸</div>' +
+        '<div class="absolute bottom-2 left-0 right-0 text-center text-pink-800 text-sm md:text-base">' + scene.interaction + '</div>' +
+      '</div>' +
+      '<div class="space-y-3 md:space-y-4 mb-6">' +
+        '<p class="poem-line handwrite text-pink-900" onclick="speakText(\'' + scene.text + '\')">' + scene.text + '</p>' +
+        '<p class="poem-line handwrite text-pink-900" onclick="speakText(\'' + scene.text2 + '\')">' + scene.text2 + '</p>' +
+      '</div>' +
+      '<div class="hand-drawn-border bg-white/80 p-4 md:p-6 inline-block">' +
+        '<div class="flex items-center justify-center gap-4 md:gap-6 flex-wrap">' +
+          '<div class="text-center"><div class="big-char handwrite"><span class="text-red-600">女</span><span class="text-4xl md:text-6xl text-amber-700 mx-1">➕</span><span class="text-amber-800">馬</span></div><div class="text-lg md:text-xl text-amber-700">左邊是「女」字旁</div></div>' +
+          '<div class="text-3xl md:text-5xl">➡️</div>' +
+          '<div class="text-center"><div class="text-6xl md:text-8xl">' + scene.emoji + '</div><div class="text-lg md:text-xl text-amber-700">親愛的媽媽！</div></div>' +
+        '</div>' +
+        '<p class="mt-4 text-amber-700 text-base md:text-lg">' + scene.description + '</p>' +
+        '<p class="mt-2 text-red-600 text-base md:text-lg font-bold">「馬」➕「女」字旁，就變成「媽」媽的「媽」！</p>' +
+      '</div>' +
+    '</div>';
+  }
+  
+  container.innerHTML = sceneHTML;
+  playSound(scene.sound);
+}
+
+function animateHorse() {
+  var horse = document.getElementById('whiteHorse');
+  if (horse) {
+    playSound('horse');
+    horse.style.transform = 'translateX(200px) scaleX(-1)';
+    setTimeout(function() {
+      horse.style.transform = 'translateX(0) scaleX(1)';
+    }, 1000);
+  }
+}
+
+function animateAnts() {
+  playSound('ant');
+  for(var i = 1; i <= 4; i++) {
+    (function(idx) {
+      var ant = document.getElementById('ant' + idx);
+      if (ant) {
+        setTimeout(function() {
+          ant.style.transform = 'translateX(50px)';
+          setTimeout(function() {
+            ant.style.transform = 'translateX(0)';
+          }, 500);
+        }, idx * 100);
+      }
+    })(i);
+  }
+}
+
+function animateHearts() {
+  playSound('heart');
+  var container = document.getElementById('heartsContainer');
+  var emojis = ['💗', '💕', '💖', '❤️', '💝'];
+  for(var i = 0; i < 8; i++) {
+    (function(idx) {
+      setTimeout(function() {
+        var heart = document.createElement('div');
+        heart.className = 'heart-float text-2xl md:text-4xl';
+        heart.textContent = emojis[Math.floor(Math.random() * emojis.length)];
+        heart.style.left = (20 + Math.random() * 60) + '%';
+        heart.style.bottom = '40%';
+        container.appendChild(heart);
+        setTimeout(function() { heart.remove(); }, 2000);
+      }, idx * 150);
+    })(i);
+  }
+}
+
+function speakText(text) {
+  speak(text);
+}
+
+function startGame() {
+  currentScene = 0;
+  showPage('storyPage');
+  renderScene(0);
+}
+
+function nextScene() {
+  playSound('click');
+  if (currentScene < 2) {
+    currentScene++;
+    renderScene(currentScene);
+  } else {
+    playSound('win');
+    setTimeout(function() {
+      alert('🎉 太棒了！你已經學完課文了！\n\n現在來玩識字遊戲吧！');
+      startPractice();
+    }, 300);
+  }
+}
+
+function prevScene() {
+  playSound('click');
+  if (currentScene > 0) {
+    currentScene--;
+    renderScene(currentScene);
+  }
+}
+
+function speakCurrentScene() {
+  var scene = scenes[currentScene];
+  speak(scene.text + scene.text2);
+}
+
+function startReading() {
+  showPage('readingPage');
+}
+
+function playAllReading() {
+  if (isReading) return;
+  isReading = true;
+  
+  var lines = document.querySelectorAll('#poemContent > div');
+  var lineIndex = 0;
+  
+  var poemLines = [
+    '我愛畫馬，',
+    '騎着白馬走天下。',
+    '我愛畫螞蟻，',
+    '小小螞蟻忙搬家。',
+    '我愛畫媽媽，',
+    '媽媽愛我我愛她。'
+  ];
+  
+  function readNextLine() {
+    if (lineIndex >= lines.length || !isReading) {
+      isReading = false;
+      lines.forEach(function(l) { l.classList.remove('reading-highlight'); });
+      return;
+    }
+    
+    lines.forEach(function(l) { l.classList.remove('reading-highlight'); });
+    lines[lineIndex].classList.add('reading-highlight');
+    
+    speak(poemLines[lineIndex], function() {
+      lineIndex++;
+      setTimeout(readNextLine, 300);
+    });
+  }
+  
+  readNextLine();
+}
+
+function stopReading() {
+  isReading = false;
+  stopSpeaking();
+  document.querySelectorAll('#poemContent > div').forEach(function(l) { l.classList.remove('reading-highlight'); });
+}
+
+document.addEventListener('click', function(e) {
+  if (e.target.classList.contains('character-highlight')) {
+    var char = e.target.dataset.char;
+    e.target.classList.add('active');
+    setTimeout(function() { e.target.classList.remove('active'); }, 500);
+    speak(char);
+  }
+});
+
+var gameLevels = [
+  {
+    name: '第一關：認識部首',
+    questions: [
+      {
+        question: '「馬」字是什麼部首？',
+        options: ['馬', '女', '蟲', '口'],
+        answer: 0,
+        hint: '馬是一個獨立的象形字！'
+      },
+      {
+        question: '「螞」蟻的「螞」是什麼部首？',
+        options: ['馬', '女', '蟲', '木'],
+        answer: 2,
+        hint: '螞蟻是昆蟲喔！'
+      },
+      {
+        question: '「媽」媽的「媽」是什麼部首？',
+        options: ['馬', '女', '蟲', '水'],
+        answer: 1,
+        hint: '媽媽是女性！'
+      }
+    ]
+  },
+  {
+    name: '第二關：選字填空',
+    questions: [
+      {
+        question: '我愛畫白___',
+        options: ['馬', '螞', '媽'],
+        answer: 0,
+        fullText: '我愛畫白馬'
+      },
+      {
+        question: '小小___蟻忙搬家',
+        options: ['馬', '螞', '媽'],
+        answer: 1,
+        fullText: '小小螞蟻忙搬家'
+      },
+      {
+        question: '___媽愛我我愛她',
+        options: ['馬', '螞', '媽'],
+        answer: 2,
+        fullText: '媽媽愛我我愛她'
+      }
+    ]
+  },
+  {
+    name: '第三關：漢字配對',
+    questions: [
+      {
+        question: '這個字讀什麼？ 🐴',
+        options: ['mǎ (馬)', 'mā (媽)', 'mà (罵)'],
+        answer: 0
+      },
+      {
+        question: '哪個字是「媽媽」的「媽」？',
+        options: ['螞', '媽', '碼'],
+        answer: 1
+      },
+      {
+        question: '「蟲」+「馬」是什麼字？',
+        options: ['媽', '螞', '瑪'],
+        answer: 1
+      }
+    ]
+  }
+];
+
+function startPractice() {
+  gameScore = 0;
+  currentGameLevel = 0;
+  currentQuestionIndex = 0;
+  showPage('gamePage');
+  renderGameQuestion();
+}
+
+function renderGameQuestion() {
+  var level = gameLevels[currentGameLevel];
+  var question = level.questions[currentQuestionIndex];
+  var container = document.getElementById('gameContainer');
+  
+  document.getElementById('gameLevel').textContent = level.name;
+  document.getElementById('gameScore').textContent = gameScore;
+  document.getElementById('gameProgress').textContent = (currentQuestionIndex + 1) + '/' + level.questions.length;
+  document.getElementById('gameFeedback').textContent = '選出正確的答案吧！';
+  document.getElementById('gameFeedback').className = 'text-center handwrite text-xl md:text-2xl text-amber-700 min-h-[40px]';
+  
+  var optionsHTML = '';
+  question.options.forEach(function(opt, i) {
+    optionsHTML += '<button onclick="checkAnswer(' + i + ')" class="char-card p-6 md:p-8 text-center touch-feedback" data-index="' + i + '">' +
+      '<div class="handwrite text-4xl md:text-6xl text-amber-900">' + opt + '</div>' +
+    '</button>';
+  });
+  
+  container.innerHTML = '<div class="text-center w-full">' +
+    '<div class="mb-8">' +
+      '<div class="text-6xl md:text-8xl mb-4">' + getQuestionEmoji(question) + '</div>' +
+      '<h3 class="handwrite text-3xl md:text-5xl text-amber-800">' + question.question + '</h3>' +
+      (question.hint ? '<p class="text-lg md:text-xl text-amber-600 mt-2">💡 ' + question.hint + '</p>' : '') +
+    '</div>' +
+    '<div class="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 max-w-2xl mx-auto">' +
+      optionsHTML +
+    '</div>' +
+  '</div>';
+}
+
+function getQuestionEmoji(question) {
+  if (question.question.includes('螞')) return '🐜';
+  if (question.question.includes('媽')) return '👩';
+  if (question.question.includes('白')) return '🦄';
+  if (question.question.includes('蟻')) return '🐜';
+  if (question.question.includes('媽愛')) return '💗';
+  if (question.question.includes('什麼') || question.question.includes('哪個')) return '🎯';
+  return '❓';
+}
+
+function checkAnswer(selectedIndex) {
+  var level = gameLevels[currentGameLevel];
+  var question = level.questions[currentQuestionIndex];
+  var cards = document.querySelectorAll('.char-card');
+  var feedback = document.getElementById('gameFeedback');
+  
+  cards.forEach(function(card) { card.disabled = true; });
+  
+  if (selectedIndex === question.answer) {
+    cards[selectedIndex].classList.add('correct');
+    playSound('correct');
+    gameScore += 10;
+    document.getElementById('gameScore').textContent = gameScore;
+    feedback.textContent = '🎉 太棒了！答對了！';
+    feedback.className = 'text-center handwrite text-xl md:text-2xl text-green-600 min-h-[40px]';
+    
+    if (question.fullText) {
+      speak(question.fullText);
+    } else if (question.options && question.options[question.answer]) {
+      speak(question.options[question.answer]);
+    }
+    
+    setTimeout(function() {
+      nextQuestion();
+    }, 1500);
+  } else {
+    cards[selectedIndex].classList.add('wrong');
+    cards[question.answer].classList.add('correct');
+    playSound('wrong');
+    feedback.textContent = '😅 再想想看，正確答案是「' + question.options[question.answer] + '」';
+    feedback.className = 'text-center handwrite text-xl md:text-2xl text-red-600 min-h-[40px]';
+    
+    setTimeout(function() {
+      nextQuestion();
+    }, 2000);
+  }
+}
+
+function nextQuestion() {
+  var level = gameLevels[currentGameLevel];
+  currentQuestionIndex++;
+  
+  if (currentQuestionIndex >= level.questions.length) {
+    currentGameLevel++;
+    currentQuestionIndex = 0;
+    
+    if (currentGameLevel >= gameLevels.length) {
+      showGameComplete();
+    } else {
+      playSound('win');
+      document.getElementById('gameFeedback').textContent = '🎊 ' + level.name + ' 完成！準備進入下一關！';
+      setTimeout(function() { renderGameQuestion(); }, 1500);
+    }
+  } else {
+    renderGameQuestion();
+  }
+}
+
+function showGameComplete() {
+  playSound('win');
+  var container = document.getElementById('gameContainer');
+  
+  var stars = '⭐';
+  if (gameScore >= 70) stars = '⭐⭐⭐';
+  else if (gameScore >= 50) stars = '⭐⭐';
+  
+  container.innerHTML = '<div class="text-center">' +
+    '<div class="text-8xl md:text-9xl mb-6 animate-bounce">🏆</div>' +
+    '<h2 class="handwrite text-4xl md:text-6xl text-amber-700 mb-4">恭喜過關！</h2>' +
+    '<div class="text-5xl md:text-7xl mb-4">' + stars + '</div>' +
+    '<p class="handwrite text-2xl md:text-4xl text-green-700 mb-2">你獲得了 ' + gameScore + ' 分！</p>' +
+    '<p class="text-xl md:text-2xl text-amber-600 mb-8">你已經學會「馬」字旁的漢字了！</p>' +
+    '<div class="hand-drawn-border bg-yellow-50 p-6 max-w-md mx-auto mb-8">' +
+      '<h3 class="handwrite text-2xl md:text-3xl text-amber-800 mb-4">今天學到的字：</h3>' +
+      '<div class="flex justify-center gap-6 text-5xl md:text-7xl">' +
+        '<div class="text-center"><div class="text-red-600">馬</div><div class="text-base md:text-lg text-amber-600">🐴 白馬</div></div>' +
+        '<div class="text-center"><div class="text-green-600">螞</div><div class="text-base md:text-lg text-amber-600">🐜 螞蟻</div></div>' +
+        '<div class="text-center"><div class="text-pink-600">媽</div><div class="text-base md:text-lg text-amber-600">👩 媽媽</div></div>' +
+      '</div>' +
+    '</div>' +
+    '<div class="flex flex-wrap justify-center gap-4">' +
+      '<button onclick="startPractice()" class="hand-drawn-btn bg-yellow-200 px-6 py-4 text-xl touch-feedback">🔄 再玩一次</button>' +
+      '<button onclick="startGame()" class="hand-drawn-btn bg-blue-200 px-6 py-4 text-xl touch-feedback">📖 重讀故事</button>' +
+      '<button onclick="goHome()" class="hand-drawn-btn bg-pink-200 px-6 py-4 text-xl touch-feedback">🏠 回首頁</button>' +
+    '</div>' +
+  '</div>';
+}
+
+function restartGame() {
+  playSound('click');
+  gameScore = 0;
+  currentGameLevel = 0;
+  currentQuestionIndex = 0;
+  showPage('gamePage');
+  renderGameQuestion();
+  // 显示明确的反馈
+  var feedback = document.getElementById('gameFeedback');
+  feedback.textContent = '🔄 遊戲已重新開始！';
+  feedback.className = 'text-center handwrite text-xl md:text-2xl text-blue-600 min-h-[40px]';
+}
+
+document.getElementById('soundToggle').addEventListener('click', function() {
+  soundEnabled = !soundEnabled;
+  document.getElementById('soundToggle').textContent = soundEnabled ? '🔊' : '🔇';
+  if (soundEnabled) {
+    playSound('click');
+  }
+});
+
+document.getElementById('homeBtn').addEventListener('click', goHome);
+
+if ('speechSynthesis' in window) {
+  window.speechSynthesis.getVoices();
+  window.speechSynthesis.onvoiceschanged = function() {
+    window.speechSynthesis.getVoices();
+  };
+}
+
+// 页面加载时预渲染游戏内容，确保按钮点击有可见反馈
+document.addEventListener('DOMContentLoaded', function() {
+  renderGameQuestion();
+});
+
+// 首次交互自动初始化音频
+var audioInitialized = false;
+function autoInitAudio() {
+  if (!audioInitialized) {
+    audioInitialized = true;
+    initAudio();
+  }
+}
+document.addEventListener('click', autoInitAudio, { once: true });
+document.addEventListener('touchstart', autoInitAudio, { once: true });
+
+var lastTouchEnd = 0;
+document.addEventListener('touchend', function(e) {
+  var now = Date.now();
+  if (now - lastTouchEnd <= 300) {
+    e.preventDefault();
+  }
+  lastTouchEnd = now;
+}, { passive: false });
+</script>
+
+</body>
+</html>

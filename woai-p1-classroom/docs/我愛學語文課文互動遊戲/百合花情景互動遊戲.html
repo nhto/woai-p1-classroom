@@ -1,0 +1,1178 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>百合花 情景互動學習遊戲</title>
+    <script src="https://aisearch-task.bj.bcebos.com/static/tailwindcss-3.4.17.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@400;600;700;900&family=Noto+Sans+TC:wght@400;500;700&display=swap');
+        
+        :root {
+            --pink-light: #fce4ec;
+            --pink-main: #f8bbd0;
+            --pink-deep: #ec407a;
+            --green-light: #e8f5e9;
+            --green-main: #a5d6a7;
+            --cream: #fffde7;
+            --purple-light: #f3e5f5;
+        }
+        
+        * {
+            font-family: 'Noto Sans TC', 'PingFang TC', 'Microsoft JhengHei', sans-serif;
+        }
+        
+        h1, h2, h3, .serif {
+            font-family: 'Noto Serif TC', 'Songti TC', 'SimSun', serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #fce4ec 0%, #f3e5f5 30%, #e8f5e9 70%, #fffde7 100%);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+        
+        .watercolor-bg {
+            background-image: 
+                radial-gradient(ellipse at 20% 30%, rgba(248, 187, 208, 0.4) 0%, transparent 50%),
+                radial-gradient(ellipse at 80% 70%, rgba(165, 214, 167, 0.3) 0%, transparent 50%),
+                radial-gradient(ellipse at 50% 50%, rgba(255, 253, 231, 0.5) 0%, transparent 60%);
+        }
+        
+        .card-watercolor {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(10px);
+            border-radius: 24px;
+            box-shadow: 0 8px 32px rgba(236, 64, 122, 0.15),
+                        0 2px 8px rgba(0, 0, 0, 0.08);
+            border: 2px solid rgba(255, 255, 255, 0.8);
+        }
+        
+        .btn-cute {
+            background: linear-gradient(135deg, #ec407a, #f48fb1);
+            border: none;
+            border-radius: 50px;
+            color: white;
+            font-weight: bold;
+            box-shadow: 0 4px 15px rgba(236, 64, 122, 0.4);
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .btn-cute:hover {
+            transform: translateY(-3px) scale(1.02);
+            box-shadow: 0 6px 20px rgba(236, 64, 122, 0.5);
+        }
+        
+        .btn-cute:active {
+            transform: translateY(0) scale(0.98);
+        }
+        
+        .btn-green {
+            background: linear-gradient(135deg, #66bb6a, #a5d6a7);
+            box-shadow: 0 4px 15px rgba(102, 187, 106, 0.4);
+        }
+        
+        .btn-green:hover {
+            box-shadow: 0 6px 20px rgba(102, 187, 106, 0.5);
+        }
+        
+        .btn-yellow {
+            background: linear-gradient(135deg, #ffca28, #ffe082);
+            box-shadow: 0 4px 15px rgba(255, 202, 40, 0.4);
+        }
+        
+        .btn-yellow:hover {
+            box-shadow: 0 6px 20px rgba(255, 202, 40, 0.5);
+        }
+        
+        .scene-image {
+            border-radius: 20px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+            transition: all 0.5s ease;
+        }
+        
+        .scene-image:hover {
+            transform: scale(1.02);
+        }
+        
+        .bounce-in {
+            animation: bounceIn 0.8s cubic-bezier(0.2, 0.8, 0.2, 1);
+        }
+        
+        @keyframes bounceIn {
+            0% { opacity: 0; transform: scale(0.8) translateY(30px); }
+            50% { transform: scale(1.05) translateY(-5px); }
+            100% { opacity: 1; transform: scale(1) translateY(0); }
+        }
+        
+        .fade-in {
+            animation: fadeIn 0.6s ease-out;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        .petal {
+            cursor: pointer;
+            transition: all 0.5s ease;
+        }
+        
+        .petal:hover {
+            filter: brightness(1.1);
+        }
+        
+        .petal.opened {
+            animation: petalOpen 0.8s ease-out forwards;
+        }
+        
+        @keyframes petalOpen {
+            0% { transform: scale(0.8) rotate(0deg); }
+            100% { transform: scale(1) rotate(0deg); }
+        }
+        
+        .fragrance {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            background: radial-gradient(circle, rgba(255,192,203,0.8), transparent);
+            border-radius: 50%;
+            pointer-events: none;
+            animation: floatUp 2s ease-out forwards;
+        }
+        
+        @keyframes floatUp {
+            0% { opacity: 1; transform: translateY(0) scale(1); }
+            100% { opacity: 0; transform: translateY(-100px) scale(2); }
+        }
+        
+        .progress-dot {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: #e0e0e0;
+            transition: all 0.3s ease;
+        }
+        
+        .progress-dot.active {
+            background: #ec407a;
+            transform: scale(1.3);
+            box-shadow: 0 0 10px rgba(236, 64, 122, 0.5);
+        }
+        
+        .progress-dot.completed {
+            background: #66bb6a;
+        }
+        
+        .reading-text {
+            font-size: clamp(1.2rem, 3vw, 1.6rem);
+            line-height: 2;
+            letter-spacing: 0.05em;
+        }
+        
+        .reading-text span {
+            padding: 2px 4px;
+            border-radius: 4px;
+            transition: all 0.2s ease;
+        }
+        
+        .reading-text span.highlight {
+            background: linear-gradient(135deg, #ffeb3b, #fff59d);
+            color: #d84315;
+            font-weight: bold;
+            transform: scale(1.05);
+            display: inline-block;
+        }
+        
+        .quiz-option {
+            background: white;
+            border: 3px solid #e0e0e0;
+            border-radius: 16px;
+            padding: 16px 24px;
+            font-size: clamp(1rem, 2.5vw, 1.3rem);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+        
+        .quiz-option:hover {
+            border-color: #f8bbd0;
+            background: #fce4ec;
+            transform: translateY(-2px);
+        }
+        
+        .quiz-option.correct {
+            border-color: #66bb6a;
+            background: #e8f5e9;
+            animation: correctPulse 0.5s ease;
+        }
+        
+        .quiz-option.wrong {
+            border-color: #ef5350;
+            background: #ffebee;
+            animation: shake 0.5s ease;
+        }
+        
+        @keyframes correctPulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+        
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
+        }
+        
+        .star {
+            display: inline-block;
+            font-size: 2rem;
+            animation: starPop 0.5s ease forwards;
+            opacity: 0;
+        }
+        
+        @keyframes starPop {
+            0% { opacity: 0; transform: scale(0) rotate(-180deg); }
+            50% { transform: scale(1.3) rotate(10deg); }
+            100% { opacity: 1; transform: scale(1) rotate(0deg); }
+        }
+        
+        .sound-wave {
+            display: inline-flex;
+            align-items: center;
+            gap: 3px;
+            height: 20px;
+        }
+        
+        .sound-wave span {
+            width: 4px;
+            background: white;
+            border-radius: 2px;
+            animation: wave 0.8s ease-in-out infinite;
+        }
+        
+        .sound-wave span:nth-child(1) { animation-delay: 0s; height: 8px; }
+        .sound-wave span:nth-child(2) { animation-delay: 0.1s; height: 16px; }
+        .sound-wave span:nth-child(3) { animation-delay: 0.2s; height: 12px; }
+        .sound-wave span:nth-child(4) { animation-delay: 0.3s; height: 20px; }
+        .sound-wave span:nth-child(5) { animation-delay: 0.4s; height: 10px; }
+        
+        @keyframes wave {
+            0%, 100% { transform: scaleY(1); }
+            50% { transform: scaleY(0.5); }
+        }
+        
+        .sound-wave.paused span {
+            animation-play-state: paused;
+        }
+        
+        .page {
+            display: none;
+            min-height: 100vh;
+            padding: 20px;
+            padding-top: 80px;
+        }
+        
+        .page.active {
+            display: block;
+        }
+        
+        .drop-zone {
+            border: 4px dashed #f8bbd0;
+            border-radius: 20px;
+            min-height: 150px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(252, 228, 236, 0.3);
+            transition: all 0.3s ease;
+        }
+        
+        .drop-zone.highlight {
+            border-color: #ec407a;
+            background: rgba(252, 228, 236, 0.6);
+        }
+        
+        .draggable-flower {
+            cursor: grab;
+            transition: transform 0.3s ease;
+            font-size: 4rem;
+            user-select: none;
+        }
+        
+        .draggable-flower:hover {
+            transform: scale(1.1);
+        }
+        
+        .draggable-flower.dragging {
+            cursor: grabbing;
+            opacity: 0.7;
+        }
+        
+        .floating-deco {
+            position: fixed;
+            pointer-events: none;
+            opacity: 0.3;
+            z-index: -1;
+        }
+        
+        .nav-btn {
+            position: fixed;
+            top: 20px;
+            z-index: 100;
+        }
+        
+        .home-btn {
+            left: 20px;
+        }
+        
+        .speaker-btn {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+        }
+        
+        @media (max-width: 640px) {
+            .page {
+                padding: 15px;
+                padding-top: 70px;
+            }
+            
+            .reading-text {
+                font-size: 1.1rem;
+                line-height: 1.8;
+            }
+        }
+    </style>
+</head>
+<body class="watercolor-bg">
+    <!-- 首頁導航按鈕 -->
+    <button id="homeBtn" class="nav-btn home-btn btn-cute speaker-btn" onclick="goHome()" style="display:none;">🏠</button>
+    
+    <!-- 裝飾元素 -->
+    <div class="floating-deco" style="top:10%; left:5%; font-size:3rem;">🌸</div>
+    <div class="floating-deco" style="top:20%; right:8%; font-size:2.5rem;">🌿</div>
+    <div class="floating-deco" style="bottom:15%; left:10%; font-size:2.8rem;">🦋</div>
+    <div class="floating-deco" style="bottom:25%; right:5%; font-size:3.2rem;">💮</div>
+
+    <!-- 封面頁 -->
+    <div id="page-cover" class="page active">
+        <div class="max-w-4xl mx-auto">
+            <div class="card-watercolor p-6 md:p-10 bounce-in">
+                <div class="text-center mb-6">
+                    <div class="inline-block bg-gradient-to-r from-pink-400 to-purple-400 text-white px-6 py-2 rounded-full text-lg md:text-xl font-bold mb-4">
+                        📖 國語課文互動學習
+                    </div>
+                    <h1 class="text-4xl md:text-6xl lg:text-7xl font-black text-transparent bg-clip-text bg-gradient-to-r from-pink-500 via-purple-500 to-pink-500 mb-2 serif">
+                        百合花
+                    </h1>
+                    <p class="text-lg md:text-xl text-gray-600">作者：余婉兒</p>
+                </div>
+                
+                <div class="relative rounded-2xl overflow-hidden mb-8 shadow-xl">
+                    <img src="https://skillagent.bj.bcebos.com/sandbox_exports/20261019/5b491d0_qwen_1792371812212597248_1.png?responseContentDisposition=attachment%3B+filename%3D%22qwen_1792371812212597248_1.png%22" 
+                         alt="百合花" 
+                         class="w-full h-48 md:h-72 lg:h-80 object-cover">
+                    <div class="absolute inset-0 bg-gradient-to-t from-pink-900/30 to-transparent"></div>
+                </div>
+                
+                <div class="text-center space-y-4">
+                    <p class="text-lg md:text-xl text-gray-700 leading-relaxed">
+                        跟著百合花一起度過一天，<br>
+                        看看它是怎麼從花苞綻放成美麗的花朵吧！🌺
+                    </p>
+                    
+                    <div class="flex flex-col sm:flex-row gap-4 justify-center pt-4">
+                        <button class="btn-cute px-8 py-4 text-xl md:text-2xl" onclick="startGame()">
+                            🎮 開始互動學習
+                        </button>
+                        <button class="btn-cute btn-yellow px-8 py-4 text-xl md:text-2xl" onclick="goToReading()">
+                            📢 直接聽朗讀
+                        </button>
+                    </div>
+                    
+                    <div class="flex justify-center gap-6 pt-6 text-2xl md:text-3xl">
+                        <span class="animate-bounce" style="animation-delay:0s">🌅</span>
+                        <span class="animate-bounce" style="animation-delay:0.2s">☀️</span>
+                        <span class="animate-bounce" style="animation-delay:0.4s">🌙</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 第一幕：早上 - 媽媽買花 -->
+    <div id="page-morning" class="page">
+        <div class="max-w-5xl mx-auto">
+            <!-- 進度指示 -->
+            <div class="flex justify-center gap-3 mb-6">
+                <div class="progress-dot active" id="dot-0"></div>
+                <div class="progress-dot" id="dot-1"></div>
+                <div class="progress-dot" id="dot-2"></div>
+                <div class="progress-dot" id="dot-3"></div>
+            </div>
+            
+            <div class="card-watercolor p-5 md:p-8 bounce-in">
+                <div class="flex items-center gap-3 mb-4">
+                    <span class="text-4xl md:text-5xl">🌅</span>
+                    <h2 class="text-2xl md:text-4xl font-bold text-orange-500 serif">早上．媽媽買回百合花</h2>
+                </div>
+                
+                <div class="grid md:grid-cols-2 gap-6 items-center">
+                    <div>
+                        <img src="https://skillagent.bj.bcebos.com/sandbox_exports/20261019/1478367_qwen_1792371747638237656_1.png?responseContentDisposition=attachment%3B+filename%3D%22qwen_1792371747638237656_1.png%22" 
+                             alt="早上的百合花" 
+                             class="scene-image w-full">
+                    </div>
+                    
+                    <div class="space-y-5">
+                        <div class="bg-orange-50 rounded-2xl p-5 border-l-4 border-orange-400">
+                            <p class="reading-text text-gray-800">
+                                早上，媽媽到市場去買菜，帶回來一束還沒開放的百合花，把它插在花瓶裡。
+                            </p>
+                            <button class="mt-3 btn-cute btn-yellow px-4 py-2 text-base speaker-btn inline-flex items-center gap-2" 
+                                    onclick="speakText('早上，媽媽到市場去買菜，帶回來一束還沒開放的百合花，把它插在花瓶裡。')">
+                                🔊 聽這一段
+                            </button>
+                        </div>
+                        
+                        <!-- 互動：把花插進花瓶 -->
+                        <div id="flowerDropGame" class="space-y-4">
+                            <p class="text-lg md:text-xl font-bold text-pink-600 text-center">
+                                👇 請你幫忙把百合花插進花瓶裡！
+                            </p>
+                            
+                            <div id="flowersToDrag" class="flex justify-center gap-4 flex-wrap">
+                                <div class="draggable-flower" draggable="true" data-flower="1" ondragstart="dragStart(event)" onclick="clickFlower(this)">🌱</div>
+                                <div class="draggable-flower" draggable="true" data-flower="2" ondragstart="dragStart(event)" onclick="clickFlower(this)">🌱</div>
+                                <div class="draggable-flower" draggable="true" data-flower="3" ondragstart="dragStart(event)" onclick="clickFlower(this)">🌱</div>
+                            </div>
+                            
+                            <div id="vaseZone" class="drop-zone" 
+                                 ondragover="dragOver(event)" 
+                                 ondragleave="dragLeave(event)" 
+                                 ondrop="dropFlower(event)"
+                                 onclick="clickVase()">
+                                <div id="vaseContent" class="text-center">
+                                    <span class="text-5xl">🏺</span>
+                                    <p class="text-gray-500 mt-2">把花拖到這裡</p>
+                                </div>
+                                <div id="flowersInVase" class="hidden text-5xl">🏺</div>
+                            </div>
+                        </div>
+                        
+                        <div id="morningComplete" class="hidden text-center">
+                            <div class="bg-green-100 rounded-2xl p-4 border-2 border-green-400">
+                                <p class="text-xl md:text-2xl text-green-700 font-bold mb-2">
+                                    <span class="star" style="animation-delay:0s">⭐</span>
+                                    <span class="star" style="animation-delay:0.2s">⭐</span>
+                                    <span class="star" style="animation-delay:0.4s">⭐</span>
+                                    <br>太棒了！花插好了！
+                                </p>
+                                <p class="text-green-600">百合花喝飽了水，準備要開花了～</p>
+                            </div>
+                            <button class="btn-cute mt-4 px-6 py-3 text-lg" onclick="goToPage('afternoon')">
+                                下午來了 →
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 第二幕：下午 - 花開了 -->
+    <div id="page-afternoon" class="page">
+        <div class="max-w-5xl mx-auto">
+            <!-- 進度指示 -->
+            <div class="flex justify-center gap-3 mb-6">
+                <div class="progress-dot completed" id="dot-0"></div>
+                <div class="progress-dot active" id="dot-1"></div>
+                <div class="progress-dot" id="dot-2"></div>
+                <div class="progress-dot" id="dot-3"></div>
+            </div>
+            
+            <div class="card-watercolor p-5 md:p-8 bounce-in">
+                <div class="flex items-center gap-3 mb-4">
+                    <span class="text-4xl md:text-5xl">☀️</span>
+                    <h2 class="text-2xl md:text-4xl font-bold text-yellow-500 serif">下午．百合花悄悄開了</h2>
+                </div>
+                
+                <div class="grid md:grid-cols-2 gap-6 items-center">
+                    <div>
+                        <div class="relative">
+                            <img id="afternoonImg" src="https://skillagent.bj.bcebos.com/sandbox_exports/20261019/1cd588b_qwen_1792371747608021758_1.png?responseContentDisposition=attachment%3B+filename%3D%22qwen_1792371747608021758_1.png%22" 
+                                 alt="下午的百合花" 
+                                 class="scene-image w-full">
+                        </div>
+                    </div>
+                    
+                    <div class="space-y-5">
+                        <div class="bg-yellow-50 rounded-2xl p-5 border-l-4 border-yellow-400">
+                            <p class="reading-text text-gray-800">
+                                下午，百合花悄悄地張開白色的花瓣，露出了紅色的花蕊。我們在臥室裡也聞到百合花的清香，一陣濃、一陣淡的。
+                            </p>
+                            <button class="mt-3 btn-cute btn-yellow px-4 py-2 text-base speaker-btn inline-flex items-center gap-2" 
+                                    onclick="speakText('下午，百合花悄悄地張開白色的花瓣，露出了紅色的花蕊。我們在臥室裡也聞到百合花的清香，一陣濃、一陣淡的。')">
+                                🔊 聽這一段
+                            </button>
+                        </div>
+                        
+                        <!-- 互動：點擊花瓣讓花開 -->
+                        <div id="petalGame" class="space-y-4">
+                            <p class="text-lg md:text-xl font-bold text-pink-600 text-center">
+                                👇 輕輕點擊花瓣，幫助百合花綻放！
+                            </p>
+                            
+                            <div class="flex justify-center gap-3 flex-wrap" id="petalsContainer">
+                                <div class="petal text-5xl md:text-6xl p-2 rounded-full bg-pink-50 hover:bg-pink-100" data-petal="1" onclick="openPetal(this)">🌱</div>
+                                <div class="petal text-5xl md:text-6xl p-2 rounded-full bg-pink-50 hover:bg-pink-100" data-petal="2" onclick="openPetal(this)">🌱</div>
+                                <div class="petal text-5xl md:text-6xl p-2 rounded-full bg-pink-50 hover:bg-pink-100" data-petal="3" onclick="openPetal(this)">🌱</div>
+                                <div class="petal text-5xl md:text-6xl p-2 rounded-full bg-pink-50 hover:bg-pink-100" data-petal="4" onclick="openPetal(this)">🌱</div>
+                                <div class="petal text-5xl md:text-6xl p-2 rounded-full bg-pink-50 hover:bg-pink-100" data-petal="5" onclick="openPetal(this)">🌱</div>
+                            </div>
+                            
+                            <div class="bg-pink-50 rounded-xl p-3">
+                                <div class="flex justify-between items-center mb-2">
+                                    <span class="text-pink-700 font-bold">開花進度</span>
+                                    <span id="petalCount" class="text-pink-600">0 / 5</span>
+                                </div>
+                                <div class="w-full bg-pink-200 rounded-full h-4">
+                                    <div id="petalProgress" class="bg-gradient-to-r from-pink-400 to-pink-600 h-4 rounded-full transition-all duration-500" style="width: 0%"></div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div id="afternoonComplete" class="hidden text-center">
+                            <div class="bg-green-100 rounded-2xl p-4 border-2 border-green-400">
+                                <p class="text-xl md:text-2xl text-green-700 font-bold mb-2">
+                                    <span class="star" style="animation-delay:0s">🌸</span>
+                                    <span class="star" style="animation-delay:0.2s">🌸</span>
+                                    <span class="star" style="animation-delay:0.4s">🌸</span>
+                                    <br>哇！花開了！聞到香味了嗎？
+                                </p>
+                                <p class="text-green-600">紅色的花蕊露出來了，好漂亮呀！</p>
+                            </div>
+                            <button class="btn-cute mt-4 px-6 py-3 text-lg" onclick="goToPage('evening')">
+                                到了晚上 →
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 第三幕：晚上 - 花盛開 -->
+    <div id="page-evening" class="page">
+        <div class="max-w-5xl mx-auto">
+            <!-- 進度指示 -->
+            <div class="flex justify-center gap-3 mb-6">
+                <div class="progress-dot completed" id="dot-0"></div>
+                <div class="progress-dot completed" id="dot-1"></div>
+                <div class="progress-dot active" id="dot-2"></div>
+                <div class="progress-dot" id="dot-3"></div>
+            </div>
+            
+            <div class="card-watercolor p-5 md:p-8 bounce-in">
+                <div class="flex items-center gap-3 mb-4">
+                    <span class="text-4xl md:text-5xl">🌙</span>
+                    <h2 class="text-2xl md:text-4xl font-bold text-purple-500 serif">晚上．百合花盛開了</h2>
+                </div>
+                
+                <div class="grid md:grid-cols-2 gap-6 items-center">
+                    <div>
+                        <div class="relative" id="flowerSmellArea" onclick="createFragrance(event)">
+                            <img src="https://skillagent.bj.bcebos.com/sandbox_exports/20261019/e1ae7a0_qwen_1792371747678266971_1.png?responseContentDisposition=attachment%3B+filename%3D%22qwen_1792371747678266971_1.png%22" 
+                                 alt="晚上盛開的百合花" 
+                                 class="scene-image w-full cursor-pointer">
+                            <div class="absolute top-4 right-4 bg-white/80 rounded-full px-3 py-1 text-sm font-bold text-purple-600 animate-pulse">
+                                👆 點花聞香
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="space-y-5">
+                        <div class="bg-purple-50 rounded-2xl p-5 border-l-4 border-purple-400">
+                            <p class="reading-text text-gray-800">
+                                晚上，百合花已經開得大大的，像一條條雪白的裙子，又美麗又芬芳，那香味真叫人難忘啊！
+                            </p>
+                            <button class="mt-3 btn-cute btn-yellow px-4 py-2 text-base speaker-btn inline-flex items-center gap-2" 
+                                    onclick="speakText('晚上，百合花已經開得大大的，像一條條雪白的裙子，又美麗又芬芳，那香味真叫人難忘啊！')">
+                                🔊 聽這一段
+                            </button>
+                        </div>
+                        
+                        <!-- 互動：聞花香 -->
+                        <div id="smellGame" class="space-y-4">
+                            <p class="text-lg md:text-xl font-bold text-pink-600 text-center">
+                                👃 點擊百合花，聞一聞花香！
+                            </p>
+                            
+                            <div class="flex justify-center gap-2 flex-wrap">
+                                <span id="smell0" class="text-4xl opacity-30 transition-all duration-300">💨</span>
+                                <span id="smell1" class="text-4xl opacity-30 transition-all duration-300">🌸</span>
+                                <span id="smell2" class="text-4xl opacity-30 transition-all duration-300">💨</span>
+                                <span id="smell3" class="text-4xl opacity-30 transition-all duration-300">🌸</span>
+                                <span id="smell4" class="text-4xl opacity-30 transition-all duration-300">💨</span>
+                            </div>
+                            
+                            <div class="bg-purple-50 rounded-xl p-3">
+                                <div class="flex justify-between items-center mb-2">
+                                    <span class="text-purple-700 font-bold">香味濃度</span>
+                                    <span id="smellCount" class="text-purple-600">0 / 5</span>
+                                </div>
+                                <div class="w-full bg-purple-200 rounded-full h-4">
+                                    <div id="smellProgress" class="bg-gradient-to-r from-purple-400 to-pink-400 h-4 rounded-full transition-all duration-500" style="width: 0%"></div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div id="eveningComplete" class="hidden text-center">
+                            <div class="bg-green-100 rounded-2xl p-4 border-2 border-green-400">
+                                <p class="text-xl md:text-2xl text-green-700 font-bold mb-2">
+                                    <span class="star" style="animation-delay:0s">🌟</span>
+                                    <span class="star" style="animation-delay:0.2s">🌟</span>
+                                    <span class="star" style="animation-delay:0.4s">🌟</span>
+                                    <br>好香呀！百合真美麗！
+                                </p>
+                                <p class="text-green-600">你知道百合花像什麼嗎？</p>
+                            </div>
+                            <button class="btn-cute mt-4 px-6 py-3 text-lg" onclick="goToPage('quiz')">
+                                動動腦時間 →
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 第四幕：問答遊戲 -->
+    <div id="page-quiz" class="page">
+        <div class="max-w-4xl mx-auto">
+            <!-- 進度指示 -->
+            <div class="flex justify-center gap-3 mb-6">
+                <div class="progress-dot completed" id="dot-0"></div>
+                <div class="progress-dot completed" id="dot-1"></div>
+                <div class="progress-dot completed" id="dot-2"></div>
+                <div class="progress-dot active" id="dot-3"></div>
+            </div>
+            
+            <div class="card-watercolor p-5 md:p-8 bounce-in">
+                <div class="text-center mb-6">
+                    <span class="text-5xl mb-3 block">🤔</span>
+                    <h2 class="text-2xl md:text-4xl font-bold text-pink-600 serif mb-2">課前熱身操</h2>
+                    <p class="text-lg text-gray-600">讀完了課文，你會回答嗎？</p>
+                </div>
+                
+                <div class="bg-pink-50 rounded-2xl p-6 mb-6 border-2 border-pink-200">
+                    <p class="text-xl md:text-2xl text-center font-bold text-gray-800 leading-relaxed">
+                        晚上盛開的百合花，<br class="md:hidden">外形像甚麼呢？
+                    </p>
+                </div>
+                
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6" id="quizOptions">
+                    <div class="quiz-option" onclick="answerQuiz(this, false)">
+                        <span class="text-3xl">🔔</span><br>
+                        像小鈴鐺
+                    </div>
+                    <div class="quiz-option" onclick="answerQuiz(this, true)">
+                        <span class="text-3xl">👗</span><br>
+                        像雪白的裙子
+                    </div>
+                    <div class="quiz-option" onclick="answerQuiz(this, false)">
+                        <span class="text-3xl">☂️</span><br>
+                        像小雨傘
+                    </div>
+                    <div class="quiz-option" onclick="answerQuiz(this, false)">
+                        <span class="text-3xl">🌙</span><br>
+                        像彎彎的月亮
+                    </div>
+                </div>
+                
+                <div id="quizResult" class="hidden">
+                    <div class="bg-green-100 rounded-2xl p-6 border-2 border-green-400 text-center mb-4">
+                        <p class="text-2xl md:text-3xl text-green-700 font-bold mb-3" id="quizResultText">
+                            答對了！
+                        </p>
+                        <p class="text-lg text-green-600">
+                            課文說：「像一條條雪白的裙子」，你記起來了嗎？
+                        </p>
+                    </div>
+                    <div class="text-center">
+                        <button class="btn-cute btn-green px-8 py-4 text-xl" onclick="goToReading()">
+                            📖 聽全文朗讀
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 全文朗讀頁 -->
+    <div id="page-reading" class="page">
+        <div class="max-w-4xl mx-auto">
+            <div class="card-watercolor p-5 md:p-8 bounce-in">
+                <div class="text-center mb-6">
+                    <h2 class="text-3xl md:text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-pink-500 to-purple-500 serif mb-2">
+                        百合花
+                    </h2>
+                    <p class="text-gray-500 text-lg">余婉兒</p>
+                </div>
+                
+                <div class="bg-gradient-to-br from-pink-50 to-purple-50 rounded-2xl p-6 md:p-8 mb-6 border-2 border-pink-100" id="fullText">
+                    <p class="reading-text text-gray-800 mb-6" id="para1">
+                        <span data-idx="0">早</span><span data-idx="1">上</span><span data-idx="2">，</span><span data-idx="3">媽</span><span data-idx="4">媽</span><span data-idx="5">到</span><span data-idx="6">市</span><span data-idx="7">場</span><span data-idx="8">去</span><span data-idx="9">買</span><span data-idx="10">菜</span><span data-idx="11">，</span><span data-idx="12">帶</span><span data-idx="13">回</span><span data-idx="14">來</span><span data-idx="15">一</span><span data-idx="16">束</span><span data-idx="17">還</span><span data-idx="18">沒</span><span data-idx="19">開</span><span data-idx="20">放</span><span data-idx="21">的</span><span data-idx="22">百</span><span data-idx="23">合</span><span data-idx="24">花</span><span data-idx="25">，</span><span data-idx="26">把</span><span data-idx="27">它</span><span data-idx="28">插</span><span data-idx="29">在</span><span data-idx="30">花</span><span data-idx="31">瓶</span><span data-idx="32">裡</span><span data-idx="33">。</span>
+                    </p>
+                    <p class="reading-text text-gray-800 mb-6" id="para2">
+                        <span data-idx="34">下</span><span data-idx="35">午</span><span data-idx="36">，</span><span data-idx="37">百</span><span data-idx="38">合</span><span data-idx="39">花</span><span data-idx="40">悄</span><span data-idx="41">悄</span><span data-idx="42">地</span><span data-idx="43">張</span><span data-idx="44">開</span><span data-idx="45">白</span><span data-idx="46">色</span><span data-idx="47">的</span><span data-idx="48">花</span><span data-idx="49">瓣</span><span data-idx="50">，</span><span data-idx="51">露</span><span data-idx="52">出</span><span data-idx="53">了</span><span data-idx="54">紅</span><span data-idx="55">色</span><span data-idx="56">的</span><span data-idx="57">花</span><span data-idx="58">蕊</span><span data-idx="59">。</span><span data-idx="60">我</span><span data-idx="61">們</span><span data-idx="62">在</span><span data-idx="63">臥</span><span data-idx="64">室</span><span data-idx="65">裡</span><span data-idx="66">也</span><span data-idx="67">聞</span><span data-idx="68">到</span><span data-idx="69">百</span><span data-idx="70">合</span><span data-idx="71">花</span><span data-idx="72">的</span><span data-idx="73">清</span><span data-idx="74">香</span><span data-idx="75">，</span><span data-idx="76">一</span><span data-idx="77">陣</span><span data-idx="78">濃</span><span data-idx="79">、</span><span data-idx="80">一</span><span data-idx="81">陣</span><span data-idx="82">淡</span><span data-idx="83">的</span><span data-idx="84">。</span>
+                    </p>
+                    <p class="reading-text text-gray-800" id="para3">
+                        <span data-idx="85">晚</span><span data-idx="86">上</span><span data-idx="87">，</span><span data-idx="88">百</span><span data-idx="89">合</span><span data-idx="90">花</span><span data-idx="91">已</span><span data-idx="92">經</span><span data-idx="93">開</span><span data-idx="94">得</span><span data-idx="95">大</span><span data-idx="96">大</span><span data-idx="97">的</span><span data-idx="98">，</span><span data-idx="99">像</span><span data-idx="100">一</span><span data-idx="101">條</span><span data-idx="102">條</span><span data-idx="103">雪</span><span data-idx="104">白</span><span data-idx="105">的</span><span data-idx="106">裙</span><span data-idx="107">子</span><span data-idx="108">，</span><span data-idx="109">又</span><span data-idx="110">美</span><span data-idx="111">麗</span><span data-idx="112">又</span><span data-idx="113">芬</span><span data-idx="114">芳</span><span data-idx="115">，</span><span data-idx="116">那</span><span data-idx="117">香</span><span data-idx="118">味</span><span data-idx="119">真</span><span data-idx="120">叫</span><span data-idx="121">人</span><span data-idx="122">難</span><span data-idx="123">忘</span><span data-idx="124">啊</span><span data-idx="125">！</span>
+                    </p>
+                </div>
+                
+                <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                    <button id="readFullBtn" class="btn-cute btn-green px-8 py-4 text-xl flex items-center justify-center gap-2" onclick="readFullText()">
+                        <span id="readIcon">▶️</span>
+                        <span id="readText">播放全文朗讀</span>
+                        <div id="soundWave" class="sound-wave paused">
+                            <span></span><span></span><span></span><span></span><span></span>
+                        </div>
+                    </button>
+                    <button class="btn-cute px-8 py-4 text-xl" onclick="stopReading(); goHome();">
+                        🏠 回到首頁
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ========== 音效系統（Web Audio API） ==========
+        let audioCtx = null;
+        
+        function initAudio() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+        }
+        
+        function playSound(type) {
+            initAudio();
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            
+            const now = audioCtx.currentTime;
+            
+            switch(type) {
+                case 'click':
+                    osc.frequency.setValueAtTime(800, now);
+                    osc.frequency.exponentialRampToValueAtTime(600, now + 0.1);
+                    gain.gain.setValueAtTime(0.2, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
+                    osc.start(now);
+                    osc.stop(now + 0.1);
+                    break;
+                case 'success':
+                    osc.frequency.setValueAtTime(523, now);
+                    osc.frequency.setValueAtTime(659, now + 0.1);
+                    osc.frequency.setValueAtTime(784, now + 0.2);
+                    gain.gain.setValueAtTime(0.2, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.4);
+                    osc.start(now);
+                    osc.stop(now + 0.4);
+                    break;
+                case 'bloom':
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(400, now);
+                    osc.frequency.exponentialRampToValueAtTime(800, now + 0.3);
+                    gain.gain.setValueAtTime(0.15, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+                    osc.start(now);
+                    osc.stop(now + 0.3);
+                    break;
+                case 'smell':
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(600, now);
+                    osc.frequency.linearRampToValueAtTime(900, now + 0.2);
+                    gain.gain.setValueAtTime(0.1, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.4);
+                    osc.start(now);
+                    osc.stop(now + 0.4);
+                    break;
+                case 'wrong':
+                    osc.frequency.setValueAtTime(300, now);
+                    osc.frequency.setValueAtTime(200, now + 0.1);
+                    gain.gain.setValueAtTime(0.2, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
+                    osc.start(now);
+                    osc.stop(now + 0.2);
+                    break;
+            }
+        }
+        
+        // ========== 語音朗讀系統 ==========
+        let speech = window.speechSynthesis;
+        let currentUtterance = null;
+        let isReading = false;
+        let readInterval = null;
+        
+        function speakText(text) {
+            playSound('click');
+            speech.cancel();
+            
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.lang = 'zh-CN';
+            utterance.rate = 0.8;
+            utterance.pitch = 1.1;
+            
+            // 嘗試選擇中文語音
+            const voices = speech.getVoices();
+            const chineseVoice = voices.find(v => v.lang.includes('zh') || v.lang.includes('CN'));
+            if (chineseVoice) utterance.voice = chineseVoice;
+            
+            speech.speak(utterance);
+        }
+        
+        function stopReading() {
+            speech.cancel();
+            isReading = false;
+            if (readInterval) clearInterval(readInterval);
+            document.querySelectorAll('.reading-text span').forEach(s => s.classList.remove('highlight'));
+            const btn = document.getElementById('readFullBtn');
+            if (btn) {
+                document.getElementById('readIcon').textContent = '▶️';
+                document.getElementById('readText').textContent = '播放全文朗讀';
+                document.getElementById('soundWave').classList.add('paused');
+            }
+        }
+        
+        function readFullText() {
+            playSound('click');
+            
+            if (isReading) {
+                stopReading();
+                return;
+            }
+            
+            const fullText = `百合花。作者：余婉兒。
+            早上，媽媽到市場去買菜，帶回來一束還沒開放的百合花，把它插在花瓶裡。
+            下午，百合花悄悄地張開白色的花瓣，露出了紅色的花蕊。我們在臥室裡也聞到百合花的清香，一陣濃、一陣淡的。
+            晚上，百合花已經開得大大的，像一條條雪白的裙子，又美麗又芬芳，那香味真叫人難忘啊！`;
+            
+            const utterance = new SpeechSynthesisUtterance(fullText);
+            utterance.lang = 'zh-CN';
+            utterance.rate = 0.75;
+            utterance.pitch = 1.1;
+            
+            const voices = speech.getVoices();
+            const chineseVoice = voices.find(v => v.lang.includes('zh') || v.lang.includes('CN'));
+            if (chineseVoice) utterance.voice = chineseVoice;
+            
+            document.getElementById('readIcon').textContent = '⏸️';
+            document.getElementById('readText').textContent = '停止朗讀';
+            document.getElementById('soundWave').classList.remove('paused');
+            isReading = true;
+            
+            // 高亮效果
+            const spans = document.querySelectorAll('#fullText span');
+            let charIndex = 0;
+            const totalChars = spans.length;
+            const duration = 28000; // 大約朗讀時長
+            const interval = duration / totalChars;
+            
+            readInterval = setInterval(() => {
+                if (charIndex > 0) spans[charIndex - 1].classList.remove('highlight');
+                if (charIndex < totalChars) {
+                    spans[charIndex].classList.add('highlight');
+                    spans[charIndex].scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    charIndex++;
+                } else {
+                    clearInterval(readInterval);
+                    isReading = false;
+                    document.getElementById('readIcon').textContent = '▶️';
+                    document.getElementById('readText').textContent = '播放全文朗讀';
+                    document.getElementById('soundWave').classList.add('paused');
+                }
+            }, interval);
+            
+            utterance.onend = () => {
+                clearInterval(readInterval);
+                isReading = false;
+                spans.forEach(s => s.classList.remove('highlight'));
+                document.getElementById('readIcon').textContent = '▶️';
+                document.getElementById('readText').textContent = '播放全文朗讀';
+                document.getElementById('soundWave').classList.add('paused');
+            };
+            
+            speech.speak(utterance);
+        }
+        
+        // 預載語音列表
+        if (speech.onvoiceschanged !== undefined) {
+            speech.onvoiceschanged = () => speech.getVoices();
+        }
+        
+        // ========== 頁面導航 ==========
+        function showPage(pageId) {
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            document.getElementById(pageId).classList.add('active');
+            window.scrollTo(0, 0);
+            playSound('click');
+            
+            // 顯示/隱藏首頁按鈕
+            document.getElementById('homeBtn').style.display = pageId === 'page-cover' ? 'none' : 'flex';
+        }
+        
+        function goHome() {
+            stopReading();
+            resetGames();
+            showPage('page-cover');
+        }
+        
+        function startGame() {
+            showPage('page-morning');
+        }
+        
+        function goToPage(page) {
+            playSound('success');
+            switch(page) {
+                case 'afternoon': showPage('page-afternoon'); break;
+                case 'evening': showPage('page-evening'); break;
+                case 'quiz': showPage('page-quiz'); break;
+            }
+        }
+        
+        function goToReading() {
+            stopReading();
+            showPage('page-reading');
+        }
+        
+        // ========== 遊戲1：插花互動 ==========
+        let flowersInVaseCount = 0;
+        let selectedFlower = null;
+        
+        function dragStart(e) {
+            e.dataTransfer.setData('text/plain', e.target.dataset.flower);
+            e.target.classList.add('dragging');
+            playSound('click');
+        }
+        
+        function dragOver(e) {
+            e.preventDefault();
+            e.currentTarget.classList.add('highlight');
+        }
+        
+        function dragLeave(e) {
+            e.currentTarget.classList.remove('highlight');
+        }
+        
+        function dropFlower(e) {
+            e.preventDefault();
+            e.currentTarget.classList.remove('highlight');
+            const flowerId = e.dataTransfer.getData('text/plain');
+            addFlowerToVase(flowerId);
+        }
+        
+        function clickFlower(el) {
+            selectedFlower = el;
+            playSound('click');
+            document.querySelectorAll('.draggable-flower').forEach(f => f.style.transform = '');
+            el.style.transform = 'scale(1.2)';
+        }
+        
+        function clickVase() {
+            if (selectedFlower) {
+                addFlowerToVase(selectedFlower.dataset.flower);
+                selectedFlower.style.transform = '';
+                selectedFlower = null;
+            }
+        }
+        
+        function addFlowerToVase(flowerId) {
+            const flower = document.querySelector(`[data-flower="${flowerId}"]`);
+            if (flower && !flower.classList.contains('used')) {
+                flower.classList.add('used');
+                flower.style.display = 'none';
+                flowersInVaseCount++;
+                
+                const vaseContent = document.getElementById('vaseContent');
+                const flowersInVase = document.getElementById('flowersInVase');
+                
+                if (flowersInVaseCount >= 3) {
+                    vaseContent.classList.add('hidden');
+                    flowersInVase.classList.remove('hidden');
+                    flowersInVase.innerHTML = '🏺🌱🌱🌱';
+                    playSound('success');
+                    
+                    setTimeout(() => {
+                        document.getElementById('flowerDropGame').classList.add('hidden');
+                        document.getElementById('morningComplete').classList.remove('hidden');
+                        document.getElementById('morningComplete').classList.add('fade-in');
+                    }, 500);
+                } else {
+                    playSound('bloom');
+                    vaseContent.innerHTML = `<span class="text-5xl">🏺${'🌱'.repeat(flowersInVaseCount)}</span><p class="text-gray-500 mt-2">繼續放花</p>`;
+                }
+            }
+        }
+        
+        // ========== 遊戲2：花瓣綻放 ==========
+        let openedPetals = 0;
+        
+        function openPetal(el) {
+            if (!el.classList.contains('opened')) {
+                el.classList.add('opened');
+                el.textContent = '🌸';
+                el.classList.remove('bg-pink-50', 'hover:bg-pink-100');
+                el.classList.add('bg-pink-200');
+                openedPetals++;
+                playSound('bloom');
+                
+                document.getElementById('petalCount').textContent = `${openedPetals} / 5`;
+                document.getElementById('petalProgress').style.width = `${openedPetals * 20}%`;
+                
+                if (openedPetals >= 5) {
+                    setTimeout(() => {
+                        playSound('success');
+                        document.getElementById('petalGame').classList.add('hidden');
+                        document.getElementById('afternoonComplete').classList.remove('hidden');
+                        document.getElementById('afternoonComplete').classList.add('fade-in');
+                    }, 500);
+                }
+            }
+        }
+        
+        // ========== 遊戲3：聞花香 ==========
+        let smellCount = 0;
+        
+        function createFragrance(e) {
+            if (smellCount >= 5) return;
+            
+            const rect = e.currentTarget.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            
+            const fragrance = document.createElement('div');
+            fragrance.className = 'fragrance';
+            fragrance.style.left = x + 'px';
+            fragrance.style.top = y + 'px';
+            e.currentTarget.appendChild(fragrance);
+            
+            setTimeout(() => fragrance.remove(), 2000);
+            
+            smellCount++;
+            playSound('smell');
+            
+            document.getElementById(`smell${smellCount - 1}`).style.opacity = '1';
+            document.getElementById('smellCount').textContent = `${smellCount} / 5`;
+            document.getElementById('smellProgress').style.width = `${smellCount * 20}%`;
+            
+            if (smellCount >= 5) {
+                setTimeout(() => {
+                    playSound('success');
+                    document.getElementById('smellGame').classList.add('hidden');
+                    document.getElementById('eveningComplete').classList.remove('hidden');
+                    document.getElementById('eveningComplete').classList.add('fade-in');
+                }, 500);
+            }
+        }
+        
+        // ========== 遊戲4：問答 ==========
+        function answerQuiz(el, isCorrect) {
+            if (document.getElementById('quizResult').classList.contains('hidden') === false) return;
+            
+            document.querySelectorAll('.quiz-option').forEach(opt => opt.style.pointerEvents = 'none');
+            
+            if (isCorrect) {
+                el.classList.add('correct');
+                playSound('success');
+                document.getElementById('quizResultText').textContent = '🎉 答對了！你真棒！';
+            } else {
+                el.classList.add('wrong');
+                playSound('wrong');
+                document.getElementById('quizResultText').textContent = '😅 答錯了，再想想看...';
+                
+                // 2秒後顯示正確答案
+                setTimeout(() => {
+                    document.querySelectorAll('.quiz-option')[1].classList.add('correct');
+                    playSound('success');
+                }, 1000);
+            }
+            
+            setTimeout(() => {
+                document.getElementById('quizResult').classList.remove('hidden');
+                document.getElementById('quizResult').classList.add('fade-in');
+            }, isCorrect ? 500 : 2000);
+        }
+        
+        // ========== 重置遊戲 ==========
+        function resetGames() {
+            // 重置插花
+            flowersInVaseCount = 0;
+            selectedFlower = null;
+            document.querySelectorAll('.draggable-flower').forEach(f => {
+                f.classList.remove('used');
+                f.style.display = '';
+                f.style.transform = '';
+            });
+            document.getElementById('vaseContent').classList.remove('hidden');
+            document.getElementById('vaseContent').innerHTML = '<span class="text-5xl">🏺</span><p class="text-gray-500 mt-2">把花拖到這裡</p>';
+            document.getElementById('flowersInVase').classList.add('hidden');
+            document.getElementById('flowerDropGame').classList.remove('hidden');
+            document.getElementById('morningComplete').classList.add('hidden');
+            
+            // 重置花瓣
+            openedPetals = 0;
+            document.querySelectorAll('.petal').forEach(p => {
+                p.classList.remove('opened');
+                p.textContent = '🌱';
+                p.classList.add('bg-pink-50', 'hover:bg-pink-100');
+                p.classList.remove('bg-pink-200');
+                p.style.pointerEvents = '';
+            });
+            document.getElementById('petalCount').textContent = '0 / 5';
+            document.getElementById('petalProgress').style.width = '0%';
+            document.getElementById('petalGame').classList.remove('hidden');
+            document.getElementById('afternoonComplete').classList.add('hidden');
+            
+            // 重置聞香
+            smellCount = 0;
+            for (let i = 0; i < 5; i++) {
+                document.getElementById(`smell${i}`).style.opacity = '0.3';
+            }
+            document.getElementById('smellCount').textContent = '0 / 5';
+            document.getElementById('smellProgress').style.width = '0%';
+            document.getElementById('smellGame').classList.remove('hidden');
+            document.getElementById('eveningComplete').classList.add('hidden');
+            
+            // 重置問答
+            document.querySelectorAll('.quiz-option').forEach(opt => {
+                opt.classList.remove('correct', 'wrong');
+                opt.style.pointerEvents = '';
+            });
+            document.getElementById('quizResult').classList.add('hidden');
+            
+            // 重置朗讀
+            stopReading();
+        }
+        
+        // 點擊音效（給所有按鈕）
+        document.addEventListener('click', (e) => {
+            if (e.target.tagName === 'BUTTON' && !e.target.onclick?.toString().includes('playSound')) {
+                // playSound already called in specific functions
+            }
+        });
+    </script>
+</body>
+</html>

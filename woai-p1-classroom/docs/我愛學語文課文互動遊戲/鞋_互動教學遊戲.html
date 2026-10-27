@@ -1,0 +1,1651 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>鞋 - 情景互動學習遊戲</title>
+<script src="https://aisearch-task.bj.bcebos.com/static/tailwindcss-3.4.17.js"></script>
+<script src="https://aisearch-task.bj.bcebos.com/static/gsap-3.12.7.min.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&family=ZCOOL+KuaiLe&display=swap');
+
+:root {
+  --paper-cream: #FFF8E7;
+  --watercolor-pink: #FFB6C1;
+  --watercolor-blue: #87CEEB;
+  --watercolor-yellow: #FFEAA7;
+  --watercolor-green: #A8E6CF;
+  --watercolor-orange: #FFB347;
+  --watercolor-brown: #8B7355;
+  --ink-dark: #4A4A4A;
+}
+
+* {
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+}
+
+body {
+  font-family: 'Noto Sans TC', 'PingFang TC', 'Microsoft JhengHei', sans-serif;
+  background: var(--paper-cream);
+  background-image: 
+    radial-gradient(ellipse at 20% 30%, rgba(255,182,193,0.15) 0%, transparent 50%),
+    radial-gradient(ellipse at 80% 70%, rgba(135,206,235,0.15) 0%, transparent 50%),
+    radial-gradient(ellipse at 50% 50%, rgba(255,234,167,0.1) 0%, transparent 60%);
+  min-height: 100vh;
+  overflow-x: hidden;
+  color: var(--ink-dark);
+}
+
+.watercolor-title {
+  font-family: 'ZCOOL KuaiLe', 'Noto Sans TC', cursive;
+}
+
+/* 水彩紙張紋理 */
+.paper-texture {
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+}
+
+/* 手繪風格邊框 */
+.hand-drawn-border {
+  border: 3px solid var(--ink-dark);
+  border-radius: 255px 15px 225px 15px/15px 225px 15px 255px;
+  box-shadow: 4px 4px 0 rgba(74,74,74,0.1);
+}
+
+.hand-drawn-border-alt {
+  border: 3px solid var(--ink-dark);
+  border-radius: 15px 225px 15px 255px/225px 15px 255px 15px;
+  box-shadow: 4px 4px 0 rgba(74,74,74,0.1);
+}
+
+/* 水彩暈染效果 */
+.watercolor-blob {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(30px);
+  opacity: 0.3;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* 按鈕手繪風格 */
+.btn-watercolor {
+  position: relative;
+  border: 3px solid var(--ink-dark);
+  border-radius: 255px 15px 225px 15px/15px 225px 15px 255px;
+  padding: 16px 32px;
+  font-size: 1.25rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 4px 4px 0 rgba(74,74,74,0.2);
+  transform: rotate(-1deg);
+}
+
+.btn-watercolor:hover {
+  transform: rotate(0deg) scale(1.05);
+  box-shadow: 6px 6px 0 rgba(74,74,74,0.25);
+}
+
+.btn-watercolor:active {
+  transform: rotate(0deg) scale(0.98);
+  box-shadow: 2px 2px 0 rgba(74,74,74,0.2);
+}
+
+/* 詩句文字卡片 */
+.poem-card {
+  background: white;
+  border: 3px solid var(--ink-dark);
+  border-radius: 20px;
+  padding: 20px 24px;
+  box-shadow: 5px 5px 0 rgba(74,74,74,0.1);
+  position: relative;
+}
+
+.poem-card::before {
+  content: '';
+  position: absolute;
+  top: -8px;
+  left: 20px;
+  width: 20px;
+  height: 20px;
+  background: var(--watercolor-yellow);
+  border: 2px solid var(--ink-dark);
+  border-radius: 50%;
+}
+
+/* 動畫 */
+@keyframes float {
+  0%, 100% { transform: translateY(0px) rotate(-2deg); }
+  50% { transform: translateY(-10px) rotate(2deg); }
+}
+
+@keyframes wiggle {
+  0%, 100% { transform: rotate(-3deg); }
+  50% { transform: rotate(3deg); }
+}
+
+@keyframes bounce-in {
+  0% { transform: scale(0) rotate(-10deg); opacity: 0; }
+  50% { transform: scale(1.1) rotate(5deg); }
+  100% { transform: scale(1) rotate(0deg); opacity: 1; }
+}
+
+@keyframes sparkle {
+  0%, 100% { opacity: 0; transform: scale(0); }
+  50% { opacity: 1; transform: scale(1); }
+}
+
+.animate-float { animation: float 3s ease-in-out infinite; }
+.animate-wiggle { animation: wiggle 0.5s ease-in-out; }
+.animate-bounce-in { animation: bounce-in 0.6s cubic-bezier(0.68,-0.55,0.27,1.55) forwards; }
+.animate-sparkle { animation: sparkle 0.8s ease-in-out forwards; }
+
+/* 人物角色 */
+.character {
+  cursor: pointer;
+  transition: all 0.3s ease;
+  filter: drop-shadow(3px 3px 2px rgba(0,0,0,0.1));
+}
+
+.character:hover {
+  transform: scale(1.05);
+  filter: drop-shadow(5px 5px 4px rgba(0,0,0,0.15));
+}
+
+.character.arrived {
+  animation: character-arrive 0.8s cubic-bezier(0.34,1.56,0.64,1) forwards;
+}
+
+@keyframes character-arrive {
+  0% { transform: translateX(-100px) scale(0.8); opacity: 0; }
+  100% { transform: translateX(0) scale(1); opacity: 1; }
+}
+
+/* 鞋子 */
+.shoe {
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.shoe:hover {
+  transform: scale(1.1) rotate(5deg);
+}
+
+.shoe.snuggle {
+  animation: snuggle 1s ease-in-out forwards;
+}
+
+@keyframes snuggle {
+  0% { transform: translate(0, 0) rotate(0deg); }
+  50% { transform: translate(10px, -10px) rotate(-10deg); }
+  100% { transform: translate(0, -5px) rotate(0deg); }
+}
+
+/* 進度指示 */
+.progress-dot {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 3px solid var(--ink-dark);
+  background: white;
+  transition: all 0.3s ease;
+}
+
+.progress-dot.active {
+  background: var(--watercolor-orange);
+  transform: scale(1.3);
+}
+
+.progress-dot.completed {
+  background: var(--watercolor-green);
+}
+
+/* 頁面切換 */
+.page {
+  display: none;
+  min-height: 100vh;
+  padding: 20px;
+  padding-bottom: 100px;
+}
+
+.page.active {
+  display: block;
+  animation: fadeIn 0.5s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* 朗讀高亮 */
+.reading-highlight {
+  background: linear-gradient(120deg, var(--watercolor-yellow) 0%, #FFD700 100%);
+  padding: 2px 8px;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+}
+
+/* 思考泡泡 */
+.thought-bubble {
+  position: relative;
+  background: white;
+  border: 3px solid var(--ink-dark);
+  border-radius: 30px;
+  padding: 20px;
+}
+
+.thought-bubble::before,
+.thought-bubble::after {
+  content: '';
+  position: absolute;
+  background: white;
+  border: 3px solid var(--ink-dark);
+  border-radius: 50%;
+}
+
+.thought-bubble::before {
+  width: 20px;
+  height: 20px;
+  bottom: -15px;
+  left: 30px;
+  border-top-color: white;
+}
+
+.thought-bubble::after {
+  width: 12px;
+  height: 12px;
+  bottom: -28px;
+  left: 20px;
+  border-top-color: white;
+}
+
+/* 溫暖的港灣場景 */
+.harbor {
+  background: linear-gradient(to bottom, 
+    #87CEEB 0%, 
+    #B0E0E6 30%, 
+    #FFE4B5 60%, 
+    #DEB887 100%);
+  border-radius: 30px;
+  position: relative;
+  overflow: hidden;
+  border: 4px solid var(--ink-dark);
+}
+
+.wave {
+  position: absolute;
+  width: 200%;
+  height: 60px;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 120'%3E%3Cpath fill='%2387CEEB' d='M0,60 C200,120 400,0 600,60 C800,120 1000,0 1200,60 L1200,120 L0,120 Z'/%3E%3C/svg%3E");
+  background-size: 600px 60px;
+  animation: wave 4s linear infinite;
+}
+
+@keyframes wave {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-600px); }
+}
+
+.boat-shoe {
+  position: absolute;
+  animation: float-boat 3s ease-in-out infinite;
+}
+
+@keyframes float-boat {
+  0%, 100% { transform: translateY(0) rotate(-2deg); }
+  50% { transform: translateY(-8px) rotate(2deg); }
+}
+
+/* 大字體適合教學 */
+.poem-text {
+  font-size: clamp(1.5rem, 4vw, 2.5rem);
+  line-height: 2;
+  font-weight: 500;
+  letter-spacing: 2px;
+}
+
+.instruction-text {
+  font-size: clamp(1.1rem, 2.5vw, 1.5rem);
+  line-height: 1.8;
+}
+
+/* 音效按鈕 */
+.sound-btn {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  border: 3px solid var(--ink-dark);
+  background: var(--watercolor-yellow);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-size: 1.5rem;
+}
+
+.sound-btn:hover {
+  transform: scale(1.1);
+}
+
+.sound-btn.playing {
+  animation: pulse 0.5s ease-in-out infinite;
+  background: var(--watercolor-pink);
+}
+
+@keyframes pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.15); }
+}
+
+/* 星星獎勵 */
+.star-reward {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 1000;
+  pointer-events: none;
+}
+
+/* 導航欄 */
+.nav-bar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: white;
+  border-top: 3px solid var(--ink-dark);
+  padding: 12px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  z-index: 100;
+  box-shadow: 0 -4px 20px rgba(0,0,0,0.1);
+}
+
+/* 裝飾元素 */
+.deco-cloud {
+  position: absolute;
+  opacity: 0.6;
+  animation: cloud-float 20s linear infinite;
+}
+
+@keyframes cloud-float {
+  0% { transform: translateX(-100px); }
+  100% { transform: translateX(calc(100vw + 100px)); }
+}
+</style>
+</head>
+<body class="paper-texture">
+
+<!-- 背景裝飾 -->
+<div class="watercolor-blob" style="width:300px;height:300px;background:var(--watercolor-pink);top:-50px;left:-50px;"></div>
+<div class="watercolor-blob" style="width:250px;height:250px;background:var(--watercolor-blue);bottom:20%;right:-50px;"></div>
+<div class="watercolor-blob" style="width:200px;height:200px;background:var(--watercolor-yellow);top:40%;left:10%;"></div>
+
+<!-- 頁面1: 開始頁面 / 課前熱身 -->
+<div id="page-start" class="page active">
+  <div class="max-w-4xl mx-auto relative z-10">
+    <!-- 標題 -->
+    <div class="text-center mb-8 pt-4">
+      <div class="inline-block relative">
+        <div class="watercolor-title text-[clamp(3rem,10vw,6rem)] font-black text-[#E74C3C]" style="text-shadow: 4px 4px 0 #FFD93D, 8px 8px 0 rgba(0,0,0,0.1);">
+          第10課
+        </div>
+        <div class="watercolor-title text-[clamp(4rem,12vw,8rem)] font-black text-[#2C3E50] -mt-4" style="text-shadow: 3px 3px 0 var(--watercolor-pink);">
+          鞋
+        </div>
+        <div class="text-lg md:text-xl text-gray-600 mt-2">林武憲</div>
+      </div>
+    </div>
+
+    <!-- 課前熱身操 -->
+    <div class="hand-drawn-border bg-white/90 p-6 md:p-8 mb-8 relative">
+      <div class="flex items-center gap-3 mb-4">
+        <span class="text-3xl">🎯</span>
+        <h2 class="watercolor-title text-2xl md:text-3xl font-bold text-[#E74C3C]">課前熱身操</h2>
+      </div>
+      
+      <div class="thought-bubble mb-6">
+        <p class="poem-text text-center" style="font-size: clamp(1.2rem, 3vw, 1.8rem);">
+          每天你都會穿鞋，<br>
+          它們讓你想到甚麼人？<br>
+          甚麼事？
+        </p>
+      </div>
+
+      <!-- 互動思考選項 -->
+      <p class="instruction-text font-bold text-center mb-4 text-[#2C3E50]">💭 點選你想到的畫面：</p>
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 mb-6">
+        <button onclick="selectThought(this, 'family')" class="thought-option hand-drawn-border-alt bg-[#FFEAA7] p-4 text-center hover:bg-[#FFD93D] transition-all">
+          <div class="text-4xl md:text-5xl mb-2">👨‍👩‍👧‍👦</div>
+          <div class="font-bold text-sm md:text-base">家人團聚</div>
+        </button>
+        <button onclick="selectThought(this, 'travel')" class="thought-option hand-drawn-border-alt bg-[#A8E6CF] p-4 text-center hover:bg-[#6BCB77] transition-all">
+          <div class="text-4xl md:text-5xl mb-2">🚶</div>
+          <div class="font-bold text-sm md:text-base">出門玩耍</div>
+        </button>
+        <button onclick="selectThought(this, 'school')" class="thought-option hand-drawn-border-alt bg-[#87CEEB] p-4 text-center hover:bg-[#4A90D9] transition-all">
+          <div class="text-4xl md:text-5xl mb-2">🏫</div>
+          <div class="font-bold text-sm md:text-base">上學讀書</div>
+        </button>
+        <button onclick="selectThought(this, 'home')" class="thought-option hand-drawn-border-alt bg-[#FFB6C1] p-4 text-center hover:bg-[#FF69B4] transition-all">
+          <div class="text-4xl md:text-5xl mb-2">🏠</div>
+          <div class="font-bold text-sm md:text-base">回到溫暖的家</div>
+        </button>
+      </div>
+
+      <div id="thought-feedback" class="hidden text-center p-4 bg-green-100 rounded-2xl border-2 border-green-400">
+        <p class="font-bold text-lg text-green-700">太棒了！讓我們一起看看課文裡寫了什麼吧！</p>
+      </div>
+    </div>
+
+    <!-- 開始按鈕 -->
+    <div class="text-center">
+      <button onclick="startGame()" class="btn-watercolor bg-[#FF6B6B] text-white text-xl md:text-2xl px-10 py-4 md:px-16 md:py-6">
+        🎮 開始互動學習
+      </button>
+      <button onclick="readPage('start')" class="sound-btn ml-4 inline-flex" title="朗讀本頁">
+        🔊
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- 頁面2: 回家脫鞋 -->
+<div id="page-home" class="page">
+  <div class="max-w-5xl mx-auto relative z-10">
+    <!-- 場景標題 -->
+    <div class="text-center mb-6">
+      <h2 class="watercolor-title text-3xl md:text-5xl font-bold text-[#2C3E50]">
+        🏠 家人回家了
+      </h2>
+      <p class="instruction-text mt-2 text-gray-600">點擊每一位家人，幫他們回家脫鞋吧！</p>
+    </div>
+
+    <!-- 家的場景 -->
+    <div class="hand-drawn-border bg-gradient-to-b from-[#E8F4F8] to-[#FFF8DC] p-4 md:p-8 mb-6 relative min-h-[400px] md:min-h-[500px]">
+      <!-- 門 -->
+      <div class="absolute left-4 top-4 md:left-8 md:top-8">
+        <div class="w-16 h-24 md:w-24 md:h-36 bg-[#8B4513] rounded-t-3xl border-4 border-[#5D3A1A] relative">
+          <div class="absolute right-2 top-1/2 w-2 h-2 md:w-3 md:h-3 bg-[#FFD700] rounded-full"></div>
+        </div>
+        <div class="text-center text-xs md:text-sm mt-1 font-bold">家門</div>
+      </div>
+
+      <!-- 鞋架區域 -->
+      <div id="shoe-area" class="absolute bottom-4 left-1/2 transform -translate-x-1/2 w-64 md:w-96">
+        <div class="bg-[#DEB887] rounded-xl border-4 border-[#8B4513] p-3 md:p-4 min-h-[100px] md:min-h-[130px]">
+          <div class="text-center text-sm md:text-base font-bold mb-2 text-[#5D3A1A]">👞 鞋架</div>
+          <div id="shoes-collected" class="flex flex-wrap justify-center gap-2 min-h-[60px]">
+            <!-- 收集的鞋子會出現在這裡 -->
+          </div>
+        </div>
+      </div>
+
+      <!-- 沙發 -->
+      <div class="absolute right-4 bottom-4 md:right-8 md:bottom-8">
+        <div class="w-32 h-16 md:w-48 md:h-24 bg-[#FFE4B5] rounded-2xl border-4 border-[#DAA520] relative">
+          <div class="absolute -top-8 md:-top-12 left-0 right-0 h-8 md:h-12 bg-[#FFE4B5] rounded-t-2xl border-4 border-b-0 border-[#DAA520]"></div>
+        </div>
+      </div>
+
+      <!-- 等待回家的人物（在門外） -->
+      <div id="characters-waiting" class="absolute left-24 md:left-40 top-8 md:top-16">
+        <!-- 我（弟弟/妹妹）-->
+        <div id="char-me" class="character inline-block mr-2 md:mr-4" onclick="bringHome('me')" title="點擊帶我回家">
+          <svg width="70" height="100" viewBox="0 0 70 100" class="md:w-[90px] md:h-[130px]">
+            <!-- 身體 -->
+            <ellipse cx="35" cy="70" rx="18" ry="22" fill="#9B59B6" stroke="#4A4A4A" stroke-width="2"/>
+            <!-- 頭 -->
+            <circle cx="35" cy="30" r="22" fill="#FFE0BD" stroke="#4A4A4A" stroke-width="2"/>
+            <!-- 頭髮 -->
+            <path d="M15 28 Q20 8 35 10 Q50 8 55 28" fill="#4A3728" stroke="#4A4A4A" stroke-width="2"/>
+            <!-- 眼睛 -->
+            <circle cx="28" cy="28" r="3" fill="#4A4A4A"/>
+            <circle cx="42" cy="28" r="3" fill="#4A4A4A"/>
+            <!-- 嘴巴 -->
+            <path d="M28 38 Q35 44 42 38" fill="none" stroke="#4A4A4A" stroke-width="2" stroke-linecap="round"/>
+            <!-- 鞋子 -->
+            <ellipse cx="28" cy="95" rx="10" ry="6" fill="#3498DB" stroke="#4A4A4A" stroke-width="2"/>
+            <ellipse cx="42" cy="95" rx="10" ry="6" fill="#3498DB" stroke="#4A4A4A" stroke-width="2"/>
+            <!-- 鞋帶 -->
+            <path d="M22 92 L28 88 L34 92 M22 95 L28 91 L34 95" stroke="white" stroke-width="1.5"/>
+            <path d="M36 92 L42 88 L48 92 M36 95 L42 91 L48 95" stroke="white" stroke-width="1.5"/>
+          </svg>
+          <div class="text-center text-xs md:text-sm font-bold mt-1 bg-white/80 rounded px-1">我</div>
+        </div>
+
+        <!-- 姐姐 -->
+        <div id="char-sister" class="character inline-block mr-2 md:mr-4" onclick="bringHome('sister')" title="點擊帶姐姐回家">
+          <svg width="70" height="110" viewBox="0 0 70 110" class="md:w-[90px] md:h-[140px]">
+            <!-- 裙子 -->
+            <path d="M20 60 L15 90 L55 90 L50 60 Z" fill="#E74C3C" stroke="#4A4A4A" stroke-width="2"/>
+            <!-- 上衣 -->
+            <ellipse cx="35" cy="55" rx="15" ry="18" fill="#FDCB6E" stroke="#4A4A4A" stroke-width="2"/>
+            <!-- 頭 -->
+            <circle cx="35" cy="25" r="20" fill="#FFE0BD" stroke="#4A4A4A" stroke-width="2"/>
+            <!-- 長髮 -->
+            <path d="M15 20 Q10 5 35 8 Q60 5 55 20 L58 45 Q55 50 50 45 L48 25 Q35 15 22 25 L20 45 Q15 50 12 45 Z" fill="#4A3728" stroke="#4A4A4A" stroke-width="2"/>
+            <!-- 蝴蝶結 -->
+            <ellipse cx="50" cy="15" rx="6" ry="4" fill="#E74C3C" stroke="#4A4A4A" stroke-width="1"/>
+            <ellipse cx="44" cy="15" rx="6" ry="4" fill="#E74C3C" stroke="#4A4A4A" stroke-width="1"/>
+            <circle cx="47" cy="15" r="2" fill="#E74C3C" stroke="#4A4A4A" stroke-width="1"/>
+            <!-- 眼睛 -->
+            <circle cx="29" cy="25" r="2.5" fill="#4A4A4A"/>
+            <circle cx="41" cy="25" r="2.5" fill="#4A4A4A"/>
+            <!-- 嘴巴 -->
+            <path d="M30 33 Q35 37 40 33" fill="none" stroke="#4A4A4A" stroke-width="2" stroke-linecap="round"/>
+            <!-- 鞋子 -->
+            <ellipse cx="25" cy="97" rx="9" ry="6" fill="#FF69B4" stroke="#4A4A4A" stroke-width="2"/>
+            <ellipse cx="45" cy="97" rx="9" ry="6" fill="#FF69B4" stroke="#4A4A4A" stroke-width="2"/>
+            <!-- 小花 -->
+            <circle cx="25" cy="92" r="3" fill="white" stroke="#4A4A4A" stroke-width="1"/>
+            <circle cx="45" cy="92" r="3" fill="white" stroke="#4A4A4A" stroke-width="1"/>
+          </svg>
+          <div class="text-center text-xs md:text-sm font-bold mt-1 bg-white/80 rounded px-1">姐姐</div>
+        </div>
+
+        <!-- 哥哥 -->
+        <div id="char-brother" class="character inline-block mr-2 md:mr-4" onclick="bringHome('brother')" title="點擊帶哥哥回家">
+          <svg width="75" height="115" viewBox="0 0 75 115" class="md:w-[95px] md:h-[145px]">
+            <!-- 褲子 -->
+            <rect x="22" y="65" width="31" height="25" fill="#2C3E50" stroke="#4A4A4A" stroke-width="2" rx="3"/>
+            <!-- 上衣 -->
+            <ellipse cx="37" cy="52" rx="18" ry="20" fill="#3498DB" stroke="#4A4A4A" stroke-width="2"/>
+            <!-- 頭 -->
+            <circle cx="37" cy="22" r="21" fill="#FFE0BD" stroke="#4A4A4A" stroke-width="2"/>
+            <!-- 短髮 -->
+            <path d="M18 18 Q22 5 37 6 Q52 5 56 18 L54 26 Q50 20 37 20 Q24 20 20 26 Z" fill="#2C3E50" stroke="#4A4A4A" stroke-width="2"/>
+            <!-- 眼睛 -->
+            <circle cx="30" cy="22" r="3" fill="#4A4A4A"/>
+            <circle cx="44" cy="22" r="3" fill="#4A4A4A"/>
+            <!-- 嘴巴 -->
+            <path d="M31 32 Q37 37 43 32" fill="none" stroke="#4A4A4A" stroke-width="2" stroke-linecap="round"/>
+            <!-- 大皮鞋 -->
+            <ellipse cx="28" cy="100" rx="11" ry="7" fill="#8B4513" stroke="#4A4A4A" stroke-width="2"/>
+            <ellipse cx="46" cy="100" rx="11" ry="7" fill="#8B4513" stroke="#4A4A4A" stroke-width="2"/>
+            <!-- 鞋帶 -->
+            <line x1="22" y1="95" x2="34" y2="95" stroke="#4A3728" stroke-width="1.5"/>
+            <line x1="23" y1="98" x2="33" y2="98" stroke="#4A3728" stroke-width="1.5"/>
+            <line x1="40" y1="95" x2="52" y2="95" stroke="#4A3728" stroke-width="1.5"/>
+            <line x1="41" y1="98" x2="51" y2="98" stroke="#4A3728" stroke-width="1.5"/>
+          </svg>
+          <div class="text-center text-xs md:text-sm font-bold mt-1 bg-white/80 rounded px-1">哥哥</div>
+        </div>
+
+        <!-- 爸爸 -->
+        <div id="char-dad" class="character inline-block" onclick="bringHome('dad')" title="點擊帶爸爸回家">
+          <svg width="80" height="125" viewBox="0 0 80 125" class="md:w-[100px] md:h-[155px]">
+            <!-- 褲子 -->
+            <rect x="22" y="72" width="36" height="28" fill="#34495E" stroke="#4A4A4A" stroke-width="2" rx="3"/>
+            <!-- 襯衫 -->
+            <ellipse cx="40" cy="55" rx="20" ry="22" fill="#3498DB" stroke="#4A4A4A" stroke-width="2"/>
+            <!-- 領帶 -->
+            <polygon points="40,35 36,45 44,45" fill="#E74C3C" stroke="#4A4A4A" stroke-width="1"/>
+            <polygon points="37,45 43,45 40,65" fill="#E74C3C" stroke="#4A4A4A" stroke-width="1"/>
+            <!-- 頭 -->
+            <circle cx="40" cy="22" r="22" fill="#FFE0BD" stroke="#4A4A4A" stroke-width="2"/>
+            <!-- 頭髮 -->
+            <path d="M20 18 Q25 3 40 4 Q55 3 60 18 L58 28 Q52 18 40 18 Q28 18 22 28 Z" fill="#2C3E50" stroke="#4A4A4A" stroke-width="2"/>
+            <!-- 眼睛 -->
+            <circle cx="33" cy="22" r="2.5" fill="#4A4A4A"/>
+            <circle cx="47" cy="22" r="2.5" fill="#4A4A4A"/>
+            <!-- 嘴巴 -->
+            <path d="M34 32 Q40 36 46 32" fill="none" stroke="#4A4A4A" stroke-width="2" stroke-linecap="round"/>
+            <!-- 大皮鞋 -->
+            <ellipse cx="30" cy="108" rx="12" ry="8" fill="#654321" stroke="#4A4A4A" stroke-width="2"/>
+            <ellipse cx="50" cy="108" rx="12" ry="8" fill="#654321" stroke="#4A4A4A" stroke-width="2"/>
+          </svg>
+          <div class="text-center text-xs md:text-sm font-bold mt-1 bg-white/80 rounded px-1">爸爸</div>
+        </div>
+      </div>
+
+      <!-- 到家後的人物（在沙發上） -->
+      <div id="characters-home" class="absolute right-20 md:right-32 bottom-24 md:bottom-32">
+      </div>
+    </div>
+
+    <!-- 詩句展示 -->
+    <div id="poem-stanza-1" class="poem-card mb-4 opacity-50 transition-all duration-500">
+      <div class="flex items-start gap-4">
+        <button onclick="speakText('我回家，把鞋脫下，姐姐回家，把鞋脫下，哥哥、爸爸回家，也都把鞋脫下。')" class="sound-btn shrink-0">🔊</button>
+        <div>
+          <p id="line1" class="poem-text mb-2">我回家，把鞋脫下，</p>
+          <p id="line2" class="poem-text mb-2">姐姐回家，把鞋脫下，</p>
+          <p id="line3" class="poem-text">哥哥、爸爸回家，<br>也都把鞋脫下。</p>
+        </div>
+      </div>
+    </div>
+
+    <div id="home-complete" class="hidden text-center">
+      <div class="inline-block animate-bounce-in">
+        <div class="text-6xl mb-4">🎉</div>
+        <p class="text-xl md:text-2xl font-bold text-[#E74C3C] mb-4">大家都回家了！鞋子都在鞋架上休息了～</p>
+      </div>
+      <button onclick="goToPage('family')" class="btn-watercolor bg-[#4CAF50] text-white mt-4">
+        下一頁：鞋子像一家人 →
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- 頁面3: 鞋子像一家人 -->
+<div id="page-family" class="page">
+  <div class="max-w-5xl mx-auto relative z-10">
+    <div class="text-center mb-6">
+      <h2 class="watercolor-title text-3xl md:text-5xl font-bold text-[#2C3E50]">
+        👨‍👩‍👧‍👦 鞋子像一家人
+      </h2>
+      <p class="instruction-text mt-2 text-gray-600">點擊鞋子，看看它們怎麼依偎在一起說悄悄話！</p>
+    </div>
+
+    <!-- 鞋子大家庭場景 -->
+    <div class="hand-drawn-border bg-gradient-to-b from-[#FFF0F5] to-[#FFF8DC] p-6 md:p-10 mb-6 relative min-h-[350px] md:min-h-[450px]">
+      <!-- 溫暖的燈光效果 -->
+      <div class="absolute top-0 left-1/2 transform -translate-x-1/2 w-64 h-32 bg-gradient-to-b from-[#FFEAA7]/50 to-transparent rounded-b-full"></div>
+      
+      <!-- 鞋架區 -->
+      <div class="flex flex-wrap justify-center items-end gap-4 md:gap-8 mt-8 md:mt-16" id="shoe-family">
+        <!-- 我的藍色運動鞋 -->
+        <div class="shoe text-center" data-shoe="me" onclick="clickShoe(this, 'me')">
+          <svg width="80" height="100" viewBox="0 0 80 100" class="md:w-[110px] md:h-[140px]">
+            <ellipse cx="40" cy="80" rx="25" ry="18" fill="#3498DB" stroke="#4A4A4A" stroke-width="3"/>
+            <ellipse cx="40" cy="60" rx="22" ry="15" fill="#5DADE2" stroke="#4A4A4A" stroke-width="3"/>
+            <!-- 鞋舌 -->
+            <ellipse cx="40" cy="48" rx="12" ry="10" fill="#85C1E9" stroke="#4A4A4A" stroke-width="2"/>
+            <!-- 白色鞋頭 -->
+            <ellipse cx="40" cy="88" rx="20" ry="8" fill="white" stroke="#4A4A4A" stroke-width="2"/>
+            <!-- 笑臉 -->
+            <circle cx="32" cy="75" r="3" fill="#4A4A4A"/>
+            <circle cx="48" cy="75" r="3" fill="#4A4A4A"/>
+            <path d="M32 85 Q40 92 48 85" fill="none" stroke="#4A4A4A" stroke-width="2.5" stroke-linecap="round"/>
+            <!-- 鞋帶 -->
+            <path d="M28 55 L40 50 L52 55 M30 62 L40 57 L50 62 M32 68 L40 63 L48 68" stroke="white" stroke-width="2.5" stroke-linecap="round"/>
+          </svg>
+          <div class="font-bold text-sm md:text-base mt-2">我的鞋</div>
+          <div class="speech-bubble hidden absolute -top-20 left-1/2 transform -translate-x-1/2 bg-white border-2 border-gray-800 rounded-2xl p-2 md:p-3 text-xs md:text-sm min-w-[100px] z-10">
+            <span class="bubble-text">今天在學校好開心！</span>
+          </div>
+        </div>
+
+        <!-- 姐姐的粉紅鞋 -->
+        <div class="shoe text-center" data-shoe="sister" onclick="clickShoe(this, 'sister')">
+          <svg width="80" height="100" viewBox="0 0 80 100" class="md:w-[110px] md:h-[140px]">
+            <ellipse cx="40" cy="80" rx="24" ry="17" fill="#FF69B4" stroke="#4A4A4A" stroke-width="3"/>
+            <ellipse cx="40" cy="58" rx="20" ry="14" fill="#FF85C1" stroke="#4A4A4A" stroke-width="3"/>
+            <!-- 瑪麗珍鞋帶 -->
+            <path d="M25 55 Q40 45 55 55" fill="none" stroke="#4A4A4A" stroke-width="3"/>
+            <!-- 小花裝飾 -->
+            <circle cx="40" cy="45" r="8" fill="white" stroke="#4A4A4A" stroke-width="2"/>
+            <circle cx="40" cy="45" r="3" fill="#FFD700" stroke="#4A4A4A" stroke-width="1"/>
+            <!-- 笑臉 -->
+            <circle cx="33" cy="75" r="3" fill="#4A4A4A"/>
+            <circle cx="47" cy="75" r="3" fill="#4A4A4A"/>
+            <ellipse cx="40" cy="85" rx="5" ry="3" fill="#FF6B6B"/>
+            <!-- 蝴蝶結 -->
+            <ellipse cx="28" cy="50" rx="5" ry="3" fill="#FF1493" stroke="#4A4A4A" stroke-width="1"/>
+            <ellipse cx="22" cy="50" rx="5" ry="3" fill="#FF1493" stroke="#4A4A4A" stroke-width="1"/>
+          </svg>
+          <div class="font-bold text-sm md:text-base mt-2">姐姐的鞋</div>
+          <div class="speech-bubble hidden absolute -top-20 left-1/2 transform -translate-x-1/2 bg-white border-2 border-gray-800 rounded-2xl p-2 md:p-3 text-xs md:text-sm min-w-[100px] z-10">
+            <span class="bubble-text">我今天畫了一張圖！</span>
+          </div>
+        </div>
+
+        <!-- 哥哥的棕色大鞋 -->
+        <div class="shoe text-center" data-shoe="brother" onclick="clickShoe(this, 'brother')">
+          <svg width="90" height="110" viewBox="0 0 90 110" class="md:w-[120px] md:h-[150px]">
+            <ellipse cx="45" cy="85" rx="30" ry="20" fill="#8B4513" stroke="#4A4A4A" stroke-width="3"/>
+            <ellipse cx="45" cy="62" rx="26" ry="17" fill="#A0522D" stroke="#4A4A4A" stroke-width="3"/>
+            <!-- 鞋舌 -->
+            <ellipse cx="45" cy="48" rx="14" ry="11" fill="#CD853F" stroke="#4A4A4A" stroke-width="2"/>
+            <!-- 笑臉 -->
+            <circle cx="36" cy="80" r="3.5" fill="#4A4A4A"/>
+            <circle cx="54" cy="80" r="3.5" fill="#4A4A4A"/>
+            <path d="M36 90 Q45 97 54 90" fill="none" stroke="#4A4A4A" stroke-width="2.5" stroke-linecap="round"/>
+            <!-- 鞋帶 -->
+            <line x1="32" y1="55" x2="58" y2="55" stroke="#4A3728" stroke-width="2.5"/>
+            <line x1="33" y1="62" x2="57" y2="62" stroke="#4A3728" stroke-width="2.5"/>
+            <line x1="34" y1="69" x2="56" y2="69" stroke="#4A3728" stroke-width="2.5"/>
+          </svg>
+          <div class="font-bold text-sm md:text-base mt-2">哥哥的鞋</div>
+          <div class="speech-bubble hidden absolute -top-20 left-1/2 transform -translate-x-1/2 bg-white border-2 border-gray-800 rounded-2xl p-2 md:p-3 text-xs md:text-sm min-w-[100px] z-10">
+            <span class="bubble-text">我打籃球贏了比賽！</span>
+          </div>
+        </div>
+
+        <!-- 爸爸的大皮鞋 -->
+        <div class="shoe text-center" data-shoe="dad" onclick="clickShoe(this, 'dad')">
+          <svg width="95" height="115" viewBox="0 0 95 115" class="md:w-[125px] md:h-[155px]">
+            <ellipse cx="47" cy="90" rx="35" ry="20" fill="#3D2314" stroke="#4A4A4A" stroke-width="3"/>
+            <ellipse cx="47" cy="65" rx="30" ry="18" fill="#5D4037" stroke="#4A4A4A" stroke-width="3"/>
+            <!-- 鞋舌 -->
+            <ellipse cx="47" cy="50" rx="12" ry="10" fill="#6D4C41" stroke="#4A4A4A" stroke-width="2"/>
+            <!-- 笑臉（溫和的）-->
+            <circle cx="38" cy="82" r="3" fill="#4A4A4A"/>
+            <circle cx="56" cy="82" r="3" fill="#4A4A4A"/>
+            <path d="M38 92 Q47 97 56 92" fill="none" stroke="#4A4A4A" stroke-width="2" stroke-linecap="round"/>
+            <!-- 鞋帶 -->
+            <line x1="37" y1="58" x2="57" y2="58" stroke="#2D1810" stroke-width="2"/>
+            <line x1="38" y1="65" x2="56" y2="65" stroke="#2D1810" stroke-width="2"/>
+          </svg>
+          <div class="font-bold text-sm md:text-base mt-2">爸爸的鞋</div>
+          <div class="speech-bubble hidden absolute -top-20 left-1/2 transform -translate-x-1/2 bg-white border-2 border-gray-800 rounded-2xl p-2 md:p-3 text-xs md:text-sm min-w-[100px] z-10">
+            <span class="bubble-text">今天工作很順利。</span>
+          </div>
+        </div>
+
+        <!-- 媽媽的黃色高跟鞋 -->
+        <div class="shoe text-center" data-shoe="mom" onclick="clickShoe(this, 'mom')">
+          <svg width="75" height="115" viewBox="0 0 75 115" class="md:w-[100px] md:h-[155px]">
+            <!-- 鞋跟 -->
+            <rect x="15" y="85" width="10" height="20" fill="#FFD700" stroke="#4A4A4A" stroke-width="2" rx="2"/>
+            <!-- 鞋子主體 -->
+            <path d="M20 85 Q15 50 45 40 Q70 35 65 70 Q60 90 20 85" fill="#FFD700" stroke="#4A4A4A" stroke-width="3"/>
+            <!-- 鞋內 -->
+            <path d="M25 80 Q22 55 45 48 Q60 46 58 65" fill="#FFEB3B" stroke="none"/>
+            <!-- 笑臉 -->
+            <circle cx="40" cy="65" r="3" fill="#4A4A4A"/>
+            <circle cx="52" cy="62" r="3" fill="#4A4A4A"/>
+            <path d="M40 73 Q46 78 52 70" fill="none" stroke="#4A4A4A" stroke-width="2" stroke-linecap="round"/>
+            <!-- 蝴蝶結 -->
+            <ellipse cx="55" cy="45" rx="6" ry="4" fill="#FF69B4" stroke="#4A4A4A" stroke-width="1"/>
+            <ellipse cx="48" cy="42" rx="6" ry="4" fill="#FF69B4" stroke="#4A4A4A" stroke-width="1"/>
+            <circle cx="51" cy="44" r="2" fill="#FF69B4"/>
+          </svg>
+          <div class="font-bold text-sm md:text-base mt-2">媽媽的鞋</div>
+          <div class="speech-bubble hidden absolute -top-20 left-1/2 transform -translate-x-1/2 bg-white border-2 border-gray-800 rounded-2xl p-2 md:p-3 text-xs md:text-sm min-w-[100px] z-10">
+            <span class="bubble-text">我買了好吃的回來！</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 詩句展示 -->
+    <div id="poem-stanza-2" class="poem-card mb-4 opacity-50 transition-all duration-500">
+      <div class="flex items-start gap-4">
+        <button onclick="speakText('大大小小的鞋，像一家人，依偎在一起，說著一天的見聞。')" class="sound-btn shrink-0">🔊</button>
+        <div>
+          <p class="poem-text mb-2">大大小小的鞋，</p>
+          <p class="poem-text mb-2">像一家人，</p>
+          <p class="poem-text mb-2">依偎在一起，</p>
+          <p class="poem-text">說著一天的見聞。</p>
+        </div>
+      </div>
+    </div>
+
+    <div id="family-hint" class="text-center p-4 bg-yellow-100 rounded-2xl border-2 border-yellow-400 mb-4">
+      <p class="font-bold text-lg">👆 點擊每一雙鞋，聽聽它們分享今天的見聞吧！</p>
+      <p class="text-sm text-gray-600 mt-1">已點擊：<span id="shoe-count">0</span> / 5 雙鞋</p>
+    </div>
+
+    <div id="family-complete" class="hidden text-center">
+      <div class="inline-block animate-bounce-in">
+        <div class="text-6xl mb-4">💬</div>
+        <p class="text-xl md:text-2xl font-bold text-[#E74C3C] mb-4">原來鞋子們也會像家人一樣聊天呢！</p>
+      </div>
+      <button onclick="goToPage('harbor')" class="btn-watercolor bg-[#2196F3] text-white mt-4">
+        下一頁：溫暖的港灣 →
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- 頁面4: 溫暖的港灣（比喻理解） -->
+<div id="page-harbor" class="page">
+  <div class="max-w-5xl mx-auto relative z-10">
+    <div class="text-center mb-6">
+      <h2 class="watercolor-title text-3xl md:text-5xl font-bold text-[#2C3E50]">
+        ⛵ 溫暖的港灣
+      </h2>
+      <p class="instruction-text mt-2 text-gray-600">為什麼說鞋子像船，家像港灣呢？點擊船隻讓它們回到港灣吧！</p>
+    </div>
+
+    <!-- 港灣場景 -->
+    <div class="harbor h-[350px] md:h-[450px] mb-6 relative overflow-hidden">
+      <!-- 天空中的雲 -->
+      <div class="absolute top-4 left-10 text-4xl md:text-6xl opacity-80 animate-float" style="animation-delay:0s">☁️</div>
+      <div class="absolute top-8 right-20 text-3xl md:text-5xl opacity-70 animate-float" style="animation-delay:1s">☁️</div>
+      <div class="absolute top-12 left-1/3 text-2xl md:text-4xl opacity-60 animate-float" style="animation-delay:2s">☁️</div>
+      
+      <!-- 太陽 -->
+      <div class="absolute top-4 right-8 w-16 h-16 md:w-24 md:h-24">
+        <div class="w-full h-full bg-[#FFD93D] rounded-full border-4 border-[#FFA500] animate-pulse" style="box-shadow: 0 0 30px rgba(255,217,61,0.5)"></div>
+      </div>
+
+      <!-- 海浪 -->
+      <div class="wave" style="bottom: 80px; opacity: 0.6;"></div>
+      <div class="wave" style="bottom: 75px; animation-direction: reverse; animation-duration: 6s; opacity: 0.4;"></div>
+
+      <!-- 沙灘/港灣底部 -->
+      <div class="absolute bottom-0 left-0 right-0 h-24 md:h-32 bg-gradient-to-t from-[#D2691E] to-[#F4A460]">
+        <!-- 港灣標示 -->
+        <div class="absolute bottom-8 left-1/2 transform -translate-x-1/2 bg-white/90 px-4 py-2 rounded-xl border-2 border-gray-800">
+          <p class="font-bold text-lg md:text-xl text-center">🏠 家 ＝ 溫暖的港灣</p>
+        </div>
+      </div>
+
+      <!-- 船（鞋子造型）-->
+      <div id="boats-area" class="absolute inset-0">
+        <!-- 小船們會從海上漂回港灣 -->
+        <div id="boat-me" class="boat-shoe cursor-pointer absolute" style="top: 30%; left: 10%;" onclick="sailHome(this, 'me')">
+          <div class="relative">
+            <div class="w-16 h-10 md:w-24 md:h-14 bg-blue-500 rounded-b-full border-3 border-gray-800 relative" style="border-width:3px">
+              <div class="absolute -top-6 md:-top-8 left-1/2 transform -translate-x-1/2 w-1 h-8 md:h-10 bg-gray-800"></div>
+              <div class="absolute -top-6 md:-top-8 left-1/2 w-6 h-4 md:w-8 md:h-5 bg-white border-2 border-gray-800" style="clip-path: polygon(0 0, 100% 0, 80% 100%, 0 100%)"></div>
+              <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-white text-xs md:text-sm font-bold">我</div>
+            </div>
+          </div>
+        </div>
+        
+        <div id="boat-sister" class="boat-shoe cursor-pointer absolute" style="top: 20%; left: 25%; animation-delay: 0.5s;" onclick="sailHome(this, 'sister')">
+          <div class="relative">
+            <div class="w-16 h-10 md:w-24 md:h-14 bg-pink-400 rounded-b-full border-3 border-gray-800 relative" style="border-width:3px">
+              <div class="absolute -top-6 md:-top-8 left-1/2 transform -translate-x-1/2 w-1 h-8 md:h-10 bg-gray-800"></div>
+              <div class="absolute -top-6 md:-top-8 left-1/2 w-6 h-4 md:w-8 md:h-5 bg-white border-2 border-gray-800" style="clip-path: polygon(0 0, 100% 0, 80% 100%, 0 100%)"></div>
+              <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-white text-xs md:text-sm font-bold">姐</div>
+            </div>
+          </div>
+        </div>
+        
+        <div id="boat-brother" class="boat-shoe cursor-pointer absolute" style="top: 35%; left: 40%; animation-delay: 1s;" onclick="sailHome(this, 'brother')">
+          <div class="relative">
+            <div class="w-20 h-12 md:w-28 md:h-16 bg-amber-700 rounded-b-full border-3 border-gray-800 relative" style="border-width:3px">
+              <div class="absolute -top-8 md:-top-10 left-1/2 transform -translate-x-1/2 w-1 h-10 md:h-12 bg-gray-800"></div>
+              <div class="absolute -top-8 md:-top-10 left-1/2 w-8 h-5 md:w-10 md:h-6 bg-white border-2 border-gray-800" style="clip-path: polygon(0 0, 100% 0, 80% 100%, 0 100%)"></div>
+              <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-white text-xs md:text-sm font-bold">哥</div>
+            </div>
+          </div>
+        </div>
+        
+        <div id="boat-dad" class="boat-shoe cursor-pointer absolute" style="top: 25%; left: 55%; animation-delay: 1.5s;" onclick="sailHome(this, 'dad')">
+          <div class="relative">
+            <div class="w-20 h-12 md:w-28 md:h-16 bg-stone-800 rounded-b-full border-3 border-gray-800 relative" style="border-width:3px">
+              <div class="absolute -top-8 md:-top-10 left-1/2 transform -translate-x-1/2 w-1 h-10 md:h-12 bg-gray-800"></div>
+              <div class="absolute -top-8 md:-top-10 left-1/2 w-8 h-5 md:w-10 md:h-6 bg-white border-2 border-gray-800" style="clip-path: polygon(0 0, 100% 0, 80% 100%, 0 100%)"></div>
+              <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-white text-xs md:text-sm font-bold">爸</div>
+            </div>
+          </div>
+        </div>
+
+        <div id="boat-mom" class="boat-shoe cursor-pointer absolute" style="top: 40%; left: 70%; animation-delay: 2s;" onclick="sailHome(this, 'mom')">
+          <div class="relative">
+            <div class="w-14 h-10 md:w-20 md:h-14 bg-yellow-400 rounded-b-full border-3 border-gray-800 relative" style="border-width:3px">
+              <div class="absolute -top-6 md:-top-8 left-1/2 transform -translate-x-1/2 w-1 h-8 md:h-10 bg-gray-800"></div>
+              <div class="absolute -top-6 md:-top-8 left-1/2 w-5 h-4 md:w-7 md:h-5 bg-white border-2 border-gray-800" style="clip-path: polygon(0 0, 100% 0, 80% 100%, 0 100%)"></div>
+              <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-white text-xs md:text-sm font-bold">媽</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 停泊的船（港灣內）-->
+      <div id="docked-boats" class="absolute bottom-20 md:bottom-28 left-0 right-0 flex justify-center gap-2 md:gap-4 flex-wrap px-4">
+      </div>
+    </div>
+
+    <!-- 比喻解釋卡片 -->
+    <div class="grid md:grid-cols-2 gap-4 mb-6">
+      <div class="poem-card bg-blue-50">
+        <h3 class="font-bold text-xl md:text-2xl text-blue-700 mb-3">⛵ 鞋子就像船</h3>
+        <p class="text-base md:text-lg leading-relaxed">
+          鞋子帶著我們去很多地方，<br>
+          就像船在大海上航行一樣！
+        </p>
+      </div>
+      <div class="poem-card bg-orange-50">
+        <h3 class="font-bold text-xl md:text-2xl text-orange-700 mb-3">🏠 家就像港灣</h3>
+        <p class="text-base md:text-lg leading-relaxed">
+          回到家就像船回到港灣，<br>
+          安靜、安全又溫暖！
+        </p>
+      </div>
+    </div>
+
+    <!-- 詩句展示 -->
+    <div id="poem-stanza-3" class="poem-card mb-4 opacity-50 transition-all duration-500">
+      <div class="flex items-start gap-4">
+        <button onclick="speakText('大大小小的鞋，就像大大小小的船，回到安靜的港灣，享受家的溫暖。')" class="sound-btn shrink-0">🔊</button>
+        <div>
+          <p class="poem-text mb-2">大大小小的鞋，</p>
+          <p class="poem-text mb-2">就像大大小小的船，</p>
+          <p class="poem-text mb-2">回到安靜的港灣，</p>
+          <p class="poem-text">享受家的溫暖。</p>
+        </div>
+      </div>
+    </div>
+
+    <div id="harbor-hint" class="text-center p-4 bg-blue-100 rounded-2xl border-2 border-blue-400 mb-4">
+      <p class="font-bold text-lg">👆 點擊每一艘船（鞋子），讓它們回到港灣吧！</p>
+      <p class="text-sm text-gray-600 mt-1">已靠岸：<span id="boat-count">0</span> / 5 艘船</p>
+    </div>
+
+    <div id="harbor-complete" class="hidden text-center">
+      <div class="inline-block animate-bounce-in">
+        <div class="text-6xl mb-4">🏠❤️</div>
+        <p class="text-xl md:text-2xl font-bold text-[#E74C3C] mb-4">所有的船都回到港灣了！家真是最溫暖的地方！</p>
+      </div>
+      <button onclick="goToPage('reading')" class="btn-watercolor bg-[#9C27B0] text-white mt-4">
+        🌟 完整課文朗讀 →
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- 頁面5: 全文朗讀 -->
+<div id="page-reading" class="page">
+  <div class="max-w-4xl mx-auto relative z-10">
+    <div class="text-center mb-6">
+      <h2 class="watercolor-title text-3xl md:text-5xl font-bold text-[#2C3E50]">
+        📖 課文全文朗讀
+      </h2>
+      <p class="instruction-text mt-2 text-gray-600">跟著一起朗讀吧！點擊播放按鈕開始</p>
+    </div>
+
+    <!-- 朗讀控制區 -->
+    <div class="hand-drawn-border bg-white/95 p-6 md:p-10 mb-6 text-center">
+      <div class="watercolor-title text-2xl md:text-3xl font-bold mb-2 text-[#E74C3C]">鞋</div>
+      <div class="text-lg text-gray-500 mb-8">林武憲</div>
+
+      <div id="full-poem" class="text-left md:text-center poem-text space-y-4 md:space-y-6">
+        <p id="read-1" class="reading-line py-2 px-4 rounded-lg transition-all">我回家，把鞋脫下，</p>
+        <p id="read-2" class="reading-line py-2 px-4 rounded-lg transition-all">姐姐回家，把鞋脫下，</p>
+        <p id="read-3" class="reading-line py-2 px-4 rounded-lg transition-all">哥哥、爸爸回家，</p>
+        <p id="read-4" class="reading-line py-2 px-4 rounded-lg transition-all">也都把鞋脫下。</p>
+        <p id="read-5" class="reading-line py-2 px-4 rounded-lg transition-all"><br></p>
+        <p id="read-6" class="reading-line py-2 px-4 rounded-lg transition-all">大大小小的鞋，</p>
+        <p id="read-7" class="reading-line py-2 px-4 rounded-lg transition-all">像一家人，</p>
+        <p id="read-8" class="reading-line py-2 px-4 rounded-lg transition-all">依偎在一起，</p>
+        <p id="read-9" class="reading-line py-2 px-4 rounded-lg transition-all">說著一天的見聞。</p>
+        <p id="read-10" class="reading-line py-2 px-4 rounded-lg transition-all"><br></p>
+        <p id="read-11" class="reading-line py-2 px-4 rounded-lg transition-all">大大小小的鞋，</p>
+        <p id="read-12" class="reading-line py-2 px-4 rounded-lg transition-all">就像大大小小的船，</p>
+        <p id="read-13" class="reading-line py-2 px-4 rounded-lg transition-all">回到安靜的港灣，</p>
+        <p id="read-14" class="reading-line py-2 px-4 rounded-lg transition-all">享受家的溫暖。</p>
+      </div>
+    </div>
+
+    <!-- 播放控制 -->
+    <div class="flex justify-center items-center gap-4 mb-8 flex-wrap">
+      <button id="play-btn" onclick="toggleReadAloud()" class="btn-watercolor bg-[#E74C3C] text-white text-xl px-8 py-4">
+        ▶️ 開始朗讀
+      </button>
+      <button onclick="resetReadAloud()" class="btn-watercolor bg-gray-400 text-white text-lg px-6 py-3">
+        🔄 重新開始
+      </button>
+      <div class="flex items-center gap-2 bg-white px-4 py-2 rounded-full border-2 border-gray-800">
+        <span class="text-lg">🔊</span>
+        <input type="range" id="volume-slider" min="0" max="1" step="0.1" value="0.8" class="w-24 md:w-32">
+      </div>
+    </div>
+
+    <!-- 學習小結 -->
+    <div class="hand-drawn-border-alt bg-gradient-to-r from-pink-50 to-yellow-50 p-6 md:p-8 mb-6">
+      <h3 class="watercolor-title text-2xl md:text-3xl font-bold text-center mb-6 text-[#2C3E50]">🎓 學習小結</h3>
+      <div class="grid md:grid-cols-3 gap-4">
+        <div class="bg-white rounded-2xl p-4 border-2 border-gray-800 text-center">
+          <div class="text-4xl mb-2">📝</div>
+          <h4 class="font-bold text-lg mb-2">課文結構</h4>
+          <p class="text-base">回家脫鞋 → 鞋子聊天 → 船回港灣</p>
+        </div>
+        <div class="bg-white rounded-2xl p-4 border-2 border-gray-800 text-center">
+          <div class="text-4xl mb-2">✨</div>
+          <h4 class="font-bold text-lg mb-2">修辭手法</h4>
+          <p class="text-base">把鞋子比作人和船，<br>把家比作港灣</p>
+        </div>
+        <div class="bg-white rounded-2xl p-4 border-2 border-gray-800 text-center">
+          <div class="text-4xl mb-2">❤️</div>
+          <h4 class="font-bold text-lg mb-2">課文主旨</h4>
+          <p class="text-base">感受家的溫暖，<br>珍惜家人團聚的時光</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="text-center">
+      <div class="inline-block animate-bounce-in mb-4">
+        <div class="text-6xl mb-2">🌟</div>
+        <p class="text-xl md:text-2xl font-bold text-[#4CAF50]">恭喜你完成了本課的互動學習！</p>
+      </div>
+      <br>
+      <button onclick="goToPage('start')" class="btn-watercolor bg-[#2196F3] text-white mt-4">
+        🏠 回到首頁再玩一次
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- 底部導航 -->
+<div class="nav-bar">
+  <button id="prev-btn" onclick="prevPage()" class="btn-watercolor bg-gray-200 text-gray-700 text-base md:text-lg py-2 px-4 md:py-3 md:px-6 disabled:opacity-30" disabled>
+    ← 上一頁
+  </button>
+  
+  <!-- 進度圓點 -->
+  <div class="flex gap-2">
+    <div id="dot-start" class="progress-dot active"></div>
+    <div id="dot-home" class="progress-dot"></div>
+    <div id="dot-family" class="progress-dot"></div>
+    <div id="dot-harbor" class="progress-dot"></div>
+    <div id="dot-reading" class="progress-dot"></div>
+  </div>
+  
+  <button id="next-btn" onclick="nextPage()" class="btn-watercolor bg-gray-200 text-gray-700 text-base md:text-lg py-2 px-4 md:py-3 md:px-6 disabled:opacity-30" disabled>
+    下一頁 →
+  </button>
+</div>
+
+<!-- 星星獎勵動畫容器 -->
+<div id="star-container" class="star-reward hidden"></div>
+
+<script>
+// ============ 音效系統 ============
+const AudioContext = window.AudioContext || window.webkitAudioContext;
+let audioCtx = null;
+
+function initAudio() {
+  if (!audioCtx) {
+    audioCtx = new AudioContext();
+  }
+}
+
+function playSound(type) {
+  initAudio();
+  const oscillator = audioCtx.createOscillator();
+  const gainNode = audioCtx.createGain();
+  
+  oscillator.connect(gainNode);
+  gainNode.connect(audioCtx.destination);
+  
+  const volume = document.getElementById('volume-slider') ? parseFloat(document.getElementById('volume-slider').value) : 0.5;
+  
+  switch(type) {
+    case 'click':
+      oscillator.frequency.setValueAtTime(800, audioCtx.currentTime);
+      oscillator.frequency.exponentialRampToValueAtTime(600, audioCtx.currentTime + 0.1);
+      gainNode.gain.setValueAtTime(volume * 0.3, audioCtx.currentTime);
+      gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
+      oscillator.start(audioCtx.currentTime);
+      oscillator.stop(audioCtx.currentTime + 0.1);
+      break;
+    case 'success':
+      oscillator.frequency.setValueAtTime(523, audioCtx.currentTime);
+      oscillator.frequency.setValueAtTime(659, audioCtx.currentTime + 0.1);
+      oscillator.frequency.setValueAtTime(784, audioCtx.currentTime + 0.2);
+      gainNode.gain.setValueAtTime(volume * 0.3, audioCtx.currentTime);
+      gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.4);
+      oscillator.start(audioCtx.currentTime);
+      oscillator.stop(audioCtx.currentTime + 0.4);
+      break;
+    case 'home':
+      oscillator.type = 'sine';
+      oscillator.frequency.setValueAtTime(400, audioCtx.currentTime);
+      oscillator.frequency.setValueAtTime(500, audioCtx.currentTime + 0.15);
+      oscillator.frequency.setValueAtTime(600, audioCtx.currentTime + 0.3);
+      gainNode.gain.setValueAtTime(volume * 0.3, audioCtx.currentTime);
+      gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.5);
+      oscillator.start(audioCtx.currentTime);
+      oscillator.stop(audioCtx.currentTime + 0.5);
+      break;
+    case 'sail':
+      oscillator.type = 'sine';
+      oscillator.frequency.setValueAtTime(300, audioCtx.currentTime);
+      oscillator.frequency.exponentialRampToValueAtTime(600, audioCtx.currentTime + 0.3);
+      gainNode.gain.setValueAtTime(volume * 0.2, audioCtx.currentTime);
+      gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.5);
+      oscillator.start(audioCtx.currentTime);
+      oscillator.stop(audioCtx.currentTime + 0.5);
+      break;
+    case 'complete':
+      const notes = [523, 587, 659, 698, 784, 880, 988, 1047];
+      notes.forEach((freq, i) => {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.frequency.setValueAtTime(freq, audioCtx.currentTime + i * 0.1);
+        gain.gain.setValueAtTime(volume * 0.2, audioCtx.currentTime + i * 0.1);
+        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + i * 0.1 + 0.15);
+        osc.start(audioCtx.currentTime + i * 0.1);
+        osc.stop(audioCtx.currentTime + i * 0.1 + 0.15);
+      });
+      break;
+  }
+}
+
+// ============ 語音朗讀 ============
+function speakText(text, callback) {
+  if ('speechSynthesis' in window) {
+    speechSynthesis.cancel();
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = 'zh-TW';
+    utterance.rate = 0.85;
+    utterance.pitch = 1.1;
+    utterance.volume = document.getElementById('volume-slider') ? parseFloat(document.getElementById('volume-slider').value) : 0.8;
+    
+    // 嘗試選擇中文語音
+    const voices = speechSynthesis.getVoices();
+    const chineseVoice = voices.find(v => v.lang.includes('zh') || v.lang.includes('cmn'));
+    if (chineseVoice) {
+      utterance.voice = chineseVoice;
+    }
+    
+    if (callback) {
+      utterance.onend = callback;
+    }
+    
+    speechSynthesis.speak(utterance);
+  }
+}
+
+function readPage(page) {
+  playSound('click');
+  const texts = {
+    'start': '第10課，鞋。課前熱身操：每天你都會穿鞋，它們讓你想到甚麼人？甚麼事？',
+    'home': '我回家，把鞋脫下，姐姐回家，把鞋脫下，哥哥、爸爸回家，也都把鞋脫下。',
+    'family': '大大小小的鞋，像一家人，依偎在一起，說著一天的見聞。',
+    'harbor': '大大小小的鞋，就像大大小小的船，回到安靜的港灣，享受家的溫暖。'
+  };
+  if (texts[page]) {
+    speakText(texts[page]);
+  }
+}
+
+// ============ 頁面導航 ============
+const pages = ['start', 'home', 'family', 'harbor', 'reading'];
+let currentPage = 0;
+
+function goToPage(pageName) {
+  playSound('click');
+  speechSynthesis.cancel();
+  
+  // 隱藏所有頁面
+  pages.forEach(p => {
+    document.getElementById('page-' + p).classList.remove('active');
+    document.getElementById('dot-' + p).classList.remove('active');
+  });
+  
+  // 顯示目標頁面
+  document.getElementById('page-' + pageName).classList.add('active');
+  document.getElementById('dot-' + pageName).classList.add('active');
+  currentPage = pages.indexOf(pageName);
+  
+  // 更新導航按鈕
+  updateNavButtons();
+  
+  // 頁面進入動畫
+  gsap.fromTo('#page-' + pageName + ' > div', 
+    { y: 30, opacity: 0.8 }, 
+    { y: 0, opacity: 1, duration: 0.5, stagger: 0.1, ease: 'power2.out' }
+  );
+}
+
+function nextPage() {
+  if (currentPage < pages.length - 1) {
+    // 檢查是否完成當前任務
+    if (canProceed()) {
+      goToPage(pages[currentPage + 1]);
+    }
+  }
+}
+
+function prevPage() {
+  if (currentPage > 0) {
+    goToPage(pages[currentPage - 1]);
+  }
+}
+
+function updateNavButtons() {
+  document.getElementById('prev-btn').disabled = currentPage === 0;
+  document.getElementById('next-btn').disabled = currentPage === pages.length - 1 || !canProceed();
+  
+  // 更新進度點
+  pages.forEach((p, i) => {
+    const dot = document.getElementById('dot-' + p);
+    dot.classList.remove('completed', 'active');
+    if (i < currentPage) {
+      dot.classList.add('completed');
+    } else if (i === currentPage) {
+      dot.classList.add('active');
+    }
+  });
+}
+
+function canProceed() {
+  const page = pages[currentPage];
+  switch(page) {
+    case 'start':
+      return thoughtSelected;
+    case 'home':
+      return Object.keys(arrivedCharacters).length >= 4;
+    case 'family':
+      return clickedShoes >= 5;
+    case 'harbor':
+      return dockedBoats >= 5;
+    case 'reading':
+      return true;
+    default:
+      return true;
+  }
+}
+
+// ============ 遊戲狀態 ============
+let thoughtSelected = false;
+let arrivedCharacters = {};
+let clickedShoes = 0;
+let dockedBoats = 0;
+let isReading = false;
+
+// ============ 課前熱身 ============
+function selectThought(btn, type) {
+  playSound('click');
+  document.querySelectorAll('.thought-option').forEach(b => {
+    b.classList.remove('ring-4', 'ring-yellow-400', 'scale-105');
+  });
+  btn.classList.add('ring-4', 'ring-yellow-400', 'scale-105');
+  thoughtSelected = true;
+  document.getElementById('thought-feedback').classList.remove('hidden');
+  updateNavButtons();
+  
+  setTimeout(() => playSound('success'), 200);
+}
+
+function startGame() {
+  playSound('success');
+  goToPage('home');
+}
+
+// ============ 回家脫鞋互動 ============
+const shoeColors = {
+  'me': '#3498DB',
+  'sister': '#FF69B4',
+  'brother': '#8B4513',
+  'dad': '#3D2314',
+  'mom': '#FFD700'
+};
+
+const shoeNames = {
+  'me': '我',
+  'sister': '姐姐',
+  'brother': '哥哥',
+  'dad': '爸爸',
+  'mom': '媽媽'
+};
+
+function bringHome(char) {
+  if (arrivedCharacters[char]) return;
+  
+  playSound('home');
+  arrivedCharacters[char] = true;
+  
+  // 移動人物到沙發區
+  const charEl = document.getElementById('char-' + char);
+  charEl.classList.add('arrived');
+  
+  setTimeout(() => {
+    // 把鞋子放到鞋架
+    addShoeToRack(char);
+    
+    // 高亮對應詩句
+    highlightStanza('poem-stanza-1', Object.keys(arrivedCharacters).length);
+    
+    // 人物移到沙發區
+    moveCharacterToSofa(char);
+    
+    // 檢查是否全部完成
+    if (Object.keys(arrivedCharacters).length >= 4) {
+      setTimeout(() => {
+        document.getElementById('home-complete').classList.remove('hidden');
+        updateNavButtons();
+        playSound('complete');
+        showStars();
+        speakText('大家都回家了！鞋子都在鞋架上休息了。');
+      }, 500);
+    } else {
+      speakText(shoeNames[char] + '回家了，把鞋脫下。');
+    }
+  }, 600);
+  
+  updateNavButtons();
+}
+
+function addShoeToRack(char) {
+  const shoeArea = document.getElementById('shoes-collected');
+  const shoe = document.createElement('div');
+  shoe.className = 'animate-bounce-in';
+  shoe.innerHTML = `
+    <div class="w-12 h-8 md:w-16 md:h-10 rounded-full border-2 border-gray-800" style="background:${shoeColors[char]}">
+      <div class="text-center text-white text-[10px] md:text-xs font-bold leading-[32px] md:leading-[40px]">${shoeNames[char]}</div>
+    </div>
+  `;
+  shoeArea.appendChild(shoe);
+}
+
+function moveCharacterToSofa(char) {
+  const charEl = document.getElementById('char-' + char);
+  const homeArea = document.getElementById('characters-home');
+  
+  // 簡單效果：人物消失在門處，出現在沙發區
+  charEl.style.opacity = '0';
+  charEl.style.transform = 'translateX(-50px)';
+  
+  setTimeout(() => {
+    const happyChar = document.createElement('div');
+    happyChar.className = 'inline-block mx-1 animate-bounce-in';
+    happyChar.innerHTML = `
+      <div class="text-3xl md:text-4xl">${getEmoji(char)}</div>
+      <div class="text-center text-xs font-bold">${shoeNames[char]}</div>
+    `;
+    homeArea.appendChild(happyChar);
+  }, 300);
+}
+
+function getEmoji(char) {
+  const emojis = {
+    'me': '👦',
+    'sister': '👧',
+    'brother': '🧑',
+    'dad': '👨',
+    'mom': '👩'
+  };
+  return emojis[char] || '😊';
+}
+
+function highlightStanza(stanzaId, progress) {
+  const stanza = document.getElementById(stanzaId);
+  stanza.style.opacity = Math.min(1, 0.5 + progress * 0.12);
+  stanza.classList.add('scale-[1.02]');
+  setTimeout(() => stanza.classList.remove('scale-[1.02]'), 300);
+}
+
+// ============ 鞋子家人互動 ============
+const shoeTalks = {
+  'me': '今天在學校跟同學玩得好開心！',
+  'sister': '我今天畫了一張全家幅！',
+  'brother': '今天體育課打籃球，我們隊贏了！',
+  'dad': '今天工作很順利，準備了禮物給大家。',
+  'mom': '我買了大家最喜歡吃的菜回來！'
+};
+
+function clickShoe(el, shoe) {
+  if (el.dataset.clicked) return;
+  
+  playSound('click');
+  el.dataset.clicked = 'true';
+  clickedShoes++;
+  
+  document.getElementById('shoe-count').textContent = clickedShoes;
+  
+  // 顯示對話泡泡
+  const bubble = el.querySelector('.speech-bubble');
+  bubble.classList.remove('hidden');
+  bubble.classList.add('animate-bounce-in');
+  
+  // 鞋子依偎動畫
+  el.classList.add('snuggle');
+  
+  // 朗讀台詞
+  speakText(shoeTalks[shoe]);
+  
+  // 高亮詩句
+  highlightStanza('poem-stanza-2', clickedShoes);
+  
+  // 更新提示
+  if (clickedShoes >= 5) {
+    document.getElementById('family-hint').classList.add('hidden');
+    setTimeout(() => {
+      document.getElementById('family-complete').classList.remove('hidden');
+      updateNavButtons();
+      playSound('complete');
+      showStars();
+    }, 1500);
+  } else {
+    document.getElementById('family-hint').querySelector('p').textContent = 
+      `還有 ${5 - clickedShoes} 雙鞋想分享它們的故事！`;
+  }
+  
+  updateNavButtons();
+}
+
+// ============ 船回港灣 ============
+function sailHome(boatEl, person) {
+  if (boatEl.dataset.docked) return;
+  
+  playSound('sail');
+  boatEl.dataset.docked = 'true';
+  dockedBoats++;
+  
+  document.getElementById('boat-count').textContent = dockedBoats;
+  
+  // 船航行到港灣的動畫
+  gsap.to(boatEl, {
+    bottom: '100px',
+    left: '50%',
+    x: '-50%',
+    duration: 1.5,
+    ease: 'power2.inOut',
+    onComplete: () => {
+      // 移到停泊區
+      boatEl.style.display = 'none';
+      addDockedBoat(person);
+    }
+  });
+  
+  // 輕微搖晃
+  gsap.to(boatEl, {
+    rotation: 10,
+    yoyo: true,
+    repeat: 3,
+    duration: 0.3,
+    ease: 'sine.inOut'
+  });
+  
+  // 高亮詩句
+  highlightStanza('poem-stanza-3', dockedBoats);
+  
+  if (dockedBoats >= 5) {
+    document.getElementById('harbor-hint').classList.add('hidden');
+    setTimeout(() => {
+      document.getElementById('harbor-complete').classList.remove('hidden');
+      updateNavButtons();
+      playSound('complete');
+      showStars();
+      speakText('所有的船都回到港灣了！家真是最溫暖的地方。');
+    }, 1500);
+  } else {
+    document.getElementById('harbor-hint').querySelector('p').textContent = 
+      `還有 ${5 - dockedBoats} 艘船正在回航中！`;
+  }
+  
+  updateNavButtons();
+}
+
+function addDockedBoat(person) {
+  const dock = document.getElementById('docked-boats');
+  const boat = document.createElement('div');
+  boat.className = 'animate-bounce-in';
+  
+  const colors = {
+    'me': 'bg-blue-500',
+    'sister': 'bg-pink-400',
+    'brother': 'bg-amber-700',
+    'dad': 'bg-stone-800',
+    'mom': 'bg-yellow-400'
+  };
+  
+  boat.innerHTML = `
+    <div class="text-center">
+      <div class="w-10 h-7 md:w-14 md:h-10 ${colors[person]} rounded-b-full border-2 border-gray-800 relative">
+        <div class="absolute -top-3 md:-top-4 left-1/2 transform -translate-x-1/2 w-0.5 h-4 md:h-5 bg-gray-800"></div>
+      </div>
+      <div class="text-[10px] md:text-xs font-bold mt-1">${shoeNames[person]}</div>
+    </div>
+  `;
+  dock.appendChild(boat);
+}
+
+// ============ 全文朗讀 ============
+const poemLines = [
+  { id: 'read-1', text: '我回家，把鞋脫下，', delay: 2500 },
+  { id: 'read-2', text: '姐姐回家，把鞋脫下，', delay: 2500 },
+  { id: 'read-3', text: '哥哥、爸爸回家，', delay: 2000 },
+  { id: 'read-4', text: '也都把鞋脫下。', delay: 2000 },
+  { id: 'read-5', text: '', delay: 800, pause: true },
+  { id: 'read-6', text: '大大小小的鞋，', delay: 2000 },
+  { id: 'read-7', text: '像一家人，', delay: 1800 },
+  { id: 'read-8', text: '依偎在一起，', delay: 2000 },
+  { id: 'read-9', text: '說著一天的見聞。', delay: 2500 },
+  { id: 'read-10', text: '', delay: 800, pause: true },
+  { id: 'read-11', text: '大大小小的鞋，', delay: 2000 },
+  { id: 'read-12', text: '就像大大小小的船，', delay: 2500 },
+  { id: 'read-13', text: '回到安靜的港灣，', delay: 2200 },
+  { id: 'read-14', text: '享受家的溫暖。', delay: 2500 }
+];
+
+let readTimeout = null;
+let currentReadLine = 0;
+
+function toggleReadAloud() {
+  if (isReading) {
+    pauseReadAloud();
+  } else {
+    startReadAloud();
+  }
+}
+
+function startReadAloud() {
+  playSound('click');
+  isReading = true;
+  document.getElementById('play-btn').innerHTML = '⏸️ 暫停朗讀';
+  readNextLine();
+}
+
+function pauseReadAloud() {
+  playSound('click');
+  isReading = false;
+  speechSynthesis.cancel();
+  if (readTimeout) clearTimeout(readTimeout);
+  document.getElementById('play-btn').innerHTML = '▶️ 繼續朗讀';
+}
+
+function resetReadAloud() {
+  playSound('click');
+  isReading = false;
+  speechSynthesis.cancel();
+  if (readTimeout) clearTimeout(readTimeout);
+  currentReadLine = 0;
+  document.getElementById('play-btn').innerHTML = '▶️ 開始朗讀';
+  
+  // 清除所有高亮
+  document.querySelectorAll('.reading-line').forEach(el => {
+    el.classList.remove('reading-highlight');
+  });
+}
+
+function readNextLine() {
+  if (!isReading) return;
+  if (currentReadLine >= poemLines.length) {
+    isReading = false;
+    document.getElementById('play-btn').innerHTML = '✅ 朗讀完成';
+    playSound('complete');
+    return;
+  }
+  
+  // 清除之前的高亮
+  document.querySelectorAll('.reading-line').forEach(el => {
+    el.classList.remove('reading-highlight');
+  });
+  
+  const line = poemLines[currentReadLine];
+  const el = document.getElementById(line.id);
+  
+  if (el && !line.pause) {
+    el.classList.add('reading-highlight');
+    el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    
+    speakText(line.text);
+  }
+  
+  currentReadLine++;
+  readTimeout = setTimeout(readNextLine, line.delay);
+}
+
+// ============ 星星獎勵動畫 ============
+function showStars() {
+  const container = document.getElementById('star-container');
+  container.classList.remove('hidden');
+  container.innerHTML = '⭐🌟✨🎉🌟⭐';
+  container.style.fontSize = '4rem';
+  container.style.animation = 'bounce-in 0.6s cubic-bezier(0.68,-0.55,0.27,1.55) forwards';
+  
+  // 創建飄落的星星
+  for (let i = 0; i < 20; i++) {
+    setTimeout(() => {
+      const star = document.createElement('div');
+      star.textContent = ['⭐', '🌟', '✨', '💫'][Math.floor(Math.random() * 4)];
+      star.style.position = 'fixed';
+      star.style.left = Math.random() * 100 + 'vw';
+      star.style.top = '-50px';
+      star.style.fontSize = (Math.random() * 30 + 20) + 'px';
+      star.style.zIndex = '9999';
+      star.style.pointerEvents = 'none';
+      document.body.appendChild(star);
+      
+      gsap.to(star, {
+        y: window.innerHeight + 100,
+        rotation: Math.random() * 720,
+        duration: Math.random() * 2 + 1.5,
+        ease: 'power1.in',
+        onComplete: () => star.remove()
+      });
+    }, i * 100);
+  }
+  
+  setTimeout(() => {
+    container.classList.add('hidden');
+  }, 2000);
+}
+
+// ============ 初始化 ============
+document.addEventListener('DOMContentLoaded', () => {
+  // 預載語音
+  if ('speechSynthesis' in window) {
+    speechSynthesis.getVoices();
+    speechSynthesis.onvoiceschanged = () => speechSynthesis.getVoices();
+  }
+  
+  // 首次點擊初始化音頻
+  document.addEventListener('click', () => initAudio(), { once: true });
+  
+  // 更新導航
+  updateNavButtons();
+  
+  // GSAP 入場動畫
+  gsap.from('.watercolor-blob', {
+    scale: 0,
+    opacity: 0,
+    duration: 1.5,
+    stagger: 0.3,
+    ease: 'power2.out'
+  });
+});
+
+// 鍵盤導航支援
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'ArrowRight') nextPage();
+  if (e.key === 'ArrowLeft') prevPage();
+  if (e.key === ' ') {
+    e.preventDefault();
+    if (pages[currentPage] === 'reading') {
+      toggleReadAloud();
+    }
+  }
+});
+</script>
+
+</body>
+</html>

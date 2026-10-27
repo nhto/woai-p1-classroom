@@ -1,0 +1,1541 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>大雨傘 - 情景互動學習遊戲</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&family=ZCOOL+KuaiLe&display=swap');
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+}
+
+html, body {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  font-family: 'ZCOOL KuaiLe', 'Noto Sans TC', sans-serif;
+  user-select: none;
+}
+
+body {
+  background: #e8f4ff;
+  background-image: url('https://skillagent.bj.bcebos.com/sandbox_exports/20261018/a61f5f5_qwen_1792331678923735092_1.png?responseContentDisposition=attachment%3B+filename%3D%22qwen_1792331678923735092_1.png');
+  background-size: cover;
+  background-position: center bottom;
+  background-repeat: no-repeat;
+}
+
+/* 雨點動畫層 */
+#rainCanvas {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* 頂部控制欄 */
+.top-bar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 20px;
+  background: linear-gradient(180deg, rgba(255,255,255,0.95) 0%, rgba(255,255,255,0.7) 100%);
+  border-bottom: 4px dashed #8ec5fc;
+}
+
+.page-title {
+  font-size: clamp(20px, 4vw, 32px);
+  color: #2c5aa0;
+  font-weight: 900;
+  text-shadow: 2px 2px 0 #fff, 3px 3px 0 #b3d9ff;
+}
+
+.sound-btn {
+  width: clamp(44px, 8vw, 56px);
+  height: clamp(44px, 8vw, 56px);
+  border-radius: 50%;
+  border: 4px solid #ffd700;
+  background: #fff9e6;
+  font-size: clamp(20px, 4vw, 28px);
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 3px 3px 0 #e6b800;
+}
+
+.sound-btn:active {
+  transform: translate(2px, 2px);
+  box-shadow: 1px 1px 0 #e6b800;
+}
+
+/* 遊戲主容器 */
+.game-container {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  padding-top: clamp(60px, 10vh, 80px);
+  z-index: 10;
+}
+
+.scene {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  padding: clamp(70px, 12vh, 90px) 20px 20px;
+}
+
+.scene.active {
+  display: flex;
+}
+
+/* 場景切換動畫 */
+.scene-enter {
+  animation: sceneIn 0.6s ease-out;
+}
+
+@keyframes sceneIn {
+  from { opacity: 0; transform: scale(0.9); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+/* 文字卡片 - 手繪風格 */
+.poem-card {
+  background: #fffef0;
+  border: 5px solid #5a9fd4;
+  border-radius: 24px;
+  padding: clamp(16px, 3vw, 28px) clamp(24px, 5vw, 40px);
+  margin-bottom: clamp(16px, 3vh, 28px);
+  box-shadow: 6px 6px 0 #b3d9ff, inset 0 0 20px rgba(255,255,200,0.5);
+  position: relative;
+  transform: rotate(-1deg);
+  max-width: 90vw;
+}
+
+.poem-card::before {
+  content: '';
+  position: absolute;
+  top: -8px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 40px;
+  height: 16px;
+  background: #ff9999;
+  border-radius: 4px;
+}
+
+.poem-line {
+  font-size: clamp(28px, 6vw, 52px);
+  color: #333;
+  text-align: center;
+  line-height: 1.8;
+  font-weight: 700;
+  letter-spacing: 4px;
+}
+
+.poem-line .keyword {
+  color: #e65c00;
+  display: inline-block;
+  animation: keywordPulse 1.5s ease-in-out infinite;
+}
+
+@keyframes keywordPulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+}
+
+/* 文字逐字顯示 */
+.char-reveal {
+  display: inline-block;
+  opacity: 0;
+  transform: translateY(20px) rotate(-10deg);
+  animation: charPop 0.5s ease-out forwards;
+}
+
+@keyframes charPop {
+  to { opacity: 1; transform: translateY(0) rotate(0); }
+}
+
+/* 角色區域 */
+.character-area {
+  position: relative;
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 300px;
+}
+
+.character {
+  height: clamp(200px, 40vh, 380px);
+  cursor: pointer;
+  transition: transform 0.3s;
+  position: relative;
+  z-index: 5;
+  filter: drop-shadow(4px 6px 8px rgba(0,0,0,0.15));
+}
+
+.character:hover {
+  transform: scale(1.05);
+}
+
+.character.jump {
+  animation: charJump 0.8s ease-out;
+}
+
+@keyframes charJump {
+  0% { transform: translateY(0) rotate(0) scale(1); }
+  30% { transform: translateY(-60px) rotate(-10deg) scale(1.1); }
+  60% { transform: translateY(-30px) rotate(5deg) scale(1.05); }
+  100% { transform: translateY(0) rotate(0) scale(1); }
+}
+
+/* 點擊提示 */
+.tap-hint {
+  position: absolute;
+  bottom: clamp(80px, 15vh, 140px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: #fff;
+  border: 3px solid #ff9933;
+  border-radius: 50px;
+  padding: 8px 20px;
+  font-size: clamp(18px, 3.5vw, 24px);
+  color: #ff6600;
+  white-space: nowrap;
+  animation: tapBounce 1s ease-in-out infinite;
+  z-index: 20;
+  box-shadow: 3px 3px 0 #ffcc99;
+}
+
+.tap-hint::after {
+  content: '👆';
+  margin-left: 8px;
+  display: inline-block;
+  animation: fingerTap 0.8s ease-in-out infinite;
+}
+
+@keyframes tapBounce {
+  0%, 100% { transform: translateX(-50%) translateY(0); }
+  50% { transform: translateX(-50%) translateY(-10px); }
+}
+
+@keyframes fingerTap {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+
+/* 發光脈衝 */
+.click-glow {
+  position: absolute;
+  width: clamp(220px, 45vh, 400px);
+  height: clamp(220px, 45vh, 400px);
+  border-radius: 50%;
+  border: 5px dashed #ffcc00;
+  animation: glowPulse 1.5s ease-in-out infinite;
+  pointer-events: none;
+}
+
+@keyframes glowPulse {
+  0% { transform: scale(0.9); opacity: 1; }
+  100% { transform: scale(1.2); opacity: 0; }
+}
+
+/* 3D手繪按鈕 */
+.btn-3d {
+  border: none;
+  border-radius: 20px;
+  padding: clamp(14px, 3vw, 22px) clamp(28px, 6vw, 44px);
+  font-size: clamp(20px, 4vw, 30px);
+  font-family: inherit;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s;
+  position: relative;
+  margin: 8px;
+  color: #fff;
+  box-shadow: 0 6px 0 rgba(0,0,0,0.2), 0 8px 15px rgba(0,0,0,0.1);
+}
+
+.btn-3d:active {
+  transform: translateY(4px);
+  box-shadow: 0 2px 0 rgba(0,0,0,0.2), 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.btn-green {
+  background: linear-gradient(180deg, #66cc66 0%, #44aa44 100%);
+  border: 4px solid #338833;
+}
+
+.btn-blue {
+  background: linear-gradient(180deg, #66b3ff 0%, #3399ff 100%);
+  border: 4px solid #2277dd;
+}
+
+.btn-orange {
+  background: linear-gradient(180deg, #ffaa33 0%, #ff8800 100%);
+  border: 4px solid #dd6600;
+}
+
+.btn-red {
+  background: linear-gradient(180deg, #ff7777 0%, #ff4444 100%);
+  border: 4px solid #dd2222;
+}
+
+.btn-row {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+  margin-top: clamp(12px, 2vh, 20px);
+}
+
+/* 關卡2 物品卡片 */
+.match-area {
+  display: flex;
+  gap: clamp(20px, 5vw, 50px);
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin: clamp(10px, 2vh, 20px) 0;
+}
+
+.item-card {
+  width: clamp(130px, 25vw, 200px);
+  height: clamp(160px, 30vw, 240px);
+  background: #fffef0;
+  border: 5px solid #ccc;
+  border-radius: 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s;
+  box-shadow: 4px 4px 0 #ddd;
+}
+
+.item-card.selected {
+  border-color: #ff9933;
+  background: #fff5e6;
+  transform: translateY(-12px) scale(1.05);
+  box-shadow: 6px 10px 20px rgba(255,153,51,0.4);
+}
+
+.item-card.matched {
+  border-color: #44bb44;
+  background: #eeffee;
+  animation: matchShake 0.6s ease-out;
+}
+
+@keyframes matchShake {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-10px) rotate(-3deg); }
+  40% { transform: translateX(10px) rotate(3deg); }
+  60% { transform: translateX(-8px) rotate(-2deg); }
+  80% { transform: translateX(8px) rotate(2deg); }
+}
+
+.item-card img {
+  width: 75%;
+  height: 65%;
+  object-fit: contain;
+  filter: drop-shadow(2px 3px 4px rgba(0,0,0,0.1));
+}
+
+.item-card .item-label {
+  font-size: clamp(20px, 4vw, 30px);
+  color: #333;
+  margin-top: 8px;
+  font-weight: 700;
+}
+
+/* 水滴收集 */
+.drops-area {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 8;
+}
+
+.raindrop-item {
+  position: absolute;
+  width: clamp(50px, 8vw, 70px);
+  height: clamp(60px, 10vw, 84px);
+  cursor: pointer;
+  pointer-events: auto;
+  animation: dropFloat 3s ease-in-out infinite;
+  filter: drop-shadow(0 0 10px rgba(100,180,255,0.6));
+}
+
+@keyframes dropFloat {
+  0%, 100% { transform: translateY(0) rotate(-5deg); }
+  50% { transform: translateY(-15px) rotate(5deg); }
+}
+
+.raindrop-item.collected {
+  animation: dropCollect 0.5s ease-out forwards;
+  pointer-events: none;
+}
+
+@keyframes dropCollect {
+  to { transform: scale(0) rotate(360deg); opacity: 0; }
+}
+
+/* 進度條 */
+.progress-wrap {
+  width: 80%;
+  max-width: 600px;
+  height: clamp(20px, 4vh, 30px);
+  background: #fff;
+  border: 4px solid #888;
+  border-radius: 15px;
+  overflow: hidden;
+  margin-top: clamp(10px, 2vh, 16px);
+  box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.progress-bar {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, #66cc66, #88dd88);
+  border-radius: 10px;
+  transition: width 0.4s ease-out;
+  position: relative;
+}
+
+.progress-bar::after {
+  content: '';
+  position: absolute;
+  top: 3px;
+  left: 6px;
+  right: 6px;
+  height: 6px;
+  background: rgba(255,255,255,0.5);
+  border-radius: 3px;
+}
+
+/* 腳印和水花特效 */
+.footprint {
+  position: absolute;
+  width: clamp(40px, 7vw, 60px);
+  height: clamp(40px, 7vw, 60px);
+  opacity: 0;
+  animation: footprintFade 1.5s ease-out forwards;
+  pointer-events: none;
+  z-index: 3;
+}
+
+@keyframes footprintFade {
+  0% { opacity: 1; transform: scale(0.5) rotate(-10deg); }
+  30% { opacity: 0.8; transform: scale(1) rotate(0); }
+  100% { opacity: 0; transform: scale(0.8) rotate(5deg) translateY(10px); }
+}
+
+.water-splash {
+  position: absolute;
+  width: clamp(80px, 12vw, 120px);
+  height: clamp(80px, 12vw, 120px);
+  animation: splashAnim 0.8s ease-out forwards;
+  pointer-events: none;
+  z-index: 4;
+}
+
+@keyframes splashAnim {
+  0% { opacity: 1; transform: scale(0.3); }
+  50% { opacity: 1; transform: scale(1.2); }
+  100% { opacity: 0; transform: scale(1.5) translateY(-20px); }
+}
+
+/* 走路動畫 */
+.walking {
+  animation: walkBounce 0.5s ease-in-out infinite;
+}
+
+@keyframes walkBounce {
+  0%, 100% { transform: translateY(0) rotate(-2deg); }
+  25% { transform: translateY(-12px) rotate(0); }
+  50% { transform: translateY(0) rotate(2deg); }
+  75% { transform: translateY(-8px) rotate(0); }
+}
+
+/* 粒子容器 */
+.particles {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 50;
+}
+
+.particle {
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.star-particle {
+  position: absolute;
+  font-size: 24px;
+  pointer-events: none;
+  animation: starFly 1s ease-out forwards;
+}
+
+@keyframes starFly {
+  0% { opacity: 1; transform: translate(0,0) scale(0) rotate(0); }
+  50% { opacity: 1; transform: translate(var(--tx), var(--ty)) scale(1.5) rotate(180deg); }
+  100% { opacity: 0; transform: translate(calc(var(--tx)*1.5), calc(var(--ty)*1.5 + 50px)) scale(0.5) rotate(360deg); }
+}
+
+/* 漢字點讀卡 */
+.word-cards {
+  display: flex;
+  gap: clamp(8px, 1.5vw, 14px);
+  flex-wrap: wrap;
+  justify-content: center;
+  margin-top: clamp(10px, 2vh, 18px);
+}
+
+.word-card {
+  width: clamp(56px, 10vw, 80px);
+  height: clamp(68px, 12vw, 96px);
+  background: #fff;
+  border: 4px solid #ff9933;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: clamp(28px, 5vw, 40px);
+  color: #333;
+  cursor: pointer;
+  font-weight: 700;
+  box-shadow: 3px 3px 0 #ffcc99;
+  transition: all 0.2s;
+  opacity: 0;
+  transform: scale(0);
+  animation: wordCardPop 0.4s ease-out forwards;
+}
+
+.word-card:nth-child(1) { animation-delay: 0.1s; }
+.word-card:nth-child(2) { animation-delay: 0.2s; }
+.word-card:nth-child(3) { animation-delay: 0.3s; }
+.word-card:nth-child(4) { animation-delay: 0.4s; }
+.word-card:nth-child(5) { animation-delay: 0.5s; }
+.word-card:nth-child(6) { animation-delay: 0.6s; }
+.word-card:nth-child(7) { animation-delay: 0.7s; }
+
+@keyframes wordCardPop {
+  to { opacity: 1; transform: scale(1); }
+}
+
+.word-card:active {
+  transform: scale(0.9);
+  box-shadow: 1px 1px 0 #ffcc99;
+  background: #fff5e6;
+}
+
+/* 提示文字 */
+.hint-text {
+  font-size: clamp(20px, 4vw, 30px);
+  color: #2c5aa0;
+  background: rgba(255,255,255,0.9);
+  padding: 10px 24px;
+  border-radius: 50px;
+  border: 3px dashed #8ec5fc;
+  margin: 8px 0;
+  text-align: center;
+}
+
+/* 標題頁 */
+.title-scene {
+  justify-content: center;
+  gap: clamp(20px, 4vh, 40px);
+}
+
+.main-title {
+  font-size: clamp(44px, 10vw, 80px);
+  color: #2c5aa0;
+  text-shadow: 4px 4px 0 #fff, 6px 6px 0 #b3d9ff, 8px 8px 15px rgba(0,0,0,0.1);
+  animation: titleBounce 2s ease-in-out infinite;
+  text-align: center;
+}
+
+@keyframes titleBounce {
+  0%, 100% { transform: rotate(-2deg) scale(1); }
+  50% { transform: rotate(2deg) scale(1.03); }
+}
+
+.author {
+  font-size: clamp(22px, 4vw, 34px);
+  color: #666;
+  background: #fff9e6;
+  padding: 6px 20px;
+  border-radius: 20px;
+  border: 3px solid #ffd700;
+}
+
+.title-char {
+  height: clamp(240px, 45vh, 400px);
+  animation: floatChar 3s ease-in-out infinite;
+  filter: drop-shadow(6px 10px 15px rgba(0,0,0,0.2));
+}
+
+@keyframes floatChar {
+  0%, 100% { transform: translateY(0) rotate(-3deg); }
+  50% { transform: translateY(-20px) rotate(3deg); }
+}
+
+/* 結束頁 */
+.ending-scene {
+  justify-content: center;
+  overflow-y: auto;
+  padding-bottom: 40px;
+}
+
+.stars-row {
+  display: flex;
+  gap: clamp(16px, 4vw, 30px);
+  margin: clamp(10px, 2vh, 20px) 0;
+}
+
+.big-star {
+  font-size: clamp(48px, 10vw, 80px);
+  opacity: 0;
+  filter: drop-shadow(0 0 20px gold);
+}
+
+.big-star.lit {
+  animation: starPop 0.6s ease-out forwards;
+}
+
+@keyframes starPop {
+  0% { opacity: 0; transform: scale(0) rotate(-180deg); }
+  60% { opacity: 1; transform: scale(1.3) rotate(10deg); }
+  100% { opacity: 1; transform: scale(1) rotate(0) scale(1); }
+}
+
+.big-star.lit::after {
+  content: '';
+  animation: starTwinkle 1.5s ease-in-out infinite 0.6s;
+}
+
+@keyframes starTwinkle {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; transform: scale(0.95); }
+}
+
+.full-poem {
+  background: #fffef0;
+  border: 5px solid #5a9fd4;
+  border-radius: 24px;
+  padding: clamp(20px, 4vw, 32px);
+  max-width: 90vw;
+  box-shadow: 6px 6px 0 #b3d9ff;
+  margin: clamp(10px, 2vh, 20px) 0;
+  transform: rotate(1deg);
+}
+
+.full-poem-title {
+  font-size: clamp(32px, 6vw, 48px);
+  color: #e65c00;
+  text-align: center;
+  margin-bottom: 12px;
+}
+
+.full-poem-line {
+  font-size: clamp(26px, 5vw, 42px);
+  color: #333;
+  text-align: center;
+  line-height: 2;
+  transition: all 0.3s;
+  padding: 4px 8px;
+  border-radius: 8px;
+}
+
+.full-poem-line.reading {
+  background: #fff3cd;
+  color: #e65c00;
+  transform: scale(1.05);
+  box-shadow: 0 0 20px rgba(255,204,0,0.5);
+}
+
+.think-box {
+  background: #f0f8ff;
+  border: 4px dashed #66b3ff;
+  border-radius: 20px;
+  padding: clamp(16px, 3vw, 24px);
+  max-width: 90vw;
+  margin-top: clamp(10px, 2vh, 16px);
+}
+
+.think-title {
+  font-size: clamp(22px, 4vw, 30px);
+  color: #2c5aa0;
+  text-align: center;
+  margin-bottom: 8px;
+}
+
+.think-content {
+  font-size: clamp(18px, 3.5vw, 26px);
+  color: #444;
+  text-align: center;
+  line-height: 1.6;
+}
+
+/* 過場動畫 */
+.overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(135,206,250,0.9);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 200;
+  flex-direction: column;
+}
+
+.overlay.show {
+  display: flex;
+  animation: overlayIn 0.4s ease-out;
+}
+
+@keyframes overlayIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.overlay-emoji {
+  font-size: clamp(80px, 15vw, 140px);
+  animation: overlayEmoji 0.6s ease-out;
+}
+
+@keyframes overlayEmoji {
+  0% { transform: scale(0) rotate(-30deg); }
+  60% { transform: scale(1.3) rotate(10deg); }
+  100% { transform: scale(1) rotate(0); }
+}
+
+.overlay-text {
+  font-size: clamp(28px, 6vw, 48px);
+  color: #fff;
+  text-shadow: 3px 3px 0 #2c5aa0;
+  margin-top: 20px;
+  font-weight: 700;
+}
+
+/* 走路路徑指示 */
+.path-hint {
+  position: absolute;
+  bottom: clamp(60px, 12vh, 100px);
+  left: 10%;
+  right: 10%;
+  height: 6px;
+  background: repeating-linear-gradient(90deg, #88ccff 0, #88ccff 20px, transparent 20px, transparent 30px);
+  border-radius: 3px;
+  z-index: 2;
+  opacity: 0.6;
+}
+
+/* 裝飾雲朵 */
+.cloud-deco {
+  position: fixed;
+  z-index: 2;
+  opacity: 0.8;
+  animation: cloudDrift linear infinite;
+  pointer-events: none;
+  font-size: clamp(40px, 8vw, 80px);
+}
+
+@keyframes cloudDrift {
+  from { transform: translateX(-150px); }
+  to { transform: translateX(calc(100vw + 150px)); }
+}
+
+/* 閱讀進度指示 */
+.reading-indicator {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  background: #ff6600;
+  border-radius: 50%;
+  margin-right: 8px;
+  animation: readPulse 1s ease-in-out infinite;
+}
+
+@keyframes readPulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.5; transform: scale(1.3); }
+}
+
+/* 響應式修正 */
+@media (max-height: 600px) {
+  .character { height: clamp(160px, 35vh, 240px); }
+  .poem-line { font-size: clamp(22px, 5vw, 36px); line-height: 1.5; }
+  .poem-card { padding: 12px 20px; margin-bottom: 10px; }
+  .item-card { width: clamp(100px, 22vw, 150px); height: clamp(130px, 28vw, 180px); }
+}
+
+@media (min-width: 1024px) {
+  .character { height: clamp(280px, 45vh, 450px); }
+  .poem-line { font-size: clamp(36px, 5vw, 58px); }
+}
+</style>
+</head>
+<body>
+
+<canvas id="rainCanvas"></canvas>
+
+<!-- 頂部欄 -->
+<div class="top-bar">
+  <div class="page-title">🌂 大雨傘</div>
+  <button class="sound-btn" id="soundBtn" onclick="toggleSound()">🔊</button>
+</div>
+
+<!-- 裝飾雲朵 -->
+<div class="cloud-deco" style="top: 12%; animation-duration: 35s; animation-delay: 0s;">☁️</div>
+<div class="cloud-deco" style="top: 25%; animation-duration: 45s; animation-delay: -15s;">☁️</div>
+<div class="cloud-deco" style="top: 8%; animation-duration: 50s; animation-delay: -30s;">🌧️</div>
+
+<!-- 粒子層 -->
+<div class="particles" id="particles"></div>
+
+<!-- 遊戲容器 -->
+<div class="game-container">
+
+  <!-- 標題頁 -->
+  <div class="scene title-scene active" id="scene0">
+    <div class="main-title">大 雨 傘</div>
+    <div class="author">作者：林良</div>
+    <img class="title-char" src="https://skillagent.bj.bcebos.com/sandbox_exports/20261018/4c9f089_qwen_1792331624906496333_1.png?responseContentDisposition=attachment%3B+filename%3D%22qwen_1792331624906496333_1.png" alt="小娃娃">
+    <div class="btn-row">
+      <button class="btn-3d btn-green" onclick="startGame()">🎮 開始遊戲</button>
+      <button class="btn-3d btn-blue" onclick="readFullPoem()">🔊 朗讀全文</button>
+    </div>
+  </div>
+
+  <!-- 第一關：撐雨傘 -->
+  <div class="scene" id="scene1">
+    <div class="poem-card">
+      <div class="poem-line" id="poem1"></div>
+    </div>
+    <div class="character-area">
+      <div class="click-glow" id="glow1"></div>
+      <img class="character" id="char1" src="https://skillagent.bj.bcebos.com/sandbox_exports/20261018/148e4dd_qwen_1792331626944505342_2.png?responseContentDisposition=attachment%3B+filename%3D%22qwen_1792331626944505342_2.png" alt="小娃娃">
+      <div class="tap-hint" id="hint1">點一點小娃娃！</div>
+    </div>
+    <div class="word-cards" id="words1" style="display:none;">
+      <div class="word-card" onclick="speakWord('小')">小</div>
+      <div class="word-card" onclick="speakWord('娃')">娃</div>
+      <div class="word-card" onclick="speakWord('娃')">娃</div>
+      <div class="word-card" onclick="speakWord('撐')">撐</div>
+      <div class="word-card" onclick="speakWord('雨')">雨</div>
+      <div class="word-card" onclick="speakWord('傘')">傘</div>
+    </div>
+    <button class="btn-3d btn-blue" id="nextBtn1" style="display:none; margin-top: 16px;" onclick="goToScene(2)">下一關 ➡️</button>
+  </div>
+
+  <!-- 第二關：雨傘像蘑菇 -->
+  <div class="scene" id="scene2">
+    <div class="poem-card">
+      <div class="poem-line">這朵會走路的 <span class="keyword">大蘑菇</span></div>
+    </div>
+    <div class="hint-text" id="hint2">💧 先點擊收集所有雨滴！</div>
+    <div class="drops-area" id="dropsArea"></div>
+    <div class="match-area" id="matchArea" style="opacity:0.3; pointer-events:none;">
+      <div class="item-card" id="card1" onclick="selectCard(1)">
+        <img src="https://skillagent.bj.bcebos.com/sandbox_exports/20261018/9b06121_qwen_1792331676492080536_1.png?responseContentDisposition=attachment%3B+filename%3D%22qwen_1792331676492080536_1.png" alt="雨傘">
+        <div class="item-label">大雨傘</div>
+      </div>
+      <div style="font-size: clamp(40px, 8vw, 70px);">❓</div>
+      <div class="item-card" id="card2" onclick="selectCard(2)">
+        <img src="https://skillagent.bj.bcebos.com/sandbox_exports/20261018/f52a2d1_qwen_1792331676785979469_1.png?responseContentDisposition=attachment%3B+filename%3D%22qwen_1792331676785979469_1.png" alt="蘑菇">
+        <div class="item-label">大蘑菇</div>
+      </div>
+    </div>
+    <div class="word-cards" id="words2" style="display:none;">
+      <div class="word-card" onclick="speakWord('蘑')">蘑</div>
+      <div class="word-card" onclick="speakWord('菇')">菇</div>
+    </div>
+    <button class="btn-3d btn-blue" id="nextBtn2" style="display:none; margin-top: 16px;" onclick="goToScene(3)">下一關 ➡️</button>
+  </div>
+
+  <!-- 第三關：走進雨中 -->
+  <div class="scene" id="scene3">
+    <div class="poem-card">
+      <div class="poem-line">走進了 <span class="keyword">雨中</span>。</div>
+    </div>
+    <div class="hint-text" id="hint3">🚶 點擊畫面，讓小娃娃走進雨中！</div>
+    <div class="progress-wrap">
+      <div class="progress-bar" id="walkProgress"></div>
+    </div>
+    <div class="character-area" id="walkArea" onclick="walkStep()">
+      <div class="path-hint"></div>
+      <img class="character" id="char3" style="position:absolute; left:10%;" src="https://skillagent.bj.bcebos.com/sandbox_exports/20261018/febfc16_qwen_1792331626964653020_2.png?responseContentDisposition=attachment%3B+filename%3D%22qwen_1792331626964653020_2.png">
+      <div class="tap-hint" id="hint3tap">點這裡走路！</div>
+    </div>
+    <div class="word-cards" id="words3" style="display:none;">
+      <div class="word-card" onclick="speakWord('走')">走</div>
+      <div class="word-card" onclick="speakWord('進')">進</div>
+      <div class="word-card" onclick="speakWord('雨')">雨</div>
+      <div class="word-card" onclick="speakWord('中')">中</div>
+    </div>
+    <button class="btn-3d btn-green" id="nextBtn3" style="display:none; margin-top: 16px;" onclick="goToScene(4)">🎉 完成學習</button>
+  </div>
+
+  <!-- 結束頁 -->
+  <div class="scene ending-scene" id="scene4">
+    <div class="stars-row">
+      <div class="big-star" id="star1">⭐</div>
+      <div class="big-star" id="star2">⭐</div>
+      <div class="big-star" id="star3">⭐</div>
+    </div>
+    <div class="full-poem">
+      <div class="full-poem-title">🌂 大雨傘</div>
+      <div class="full-poem-author" style="text-align:center; color:#888; margin-bottom:12px; font-size:clamp(18px,3vw,24px);">林良</div>
+      <div class="full-poem-line" id="line1">小娃娃撐了一把大雨傘。</div>
+      <div class="full-poem-line" id="line2">這朵會走路的大蘑菇，</div>
+      <div class="full-poem-line" id="line3">走進了雨中。</div>
+    </div>
+    <div class="btn-row">
+      <button class="btn-3d btn-orange" id="readAllBtn" onclick="readFullPoemEnding()">🔊 朗讀全文</button>
+      <button class="btn-3d btn-red" onclick="restartGame()">🔄 再玩一次</button>
+    </div>
+    <div class="think-box">
+      <div class="think-title">💡 想一想</div>
+      <div class="think-content">
+        為什麼詩人把雨傘說成是「會走路的大蘑菇」呢？<br>
+        因為雨傘的樣子圓圓的像蘑菇，<br>
+        小娃娃撐著它走路，<br>
+        雨傘就像一朵會跟著人走動的大蘑菇啦！🍄
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- 過場 -->
+<div class="overlay" id="overlay">
+  <div class="overlay-emoji" id="overlayEmoji">🌟</div>
+  <div class="overlay-text" id="overlayText">太棒了！</div>
+</div>
+
+<script>
+// ============ 全局狀態 ============
+let soundOn = true;
+let currentScene = 0;
+let audioCtx = null;
+let dropsCollected = 0;
+const totalDrops = 5;
+let selectedCard = 0;
+let walkSteps = 0;
+const totalWalkSteps = 8;
+let isWalking = false;
+
+// ============ 音效系統 ============
+function initAudio() {
+  if (!audioCtx) {
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  }
+}
+
+function playTone(freq, duration, type = 'sine', vol = 0.3) {
+  if (!soundOn || !audioCtx) return;
+  try {
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.type = type;
+    osc.frequency.value = freq;
+    gain.gain.setValueAtTime(vol, audioCtx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + duration);
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    osc.start();
+    osc.stop(audioCtx.currentTime + duration);
+  } catch(e) {}
+}
+
+function playClick() {
+  playTone(800, 0.1, 'sine', 0.2);
+  setTimeout(() => playTone(1000, 0.08, 'sine', 0.15), 50);
+}
+
+function playJump() {
+  if (!soundOn) return;
+  for (let i = 0; i < 5; i++) {
+    setTimeout(() => playTone(400 + i*150, 0.15, 'triangle', 0.2), i*60);
+  }
+}
+
+function playSuccess() {
+  if (!soundOn) return;
+  const notes = [523, 659, 784, 1047];
+  notes.forEach((f, i) => setTimeout(() => playTone(f, 0.3, 'sine', 0.25), i*120));
+}
+
+function playStep() {
+  playTone(150, 0.08, 'square', 0.15);
+  setTimeout(() => playTone(200, 0.06, 'sine', 0.1), 40);
+}
+
+function playSplash() {
+  if (!audioCtx || !soundOn) return;
+  try {
+    const bufferSize = audioCtx.sampleRate * 0.2;
+    const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+    const data = buffer.getChannelData(0);
+    for (let i = 0; i < bufferSize; i++) {
+      data[i] = (Math.random()*2-1) * Math.pow(1 - i/bufferSize, 2);
+    }
+    const src = audioCtx.createBufferSource();
+    const gain = audioCtx.createGain();
+    src.buffer = buffer;
+    gain.gain.value = 0.15;
+    src.connect(gain);
+    gain.connect(audioCtx.destination);
+    src.start();
+  } catch(e) {}
+}
+
+function playMatch() {
+  playTone(523, 0.15, 'sine', 0.3);
+  setTimeout(() => playTone(659, 0.15, 'sine', 0.3), 100);
+  setTimeout(() => playTone(784, 0.15, 'sine', 0.3), 200);
+  setTimeout(() => playTone(1047, 0.4, 'sine', 0.3), 300);
+}
+
+function toggleSound() {
+  soundOn = !soundOn;
+  document.getElementById('soundBtn').textContent = soundOn ? '🔊' : '🔇';
+  if (soundOn) {
+    initAudio();
+    playClick();
+  }
+}
+
+// ============ 語音朗讀 ============
+function speak(text, rate = 0.85) {
+  if (!soundOn) return;
+  if ('speechSynthesis' in window) {
+    window.speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(text);
+    u.lang = 'zh-CN';
+    u.rate = rate;
+    u.pitch = 1.1;
+    window.speechSynthesis.speak(u);
+  }
+}
+
+function speakWord(word) {
+  initAudio();
+  playClick();
+  speak(word, 0.7);
+}
+
+function readFullPoem() {
+  initAudio();
+  speak('大雨傘，作者林良。小娃娃撐了一把大雨傘。這朵會走路的大蘑菇，走進了雨中。', 0.75);
+}
+
+function readFullPoemEnding() {
+  initAudio();
+  window.speechSynthesis.cancel();
+  const lines = ['大雨傘，作者林良。', '小娃娃撐了一把大雨傘。', '這朵會走路的大蘑菇，', '走進了雨中。'];
+  const els = [null, document.getElementById('line1'), document.getElementById('line2'), document.getElementById('line3')];
+  document.getElementById('readAllBtn').textContent = '🔊 朗讀中...';
+  
+  let i = 0;
+  function readNext() {
+    if (i > 0 && i <= 3) {
+      document.querySelectorAll('.full-poem-line').forEach(el => el.classList.remove('reading'));
+      els[i].classList.add('reading');
+    }
+    if (i < lines.length) {
+      const u = new SpeechSynthesisUtterance(lines[i]);
+      u.lang = 'zh-CN';
+      u.rate = 0.75;
+      u.pitch = 1.1;
+      u.onend = () => { i++; setTimeout(readNext, 200); };
+      window.speechSynthesis.speak(u);
+      i++;
+    } else {
+      document.querySelectorAll('.full-poem-line').forEach(el => el.classList.remove('reading'));
+      document.getElementById('readAllBtn').textContent = '🔊 朗讀全文';
+    }
+  }
+  readNext();
+}
+
+// ============ 場景切換 ============
+function showOverlay(emoji, text, duration = 1200) {
+  const ov = document.getElementById('overlay');
+  document.getElementById('overlayEmoji').textContent = emoji;
+  document.getElementById('overlayText').textContent = text;
+  ov.classList.add('show');
+  playSuccess();
+  setTimeout(() => ov.classList.remove('show'), duration);
+}
+
+function goToScene(n) {
+  initAudio();
+  playClick();
+  
+  if (n === 4) {
+    showOverlay('🎉', '太厲害了！', 1500);
+  }
+  
+  setTimeout(() => {
+    document.querySelectorAll('.scene').forEach(s => s.classList.remove('active', 'scene-enter'));
+    currentScene = n;
+    const sc = document.getElementById('scene' + n);
+    sc.classList.add('active', 'scene-enter');
+    
+    if (n === 1) initScene1();
+    if (n === 2) initScene2();
+    if (n === 3) initScene3();
+    if (n === 4) initEnding();
+  }, n === 4 ? 800 : 300);
+}
+
+function startGame() {
+  initAudio();
+  playClick();
+  goToScene(1);
+}
+
+function restartGame() {
+  playClick();
+  window.speechSynthesis.cancel();
+  dropsCollected = 0;
+  selectedCard = 0;
+  walkSteps = 0;
+  document.getElementById('walkProgress').style.width = '0%';
+  document.getElementById('words1').style.display = 'none';
+  document.getElementById('words2').style.display = 'none';
+  document.getElementById('words3').style.display = 'none';
+  document.getElementById('nextBtn1').style.display = 'none';
+  document.getElementById('nextBtn2').style.display = 'none';
+  document.getElementById('nextBtn3').style.display = 'none';
+  document.getElementById('char1').src = 'https://skillagent.bj.bcebos.com/sandbox_exports/20261018/148e4dd_qwen_1792331626944505342_2.png?responseContentDisposition=attachment%3B+filename%3D%22qwen_1792331626944505342_2.png';
+  document.getElementById('hint1').style.display = 'block';
+  document.getElementById('glow1').style.display = 'block';
+  document.getElementById('poem1').innerHTML = '';
+  document.getElementById('hint3tap').style.display = 'block';
+  document.getElementById('hint3').textContent = '🚶 點擊畫面，讓小娃娃走進雨中！';
+  document.getElementById('char3').style.left = '10%';
+  document.getElementById('char3').classList.remove('walking');
+  document.getElementById('char3').src = 'https://skillagent.bj.bcebos.com/sandbox_exports/20261018/febfc16_qwen_1792331626964653020_2.png?responseContentDisposition=attachment%3B+filename%3D%22qwen_1792331626964653020_2.png';
+  document.querySelectorAll('.big-star').forEach(s => s.classList.remove('lit'));
+  document.querySelectorAll('.full-poem-line').forEach(el => el.classList.remove('reading'));
+  goToScene(0);
+}
+
+// ============ 第一關：撐雨傘 ============
+function initScene1() {
+  document.getElementById('poem1').innerHTML = '';
+  speak('點一點小娃娃，幫他撐開雨傘吧！', 0.8);
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  const char1 = document.getElementById('char1');
+  char1.addEventListener('click', openUmbrella);
+});
+
+function openUmbrella() {
+  if (document.getElementById('nextBtn1').style.display === 'block') return;
+  
+  const char = document.getElementById('char1');
+  char.classList.add('jump');
+  document.getElementById('hint1').style.display = 'none';
+  document.getElementById('glow1').style.display = 'none';
+  
+  playJump();
+  
+  // 切換到撐開雨傘的圖
+  setTimeout(() => {
+    char.src = 'https://skillagent.bj.bcebos.com/sandbox_exports/20261018/febfc16_qwen_1792331626964653020_2.png?responseContentDisposition=attachment%3B+filename%3D%22qwen_1792331626964653020_2.png';
+    createWaterBurst(char);
+    createStarBurst(char);
+    playSplash();
+    speak('雨傘撐開了！', 0.8);
+  }, 400);
+  
+  // 詩句逐字顯示
+  setTimeout(() => {
+    const poemText = '小娃娃撐了一把大雨傘。';
+    const poemEl = document.getElementById('poem1');
+    poemEl.innerHTML = '';
+    [...poemText].forEach((c, i) => {
+      const span = document.createElement('span');
+      span.className = 'char-reveal';
+      span.textContent = c;
+      span.style.animationDelay = (i * 0.1) + 's';
+      poemEl.appendChild(span);
+    });
+    
+    setTimeout(() => {
+      speak('小娃娃撐了一把大雨傘。', 0.75);
+    }, poemText.length * 100 + 200);
+  }, 700);
+  
+  setTimeout(() => {
+    char.classList.remove('jump');
+    document.getElementById('words1').style.display = 'flex';
+    document.getElementById('nextBtn1').style.display = 'block';
+  }, 2200);
+}
+
+// ============ 第二關：收集雨滴+配對 ============
+function initScene2() {
+  dropsCollected = 0;
+  selectedCard = 0;
+  document.getElementById('matchArea').style.opacity = '0.3';
+  document.getElementById('matchArea').style.pointerEvents = 'none';
+  document.getElementById('hint2').textContent = '💧 先點擊收集所有雨滴！';
+  document.getElementById('words2').style.display = 'none';
+  document.getElementById('nextBtn2').style.display = 'none';
+  document.getElementById('card1').classList.remove('selected', 'matched');
+  document.getElementById('card2').classList.remove('selected', 'matched');
+  
+  // 生成雨滴
+  const dropsArea = document.getElementById('dropsArea');
+  dropsArea.innerHTML = '';
+  for (let i = 0; i < totalDrops; i++) {
+    const drop = document.createElement('div');
+    drop.className = 'raindrop-item';
+    drop.innerHTML = '💧';
+    drop.style.fontSize = 'clamp(40px, 7vw, 60px)';
+    drop.style.left = (10 + Math.random()*75) + '%';
+    drop.style.top = (20 + Math.random()*50) + '%';
+    drop.style.animationDelay = (Math.random()*2) + 's';
+    drop.onclick = () => collectDrop(drop);
+    dropsArea.appendChild(drop);
+  }
+  
+  speak('請點擊收集飄浮的雨滴！', 0.8);
+}
+
+function collectDrop(drop) {
+  if (drop.classList.contains('collected')) return;
+  drop.classList.add('collected');
+  dropsCollected++;
+  playSplash();
+  createWaterBurst(drop);
+  
+  if (dropsCollected >= totalDrops) {
+    document.getElementById('hint2').textContent = '🤔 雨傘看起來像什麼？點一點！';
+    document.getElementById('matchArea').style.opacity = '1';
+    document.getElementById('matchArea').style.pointerEvents = 'auto';
+    playSuccess();
+    speak('太棒了！雨傘看起來像什麼呢？', 0.8);
+  }
+}
+
+function selectCard(n) {
+  if (dropsCollected < totalDrops) return;
+  if (document.getElementById('nextBtn2').style.display === 'block') return;
+  
+  playClick();
+  
+  if (selectedCard === 0) {
+    selectedCard = n;
+    document.getElementById('card' + n).classList.add('selected');
+    speak(n === 1 ? '大雨傘' : '大蘑菇', 0.7);
+  } else if (selectedCard !== n) {
+    // 選了兩個不同的，配對成功
+    document.getElementById('card' + selectedCard).classList.add('matched');
+    document.getElementById('card' + n).classList.add('matched');
+    document.getElementById('card' + selectedCard).classList.remove('selected');
+    createStarBurst(document.getElementById('matchArea'));
+    playMatch();
+    document.getElementById('hint2').textContent = '✨ 對啦！雨傘就像一朵大蘑菇！';
+    speak('答對了！雨傘就像一朵會走路的大蘑菇！', 0.75);
+    
+    setTimeout(() => {
+      document.getElementById('words2').style.display = 'flex';
+      document.getElementById('nextBtn2').style.display = 'block';
+    }, 1200);
+  } else {
+    // 選了同一個，取消
+    document.getElementById('card' + n).classList.remove('selected');
+    selectedCard = 0;
+  }
+}
+
+// ============ 第三關：走路 ============
+function initScene3() {
+  walkSteps = 0;
+  isWalking = false;
+  document.getElementById('walkProgress').style.width = '0%';
+  document.getElementById('words3').style.display = 'none';
+  document.getElementById('nextBtn3').style.display = 'none';
+  document.getElementById('hint3tap').style.display = 'block';
+  document.getElementById('hint3').textContent = '🚶 點擊畫面，讓小娃娃走進雨中！';
+  const char3 = document.getElementById('char3');
+  char3.style.left = '10%';
+  char3.classList.remove('walking');
+  char3.src = 'https://skillagent.bj.bcebos.com/sandbox_exports/20261018/febfc16_qwen_1792331626964653020_2.png?responseContentDisposition=attachment%3B+filename%3D%22qwen_1792331626964653020_2.png';
+  // 清除舊的腳印和水花
+  document.querySelectorAll('.footprint, .water-splash').forEach(el => el.remove());
+  
+  speak('點擊畫面，讓小娃娃走進雨中吧！', 0.8);
+}
+
+function walkStep() {
+  if (walkSteps >= totalWalkSteps || isWalking) return;
+  if (document.getElementById('nextBtn3').style.display === 'block') return;
+  
+  isWalking = true;
+  const char = document.getElementById('char3');
+  document.getElementById('hint3tap').style.display = 'none';
+  
+  // 切換走路姿態
+  char.src = 'https://skillagent.bj.bcebos.com/sandbox_exports/20261018/ade3132_qwen_1792331629887063976_2.png?responseContentDisposition=attachment%3B+filename%3D%22qwen_1792331629887063976_2.png';
+  char.classList.add('walking');
+  
+  playStep();
+  setTimeout(playSplash, 100);
+  
+  // 計算新位置
+  walkSteps++;
+  const progress = walkSteps / totalWalkSteps;
+  const newLeft = 10 + progress * 70;
+  char.style.left = newLeft + '%';
+  
+  // 產生腳印
+  const rect = char.getBoundingClientRect();
+  const fp = document.createElement('div');
+  fp.className = 'footprint';
+  fp.textContent = '👣';
+  fp.style.fontSize = 'clamp(30px, 5vw, 48px)';
+  fp.style.left = (rect.left + rect.width/2 - 30) + 'px';
+  fp.style.top = (rect.bottom - 20) + 'px';
+  fp.style.position = 'fixed';
+  document.body.appendChild(fp);
+  setTimeout(() => fp.remove(), 1600);
+  
+  // 產生水花
+  const ws = document.createElement('div');
+  ws.className = 'water-splash';
+  ws.textContent = '💦';
+  ws.style.fontSize = 'clamp(40px, 7vw, 64px)';
+  ws.style.left = (rect.left + rect.width/2 - 40) + 'px';
+  ws.style.top = (rect.bottom - 40) + 'px';
+  ws.style.position = 'fixed';
+  document.body.appendChild(ws);
+  setTimeout(() => ws.remove(), 900);
+  
+  // 更新進度條
+  document.getElementById('walkProgress').style.width = (progress * 100) + '%';
+  
+  // 更新提示文字
+  if (progress < 0.3) {
+    document.getElementById('hint3').textContent = '🚶 一步一步往前走！';
+  } else if (progress < 0.6) {
+    document.getElementById('hint3').textContent = '😊 走在雨中真開心！';
+  } else if (progress < 0.9) {
+    document.getElementById('hint3').textContent = '🌈 快到終點了！';
+  }
+  
+  setTimeout(() => {
+    isWalking = false;
+    
+    if (walkSteps >= totalWalkSteps) {
+      // 走完了
+      char.classList.remove('walking');
+      char.src = 'https://skillagent.bj.bcebos.com/sandbox_exports/20261018/febfc16_qwen_1792331626964653020_2.png?responseContentDisposition=attachment%3B+filename%3D%22qwen_1792331626964653020_2.png';
+      document.getElementById('hint3').textContent = '🎉 小娃娃走進雨中了！';
+      createStarBurst(char);
+      createConfetti();
+      playSuccess();
+      speak('走進了雨中！太棒了！', 0.75);
+      
+      setTimeout(() => {
+        document.getElementById('words3').style.display = 'flex';
+        document.getElementById('nextBtn3').style.display = 'block';
+      }, 1000);
+    }
+  }, 500);
+}
+
+// ============ 結束頁 ============
+function initEnding() {
+  setTimeout(() => document.getElementById('star1').classList.add('lit'), 300);
+  setTimeout(() => { document.getElementById('star2').classList.add('lit'); playTone(784, 0.3, 'sine', 0.3); }, 800);
+  setTimeout(() => { 
+    document.getElementById('star3').classList.add('lit'); 
+    playSuccess();
+    createConfetti();
+  }, 1300);
+  
+  setTimeout(() => {
+    speak('你真棒！我們再讀一遍這首詩吧！', 0.8);
+  }, 2000);
+}
+
+// ============ 粒子特效 ============
+function createStarBurst(el) {
+  const rect = el.getBoundingClientRect();
+  const cx = rect.left + rect.width/2;
+  const cy = rect.top + rect.height/2;
+  const particles = document.getElementById('particles');
+  const emojis = ['⭐', '✨', '🌟', '💫', '🎉'];
+  
+  for (let i = 0; i < 12; i++) {
+    const star = document.createElement('div');
+    star.className = 'star-particle';
+    star.textContent = emojis[Math.floor(Math.random()*emojis.length)];
+    star.style.left = cx + 'px';
+    star.style.top = cy + 'px';
+    star.style.fontSize = (20 + Math.random()*20) + 'px';
+    const angle = (Math.PI*2 / 12) * i;
+    const dist = 80 + Math.random()*80;
+    star.style.setProperty('--tx', Math.cos(angle)*dist + 'px');
+    star.style.setProperty('--ty', Math.sin(angle)*dist + 'px');
+    particles.appendChild(star);
+    setTimeout(() => star.remove(), 1100);
+  }
+}
+
+function createWaterBurst(el) {
+  const rect = el.getBoundingClientRect();
+  const cx = rect.left + rect.width/2;
+  const cy = rect.top + rect.height/2;
+  const particles = document.getElementById('particles');
+  
+  for (let i = 0; i < 10; i++) {
+    const p = document.createElement('div');
+    p.className = 'particle';
+    p.style.width = (8 + Math.random()*10) + 'px';
+    p.style.height = p.style.width;
+    p.style.background = 'radial-gradient(circle, #88ccff, #4499ff)';
+    p.style.left = cx + 'px';
+    p.style.top = cy + 'px';
+    const angle = Math.random() * Math.PI * 2;
+    const dist = 40 + Math.random()*80;
+    const tx = Math.cos(angle)*dist;
+    const ty = Math.sin(angle)*dist - 50;
+    p.animate([
+      { transform: 'translate(0,0) scale(1)', opacity: 1 },
+      { transform: `translate(${tx}px, ${ty}px) scale(0)`, opacity: 0 }
+    ], { duration: 800, easing: 'ease-out' });
+    particles.appendChild(p);
+    setTimeout(() => p.remove(), 850);
+  }
+}
+
+function createConfetti() {
+  const colors = ['#ff6b6b', '#ffd93d', '#6bcb77', '#4d96ff', '#ff9a3c', '#ff6b9d'];
+  const particles = document.getElementById('particles');
+  
+  for (let i = 0; i < 30; i++) {
+    const p = document.createElement('div');
+    p.className = 'particle';
+    p.style.width = '12px';
+    p.style.height = '12px';
+    p.style.background = colors[Math.floor(Math.random()*colors.length)];
+    p.style.borderRadius = Math.random() > 0.5 ? '50%' : '2px';
+    p.style.left = (Math.random()*window.innerWidth) + 'px';
+    p.style.top = '-20px';
+    const tx = (Math.random()-0.5)*200;
+    const ty = window.innerHeight + 50;
+    p.animate([
+      { transform: 'translateY(0) rotate(0)', opacity: 1 },
+      { transform: `translate(${tx}px, ${ty}px) rotate(720deg)`, opacity: 0.8 }
+    ], { duration: 2000 + Math.random()*1000, easing: 'ease-in', delay: Math.random()*300 });
+    particles.appendChild(p);
+    setTimeout(() => p.remove(), 3500);
+  }
+}
+
+// ============ 雨點Canvas動畫 ============
+function initRain() {
+  const canvas = document.getElementById('rainCanvas');
+  const ctx = canvas.getContext('2d');
+  
+  function resize() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+  }
+  resize();
+  window.addEventListener('resize', resize);
+  
+  const raindrops = [];
+  for (let i = 0; i < 80; i++) {
+    raindrops.push({
+      x: Math.random()*canvas.width,
+      y: Math.random()*canvas.height,
+      l: 10 + Math.random()*15,
+      v: 3 + Math.random()*4,
+      o: 0.2 + Math.random()*0.3
+    });
+  }
+  
+  function draw() {
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    ctx.strokeStyle = '#7ab8ff';
+    ctx.lineWidth = 2;
+    ctx.lineCap = 'round';
+    
+    raindrops.forEach(r => {
+      ctx.globalAlpha = r.o;
+      ctx.beginPath();
+      ctx.moveTo(r.x, r.y);
+      ctx.lineTo(r.x - 1, r.y + r.l);
+      ctx.stroke();
+      r.y += r.v;
+      r.x -= 0.5;
+      if (r.y > canvas.height) {
+        r.y = -20;
+        r.x = Math.random()*canvas.width;
+      }
+    });
+    ctx.globalAlpha = 1;
+    requestAnimationFrame(draw);
+  }
+  draw();
+}
+
+// ============ 初始化 ============
+window.addEventListener('load', () => {
+  initRain();
+  // 第一次點擊初始化音頻
+  document.body.addEventListener('click', () => {
+    if (!audioCtx) initAudio();
+  }, { once: true });
+});
+
+// 防止雙擊縮放
+document.addEventListener('touchmove', (e) => {
+  if (e.touches.length > 1) e.preventDefault();
+}, { passive: false });
+</script>
+</body>
+</html>
